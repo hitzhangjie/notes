@@ -1,7 +1,7 @@
 ### utils
 
 ```c
-// ptr是指向结构体type中成员member的指针，计算包含该结构体地址
+// ptr是指向结构体type中成员member的指针，计算包含该member的结构体的地址
 // - 在list等实现中，mill_cont用于获取“迭代器”对应的元素结构体地址
 #define mill_cont(ptr, type, member) \
     (ptr ? ((type*) (((char*) ptr) - offsetof(type, member))) : NULL)
