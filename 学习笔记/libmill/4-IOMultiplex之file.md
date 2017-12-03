@@ -1,6 +1,16 @@
 ### file
 
-epoll除了可以对socket fd进行io事件监听，也可以对普通文件上的io事件进行监听。
+epoll并不支持所有的fd类型，一般将epoll应用于socket、pipe、tty以及其他有限的设备类型，epoll不支持regular file。尽管我们可以传递regular file的fd给select、poll但这只是因为select、poll在接口上允许而已，并没有什么效果（总是返回事件就绪)，既然没有什么效果，epoll接口在设计的时候就决定根本不接受regular file fd，实际上epoll也只是为了改善select、poll并没打算额外支持regular file。这里只是将epoll应用在/dev/pts设备上，stdin、stdout、stderr都事这种设备类型，并不是针对regular file的。
+
+难道os就无法支持regular file的io多路复用吗？怎么可能不能？只是epoll不支持，bsd下kqueue就支持！
+
+这里的一篇文章对kqueue和epoll进行了对比：[Scalable Event Multiplexing: epoll vs. kqueue](http://people.eecs.berkeley.edu/~sangjin/2012/12/21/epoll-vs-kqueue.html)
+
+>The last issue is that epoll does not even support all kinds of file descriptors; select()/poll()/epoll do not work with regular (disk) files. This is because epoll has a strong assumption of the readiness model; you monitor the readiness of sockets, so that subsequent IO calls on the sockets do not block. However, disk files do not fit this model, since simply they are always ready.
+
+>Disk I/O blocks when the data is not cached in memory, not because the client did not send a message. For disk files, the completion notification model fits. In this model, you simply issue I/O operations on the disk files, and get notified when they are done. kqueue supports this approach with the EVFILT_AIO filter type, in conjunction with POSIX AIO functions, such as aio_read(). In Linux, you should simply pray that disk access would not block with high cache hit rate (surprisingly common in many network servers), or have separate threads so that disk I/O blocking does not affect network socket processing (e.g., the FLASH architecture).
+
+这里不再过分展开了，看下这里的代码吧。
 
 ```c
 #ifndef MILL_FILE_BUFLEN
@@ -277,4 +287,5 @@ struct mill_file *mill_mferr_(void) {
     return &f;
 }
 ```
+
 
