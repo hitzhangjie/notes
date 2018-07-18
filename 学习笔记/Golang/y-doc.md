@@ -61,7 +61,7 @@ godoc中的示例代码是存放在一个独立的文件“**example_test.go**�
 这个示例代码文件的包名定义为```package conf_test```或者```package conf```都可以，其他包的话```go install```会提示```error: can't load package...```，godoc运行时会对example_test.go中的示例代码进行加载并渲染。
 
 #### package示例代码
-package示例代码是编写在在```func example() {...}```函数里面，只能包含一个package示例代码，通常在package示例代码里面详细描述该package的使用方法，比如完整package conf解析json、ini、prop配置文件的方法。
+package示例代码是编写在在```func Example() {...}```函数里面，只能包含一个package示例代码，通常在package示例代码里面详细描述该package的使用方法，比如完整package conf解析json、ini、prop配置文件的方法。
 
 以下是一个示例：
 
@@ -70,7 +70,7 @@ package conf_test
 
 import "fmt"
 
-func example() {
+func Example() {
     fmt.Println("hello world")
     
     // how to load json cfg
@@ -97,7 +97,7 @@ func example() {
 
 #### type示例代码
 
-每中类型下往往定义了多个方法，可能有需要对多个方法提供示例代码，所以可以godoc约定允许通过函数“**func Example${type}_${testcase} {...}**”提供多个示例代码，需要注意的是${testcase}必须首字母小写，否则godoc会忽略。
+每中类型下往往定义了多个方法，可能有需要对多个方法提供示例代码，所以可以godoc约定允许通过函数“**func Example#type_#testcase {...}**”提供多个示例代码，需要注意的是#testcase必须首字母小写，否则godoc会忽略。
 
 以```type JsonCfg```为例：
 

@@ -45,7 +45,7 @@ saved setuid从effective uid复制过来，即108。
 是因为普通用户1000执行过程中调用了setuid(1000)， 对于普通用户来说，setuid可以将effective uid设置为real uid或者saved setuid，在 我们的上述示例程序中，将effective uid设置为了real uid，将euid设置为与suid相同的情况多为权限恢复时使用。
 
 这里也可以参考下wiki：[User Identifier](https://en.wikipedia.org/wiki/User_identifier#Saved_user_ID)
-       
+
      
    
  
