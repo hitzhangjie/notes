@@ -44,6 +44,12 @@ insert的时候id=1,2,3假如事务回滚了,下次插入的时候id=4；
 ##### 14 存储过程、函数、触发器会降低性能
 mysql中如果存储过程、函数、触发器逻辑中包括了deadcode（永远不会被执行的分支逻辑），虽然它不会执行，但是mysql分析器还是会去分析他们，对性能还是有影响的。参考文章：[Why MySQL Stored Procedures, Functions and Triggers Are Bad For Performance](https://www.percona.com/blog/2018/07/12/why-mysql-stored-procedures-functions-triggers-bad-performance/)
 
+##### 15 查看允许的最大连接数
+```
+show variables like 'max_connections' // 显示最大允许连接数
+show variables like 'max_user_connections' // 显示用户最大允许连接数
+show processList; // 显示mysql当前正在执行的sql
+```
 ##### X 其他
 
 
