@@ -50,6 +50,39 @@ show variables like 'max_connections' // 显示最大允许连接数
 show variables like 'max_user_connections' // 显示用户最大允许连接数
 show processList; // 显示mysql当前正在执行的sql
 ```
+
+##### 16 修改表的存储引擎
+```
+alter table ${tablename} engine=MyISAM;
+alter table ${tablename} engine=InnoDB;
+```
+
+##### 17 MySQL分表
+```
+create table `tbl_1` (
+`id` int unsigned not null auto_increment,
+`name` varchar(64) not null,
+`age` int unsigned not null,
+PRIMARY KEY(id)
+) ENGINE=MyISAM;
+
+create table `tbl_2` (
+...
+);
+
+create table `tbl_3` (
+...
+);
+
+create table `tbl` (
+`id` int unsigned not null auto_increment,
+`name` varchar(64) not null,
+`age` int unsigned not null,
+PRIMARY KEY(id)
+) ENGINE=MRG_MyISAM INSERT_METHOD=NO UNION=(tbl_1,tbl_2,tbl_3);
+
+```
+
 ##### X 其他
 
 
