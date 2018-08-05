@@ -405,7 +405,11 @@ http {
 
 ### 3.3.5 总结
 
-Nginx是一款高性能的Web服务器和反向代理服务器，业界对Nginx的广泛使用足以证明其经得起考验，Nginx还还有很多其他配置可以了解一下，现在Nginx甚至连grpc都已经支持了，Web前端开发与基于grpc的后台微服务开发可以更好地有机结合起来，减轻CGI开发工作量。
+Nginx是一款高性能的Web服务器和反向代理服务器，业界对Nginx的广泛使用足以证明其经得起考验，Nginx还还有很多其他配置可以了解一下，现在Nginx甚至连grpc都已经支持了，Web前端开发与基于grpc（grpc是基于http/2通信）的后台微服务开发可以更好地有机结合起来，减轻CGI开发工作量。
+
+>grpc是基于http/2协议构建起来的rpc框架，所以nginx才能转发grpc请求给grpc服务端。
+>grpc支持四种通信模式：unary rpc、streaming client rpc、streaming server rpc、bidirectional streaming rpc。这也是与http/2 stream分不开的。
+>因为grpc是基于http/2构建的，这也意味着grpc框架不能支持udp。在某些延时敏感的业务场景下（如动作类网游）tcp因为存在拥塞控制策略并不是一个好的选择，基于http/2的grpc就更不行了，udp+应用层可靠性控制往。因此，grpc是否适合使用，还是要看具体的应用场景。
 
 # 4 负载均衡调度器
 
