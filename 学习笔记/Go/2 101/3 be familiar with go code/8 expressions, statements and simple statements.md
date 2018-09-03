@@ -1,0 +1,13 @@
+# Expressions, Statements And Simple Statements
+
+- Some Expression Cases  Value literals, named constants and variables are all expressions. They also called elementary values.  The operations (without the assignment part) using the operators introduced in the article common operators are all expressions. There are more operator operations which will be introduced in other articles are also expressions.  If a function returns exact one result, then its calls (without the assignment parts) are expressions. Calls of functions without results are not expressions. We have learned that a function call may return multiple results in the article function declarations and calls. Such function calls are called multi-valued expressions. Multi-value expressions can only be be used at some specific senarios.Most expressions in Go a single-valued expression. Later, out of the currrent article, unless otherwise specified, when an expression is mentioned, we mean it is a single-valued expression.  Methods can be viewed as special functions. So the above mentioned function cases also apply to methods. Methods will explained detailedly in the article method in Go later.  In fact, later we will learn that custom functions, including methods, are all function values, so they are also expressions. We can learn more about function types and values later.  Channel receive operations (without the assignment parts) are also expressions. Channel operations will be explained in the article channels in Go later.  Some expressions may have optional results in Go. We can learn such expressions in other Go 101 articles later.  [go101.org]
+
+  > "golang中表达式定义"
+
+- Simple Statement Cases  There are six kinds of simple statements. short variable declaration forms pure value assignments (not mixing with variable declarations), including x op= y operations. function/method calls and channel receive operations without the assignment parts. Some of these simple statements can also be used as expressions. channel send operations. nothing. This is called blank statement. x++ and x--.   [go101.org]
+
+  > "golang中简单语句定义，这个要了解下，以为后续很多分支控制、循环控制结构的某些部分要求必须是简单语句。"
+
+- Yes, Go supports the two syntaxes. However, the two forms can't be used as values. In other words, they are not expressions. x++ is equivalent to x = x + 1, and x-- is equivalent to x = x - 1, where expression x will only be evaludated once. Go doesn't support the ++x and --x syntaxes.  [go101.org]
+
+  > "golang虽然支持x++和x--，但是不能将其用做赋值，在golang中，++和--都是简单语句，并且没有返回值的，所以不能用于赋值操作。golang中没有前置++、--这种形式。"
