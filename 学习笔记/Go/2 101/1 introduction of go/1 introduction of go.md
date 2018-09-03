@@ -1,6 +1,7 @@
 **1 Go is a compiled and static typed programming language born from Google. Go has many features, some are unique, some are borrowed from other programming languages。**
->golang的一些features： 
->
+
+golang的一些features： 
+
 - 1）内置并发支持，包括goroutine、channel（基于CSP模型）和select机制同步goroutine等； 
 - 2）内置支持map、slice等容器类型； 
 - 3）基于interfaces的多态机制； 
