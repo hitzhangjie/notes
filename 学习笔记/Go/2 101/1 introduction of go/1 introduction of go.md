@@ -16,8 +16,9 @@ golang的一些features：
 -  12）类型推断； 
 -  13）此外，go语法简单、干练，与其他流行的编程语言类似，代码可读性强。go标准库中提供了丰富的常用工具包，大部分是跨平台的。go也拥有活跃的开发者社区，贡献了很多优秀的代码库。
 
-**2 Go is a language still in evolving and in active development** 
->go并不是完美的，比如它现在不支持范型，在项目中是否采用go确实需要一定的取舍。尽管如此，go一直在不断完善中。
+**2 Go is a language still in evolving and in active development**
+
+go并不是完美的，比如它现在不支持范型，在项目中是否采用go确实需要一定的取舍。尽管如此，go一直在不断完善中。
 
 
 
