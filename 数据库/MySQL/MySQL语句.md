@@ -96,6 +96,17 @@ create database dbname default character set utf8 default collate utf8_bin;
 - 修改mysql.conf在mysqld下面增加max_allowed_packet=xxMB
 - 命令行里面执行set [global] max_allowed_packet=xxxxxx（注意单位是字节）
 
+##### 20 检查mysql慢查询？
+
+```SELECT * FROM information_schema.PROCESSLIST WHERE COMMAND!='Sleep';```
+
+该命令会列出当前正在执行处理的sql以及耗时信息，通常该方法用于检查慢查询。
+
+| ID | USER | HOST | DB | COMMAND | TIME | STATE | INFO |
+|:-----:|:------:|:-------:|:----:|:--------------:|:------:|:-------:|:------:|
+| 1 | root | ip:port | test | query | 0 | sending data | select *  from t_test ... |
+
+
 ##### X 其他
 
 
