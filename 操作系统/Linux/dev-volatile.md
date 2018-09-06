@@ -4,7 +4,9 @@ volatile字面意思是“**不稳定的、易失的**”，volatile修饰的变
 
 ## 1 diff btw java\c\c++
 
-在Java中语言规范明确指出了volatile对应的明确语义，即volatile保证内存可见性，遵从happens-before规则阻止处理器指令重排序。但是在C、C++规范里面并没有明确指出volatile的语义，具体如何处理volatile的工作就交给了编译器来处理，其实gcc中对volatile也是可以保证内存可见性bing'mei'you的，其操作方式就是在gcc开优化（如-O2）的时候不对volatile变量做优化，读写volatile变量都是读内存的而非寄存器从而保证了内存可见性。但是gcc并没有对阻止指令重排序做更多操作。
+在Java中语言规范明确指出了volatile对应的明确语义，即volatile保证内存可见性，遵从happens-before规则阻止处理器指令重排序（volatile语句前后的语句对应的指令不会被指令重排序到volatile之后或者之前）。JVM中JMM存在“**本地内存**”的概念，多个线程对内存中共享变量的访问都是先加载到本地内存，后续写操作再同步回主存。volatile可以保证一个线程的写操作对其他线程立即可见，实现是借助处理器lock指令使各个线程的本地内存中cache的变量失效，各个线程重新从内存加载变量值。
+
+但是在C、C++规范里面并没有明确指出volatile的语义，具体如何处理volatile的工作就交给了编译器来处理。其实gcc中对volatile也是可以保证内存可见性的，其操作方式就是在gcc开优化（如-O2）的时候不对volatile变量做优化，读写volatile变量都是读内存的而非寄存器从而保证了内存可见性。但是gcc并没有对阻止指令重排序做更多操作。
 
 ## 2 how gcc handle volatile
 
