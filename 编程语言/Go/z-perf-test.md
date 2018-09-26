@@ -46,3 +46,69 @@ function memstat {
 
 # go服务性能分析
 go标准库中内置了运行时监控、采样能力，以便对服务性能进行深入洞察，下面描述下go提供的相关工具及其工作原理、使用方式等。
+
+go提供了一些内置工具来探查程序中的内存占用问题、执行耗时问题、cpu占用等问题，如`go tool pprof`，`go test -bench=. -benchmem`，也有一些第三方的非常好用的工具，如`go-torch pprof`，`gops`等等。
+
+## go tool pprof
+pprof可以对程序执行过程进行采样，并对采样结果进行汇总，通过一些交互式命令来查看采样期间的执行耗时、内存占用等情况，同时它也提供了一些可视化的方式来更加直观地将问题展示出来。
+
+### 执行耗时
+
+```sh
+# 执行该命令启动cpu执行耗时采样
+go tool pprof -seconds=10  http://ip:port/debug/pprof/profile
+
+# 列出采样期间最频繁执行的指令（方法、语句）
+top 10
+
+# 列出某个方法的详细执行耗时信息（flat、cum）
+# - flat表示单条语句执行的耗时情况
+# - cum表示整个采样期间该语句总执行耗时
+list funcName
+
+# svg将采样期间的调用情况、执行耗时情况，以callgraph的形式进行可视化
+svg
+```
+
+这里的可视化方式，除了callgraph（调用图）以外，另一种比较直观的方式是flamegraph（火焰图），`go-torch pprof`内部会调用`go tool pprof`并将采样结果使用flamegraph的形式可视化，其使用方式与后者类似，`go-torch pprof -seconds http://ip:port/debug/pprof/profile`。
+
+### 内存占用
+
+```sh
+# 执行该命令启动cpu执行内存采样
+go tool pprof -seconds=10  http://ip:port/debug/pprof/heap
+
+# 列出采样期间内存占用频繁的指令（方法、语句）
+top 10
+
+# 列出某个方法的详细内存占用信息（flat、cum）
+# - flat表示单条语句执行的内存占用情况
+# - cum表示整个采样期间该语句总内存占用耗时
+list funcName
+
+# svg将采样期间的调用情况、内存占用情况，以callgraph的形式进行可视化
+svg
+```
+
+## go test -bench=. -benchmem
+
+首先要了解go benchmark test的执行过程，以及如何编写一个benchmark test，下面是一个示例。
+
+```go
+type Student struct {
+  Name string
+  Age int
+  Sex int
+}
+func BenchmarkTestAny(b *testing.B) {
+  for i:=0; i<b.N; b++ {
+    _ = &Student{Name:"whoami", Age:100, Sex:1}
+  }
+}
+```
+
+benchmark测试（基准测试）会将目标代码（for循环体中的代码）执行b.N次，并对测试期间的内存、cpu占用情况进行采样分析，并最终将for循环体单次执行的平均执行耗时情况、内存占用情况进行计算输出。
+
+## 总结
+
+这里只是将本人平时常用的操作进行了一下整理，还有很多第三方的软件可供使用，当然golang内置的pprof、benchmark test也已经很强大了，归根结底还是要求我们要了解golang的执行原理，理解OS原理，才能够敏感的觉察出程序中存在的执行耗时、内存占用问题，才能够进一步想到更好的优化方案。
