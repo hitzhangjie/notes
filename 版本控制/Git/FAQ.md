@@ -29,7 +29,7 @@ quotepath = false
 
 能不能对提交的注释信息进行修改呢？
 
-1）如果只是git commit了，但是还没有进行push的情况下 
+1）如果只是git commit了，但是还没有进行push的情况下
 执行 **git commit --amend -m '...new-comments...'**，对上次提交的内容进行修订，修订后最后一次提交的注释信息就变成了刚才新填写的注释信息。这种情况只适用于对 **最后一次提交** 的错误注释信息进行修订，之前的均不能适用。
 
 2）如果git commit了，而且还git push了
@@ -54,3 +54,7 @@ git config receive.denyCurrentBranch <ignore | refuse>
 denyCurrentBranch = <ignore | warning | refuse>
 ```
 
+##### 4 删除一个分支
+
+删除本地分支：`git branch -D ${branchName}`
+删除远程分支：`git push ${remoteName} --delete ${branchName}`
