@@ -1,0 +1,1 @@
+从mysql表里面select出来的结果，可能为null，也可能有正常数据，但是row.Scan(interface{}...)的时候会出现scan error错误，原因是mysql的类型与golang内置类型并不完全匹配，而go-sql-driver并没有提供足够的信息让mysql driver来识别并作出合适的转换。
