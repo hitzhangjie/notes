@@ -353,7 +353,7 @@ Nginx是一个高性能Web服务器和反向代理服务器，这里简单总结
 
 nginx配置文件通过一些配置命令(directives)来控制nginx模块(modules)，directives可以分为simple directive和block directive两种类型。
 
-- simple directive，就是简单的“optiona value;”的形式；
+- simple directive，就是简单的“option value;”的形式；
 - block directive，它是一系列simple directives的组合，用“{...}”包括起来；
 - context，它指的是内部嵌套着block directive的block directive，如events、http、server、location；  
 
