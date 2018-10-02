@@ -16,12 +16,6 @@
 
 - CDN
 
-
-
-
-
-
-
 CDN解决不同地域、不同网络环境用户快速接入问题，常称为“**用户访问第一跳**”，也可以将静态资源信息发布到CDN加快用户访问速度，例如将html、js、css、图片资源发布至CDN可以减少用户访问“**源站**”拉取资源的时间，在直播场景中还会将音视频HLS文件发布至CDN加速用户拉流。
 
 - 反向代理
@@ -270,7 +264,7 @@ CDN业务运营中发现，某些场景下，元数据的频繁读写会导致�
 
 有反向代理就有正向代理，通常说的代理，一般指正向代理。两种代理服务器示意图如下所示。
 
-![](media/15332979301685.jpg) 
+![](media/15332979301685.jpg)
 
 
 - 正向代理（Forward Proxy）
@@ -348,7 +342,7 @@ Nginx是一个高性能Web服务器和反向代理服务器，这里简单总结
     - reload, 重新加载配置
     - reopen, 重新打开日志  
     人为修改日志后，该选项使nginx将文件写偏移量移到文件末尾，避免日志文件损坏。  
-    
+
 ### 3.5.2 基本配置
 
 nginx配置文件通过一些配置命令(directives)来控制nginx模块(modules)，directives可以分为simple directive和block directive两种类型。
@@ -370,14 +364,14 @@ http {
     server {
         listen 80 default_server;
         server_name _;
-        
+
         location / {
             root /data/www/html;
         }
         location /images {
             root /data/www/images;
         }
-        
+
         error_page 404 /404.html;
         error_page 500 502 503 504 /50x.html;
     }
@@ -399,7 +393,7 @@ http {
     server {
         listen 80 default_server;
         server_name _;
-        
+
         location / {
             root /data/www/html;
         }
@@ -409,10 +403,10 @@ http {
         error_page 404 /404.html;
         error_page 500 502 503 504 /50x.html;
     }
-    
+
     server {
         listen 8080;
-        
+
         location / {
             root /data/www/;
         }
@@ -451,4 +445,3 @@ Nginx是一款高性能的Web服务器和反向代理服务器，业界对Nginx�
 # 13 服务监控
 
 # 14 远程日志
-
