@@ -30,7 +30,7 @@ dapper在许多高阶的设计思想上吸取了`pinpoint`和`Magpie`的研究�
 
 dapper的分布式跟踪方案可以借助下图来一探究竟，其核心思想是从客户端（user）发起的请求一直到接入层服务A，再到后端服务B、C，再从C到D、E，整个请求处理链路可以借由一个树形结构来表示出来。可以通过将服务器上发生的每一次请求、响应作为一个记录收集起来，收集信息包括跟踪标识符（message identifier）和时间戳（timestamped events）。通过添加标注（annotation），依赖于应用程序或中间件明确地标记一个全局id，从而连接每一条收集的记录和用户发起的请求。显然这里需要代码植入，不过我们可以代码植入的范围收敛到框架层，保证对应用层透明。
 
-![dapper的分布式跟踪](assets/markdown-img-paste-20181002172106821.png)
+![dapper跟踪树](assets/markdown-img-paste-20181002172106821.png)
 
 下面对dapper的设计思想进行更深入的了解，我们将先从上图中涉及到的几个关键概念开始。
 
@@ -38,7 +38,7 @@ dapper的分布式跟踪方案可以借助下图来一探究竟，其核心思�
 
 **在dapper跟踪树结构中，树节点是整个架构的基本单元，而每一个节点是一个span，它又包含了对其他span的引用**。节点之间的连线表示的是当前span与它的父span或者派生出的子span之间的关系。span在日志文件中的表示只是简单的记录请求开始时间、请求结束时间，span在整个树形结构中它们是相对独立的。
 
-![](assets/markdown-img-paste-20181002175422393.png)
+![dapper调用链](assets/markdown-img-paste-20181002175422393.png)
 
 上图是一个分布式跟踪过程的示意图，图中说明了span在一个完整的跟踪过程中是什么样的，dapper记录了span的名称、span-id、父span-id，以重建一次跟踪过程中不同span之间的关系。如果一个span没有父span-id那么它是root span，也就是整个调用链的起始点。所有span都挂在一个特定的跟踪链上，也共用同一个跟踪id，即trace-id（图中未标出）。所有这些id（trace-id、span-id）都是全局唯一的64位整数表示。
 
@@ -48,7 +48,7 @@ dapper的分布式跟踪方案可以借助下图来一探究竟，其核心思�
 
 下图中给出了一个更加详细的dapper跟踪中span记录点的视图，其实**每个span记录点都包含了两个不同的视角（client端RPC视角，server端RPC视角）**，图中也画出了rpc Helper.Call的client、server端视角，如client发送请求、server接收请求、server处理、server发送响应、client接收响应的过程。span的开始、结束时间，以及任何rpc的时间信息都可以通过dapper在rpc组件库中植入代码以记录下来。
 
-![](assets/markdown-img-paste-20181002180241439.png)
+![dapper span annotation](assets/markdown-img-paste-20181002180241439.png)
 
 如果应用程序开发者希望在跟踪中增加自己的注释信息（业务数据），如图中的“foo”，这些信息也会和其他span一样记录下来。
 
@@ -64,7 +64,7 @@ dapper可以对应用开发者以近乎零侵入的成本对分布式控制路�
 
 下面是通过c++和java向跟踪中span记录点添加注释的方法：
 
-![](assets/markdown-img-paste-20181002185739556.png)
+![dapper span annotation](assets/markdown-img-paste-20181002185739556.png)
 
 上述植入点可以帮助推导出复杂的分布式系统的跟踪细节，使得dapper可以在不改动应用代码的情境下就可以发挥其核心功能。然而，dapper还允许应用开发人员在跟踪的过程中添加额外的信息，以监控更高级别的系统行为，或帮助调试问题。
 
@@ -80,7 +80,7 @@ dapper允许用户通过一个简单的api来定义时间戳的annotation，核�
 
 下图展示了dapper的跟踪的收集过程，大致可以分为图中1、2、3三个过程。
 
-![](assets/markdown-img-paste-20181002191409292.png)
+![收集跟踪数据    ](assets/markdown-img-paste-20181002191409292.png)
 
 1. 应用程序通过dapper api将span数据写入本地日志文件中
 2. dapper守护进程和收集组件把这些日志信息从生产环境的日志文件中拉取出来
