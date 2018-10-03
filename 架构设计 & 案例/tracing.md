@@ -180,3 +180,11 @@ dapper也是一个带宽资源的轻量级消费者，每一个span在传输到B
 dapper结合两种采样策略，来平衡开销、跟踪效果、硬件成本之间的关系：
 - 应用程序中生成trace数据并记录到本地磁盘，此过程应用“可变采样策略”；
 - trace数据收集系统收集数据写入BigTable中央仓库，此过程应用“额外采样策略”；
+
+## dapper工具
+
+关于dapper的工具，大家可以了解下zipkin、jaeger，他们都是基于dapper演化而来，这里我们就再列举dapper自身的工具了。
+
+本文主要是为了阐述dapper的设计思想，方便我们大家了解分布式跟踪系统的工作原理，然后方便我们将现有的开源实现zipkin、jaeger集成到我们自身的框架中，方便自己的业务开发人员定位线上问题。
+
+如果对谷歌dapper的工具感兴趣的话，可以参考这里的说明，点击查看 [dapper：大规模分布式跟踪系统](https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/papers/dapper-2010-1.pdf)。
