@@ -197,6 +197,27 @@ output {
 
 上面描述了如何安装ELK Stack以及如何配置Pipeline的示例，这里我们针对日志管理这种场景，再详细介绍下ELK Stack的常见配置方式，方便加深认识。
 
+## Mac下如何安装ELK Stack
+
+我是使用的Mac，brew中也对ELK Stack相关组件进行了维护，所以可以直接运行以下命令完成安装：
+
+```sh
+brew install elasticsearch
+brew install logstash
+brew install kibana
+```
+
+运行上述服务也可以通过brew来完成：
+
+```sh
+brew services start elasticsearch
+brew services start kibana
+brew services start logstash
+
+# 查看服务是否启动成功，成功启动的话会显示在已启动服务列表中
+brew services list
+```
+
 ## LogStash
 
 LogStash是一个日志收集、处理组件，它可以从多种不同的数据源收集日志数据，再将日志解析、处理后输出到不同的目的地，如ElasticSearch等。
