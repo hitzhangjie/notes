@@ -169,7 +169,7 @@ output {
 
 ![Kibana-index-pattern](https://logz.io/wp-content/uploads/2018/08/image19-1024x664.png)
 
-定义为“logstash-*”并选择“@timestamp”作为Time Filter字段，该字段是apache access log中的字段。
+定义为“logstash-*”并选择“@timestamp”作为Time Filter字段，该字段是LogStash收集、整理apache access log时自己添加进去的，意为收集到日志的时间。
 
 ![Kibana-index-pattern](https://logz.io/wp-content/uploads/2018/08/image8-1024x664.png)
 
@@ -193,4 +193,169 @@ output {
 
 欢迎查看本文后续内容以了解ELK Stack的更多高级话题，可以帮助大家更好地理解ElasticSearch、LogStash、Kibana、Beats的工作过程。也可以参考Elastic提供的官方手册来更全面地了解ELK Stack，点击查看 [Elastic官方手册](https://www.elastic.co/cn/)。
 
-# What Is ElasticSearch ?
+# How to Quickly Configure ELK Stack ?
+
+上面描述了如何安装ELK Stack以及如何配置Pipeline的示例，这里我们针对日志管理这种场景，再详细介绍下ELK Stack的常见配置方式，方便加深认识。
+
+## LogStash
+
+LogStash是一个日志收集、处理组件，它可以从多种不同的数据源收集日志数据，再将日志解析、处理后输出到不同的目的地，如ElasticSearch等。
+
+LogStash支持的输入类型（日志数据源）包括：
+- 标准输入 stdin
+- 读取文件 file
+- 读取网络数据 tcp/udp
+- 生成测试数据 generator
+- 读取SysLog数据
+- 读取Redis数据
+- 读取Collectd数据
+
+LogStash支持的输出类型类型包括：
+- 标准输出 stdout
+- 保存成文件 file
+- 保存到ElasticSearch
+- 输出到Redis
+- 输出网络数据 tcp/udp
+- 输出到Statsd
+- 报警到Nagios
+- 发送邮件 email
+- 调用命令执行 exec
+
+### stdin -> stdout
+
+首先，创建如下配置文件“**logstash-stdin-stdout.conf**”，文件内容如下：
+```conf
+input {
+    stdin{}
+}
+
+output {
+    stdout{}
+}
+```
+
+该模式下，logstash将把stdin当做日志数据源，并从stdin收集日志数据，然后将数据处理后输出到stdout。
+
+执行如下命令启动logstash：`logstash -f logstash-stdin-stdout.conf`，程序启动需要花费几秒钟甚至更久的事件，耐心等待，直到看到如下界面：
+
+![logstash-stdin-stdout](assets/markdown-img-paste-20181012115249896.png)
+
+上述截图中可以看到有一行文本“**The stdin plugin is now waiting for input:**”，意思是说logstash正在等待从stdin收集日志数据。此时可以在命令行界面输入一行文本信息进行测试，如输入“**hello world**”，logstash会将收集到的信息再输出到stdout，示例操作如下所示：
+
+![logstash-stdin-stdout](assets/markdown-img-paste-20181012115506515.png)
+
+### file -> stdout
+
+首先，还是创建一个配置文件“**logstash-file-stdout.conf**”，文件内容如下所示：
+```conf
+input {
+    file {
+        path => "/var/log/system.log"
+        start_position => "beginning"
+    }
+}
+
+filter {
+    grok {
+        match => {
+            "message" => "%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_message}"
+        }
+        add_field => [ "received_at", "%{@timestamp}" ]
+        add_field => [ "received_from", "%{host}" ]
+
+        remove_field => "message"
+    }
+    date {
+        match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+}
+
+output {
+    stdout {
+        codec => rubydebug
+    }
+}
+```
+
+该模式下，logstash将读取**input.file.path**指向的单个文件system.log的内容，并且是从文件开始处开始读取，其实也可以配置同时读取多个日志文件甚至是一个目录下的所有日志文件，也可以指定从文件开头、结尾开始读取（beginning、tailing），建议参考下logstash的手册。
+
+logstash将从日志中读取到的内容按行进行处理，对于某些多行日志，如Java异常堆栈、Protobuf Message的结构信息等，也是可以借助配置进行解析、处理的，稍后介绍。logstash将读取到的每行信息与**filter.grok.match.message**中定义的grok语法的正则表达式进行匹配，并做适当解析、转换，如将匹配的字段信息映射到某个字段名，并将字段信息解析成对应的数据类型，如将syslog_timestamp按照日期格式“MMM d HH:mm:ss或者MMM dd HH:mm:ss”解析成时间。
+
+最后logstash将把解析、处理后的日志数据格式化输出到stdout，并且输出的时候采用rubydebug编码方式，也可以采用其他的编码方式，如json等，更多详细信息请参考logstash的配置手册。
+
+然后，执行如下命令启动logstash：`logstash -f logstash-file-stdout.conf`，运行效果如下所示：
+
+![logstash-file-stdout](assets/markdown-img-paste-20181012120723199.png)
+
+### file -> elasticsearch
+
+首先，还是创建一个配置文件，与上一小结中的“file -> stdout”模式的配置文件只有一行不同，不过我们还是完整贴出来，方便大家copy/paste进行测试。创建配置文件“**logstash-file-es.conf**”,文件内容如下所示：
+
+```conf
+input {
+    file {
+        path => "/var/log/system.log"
+        start_position => "beginning"
+    }
+}
+
+filter {
+    grok {
+        match => {
+            "message" => "%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_message}"
+        }
+        add_field => [ "received_at", "%{@timestamp}" ]
+        add_field => [ "received_from", "%{host}" ]
+
+        remove_field => "message"
+    }
+    date {
+        match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+}
+
+output {
+    elasticsearch {
+        hosts => ["localhost:9200"]
+    }
+    stdout {
+        codec => rubydebug
+    }
+}
+```
+
+上述配置文件在“logstash-file-stdout.conf”的基础上，在output里面增加了一个输出目的地elasticsearch.hosts，意味着除了将解析、处理后的日志数据输出到stdout之外，也同时会输出到elasticsearch。
+
+执行如下命令启动logstash：`logstash -f logstash-file-stdout.conf`。此时假定我们已经成功安装了ElasticSearch并且默认监听本地“localhost:9200”，logstash将可以正确运行，并将解析、处理后的日志数据输出到ElasticSearch进行存储。此时假定我们也已经成功安装了Kibana，但是由于我们还没有配置任何Index Pattern，Kibana中Discover Tab中还不能对查询到的数据进行可视化展示。请继续阅读后面Kibana小节的内容。
+
+## ElasticSearch
+
+假定ElasticSearch已经正确安装，并且监听默认地址“**http://localhost:9200**”。
+
+## Kibana
+
+假定Kibana已经正确安装，并且监听默认地址“**http://localhost:5601**”，此时打开浏览器访问该地址，点击Discover Tab发现没有任何数据展示，但是提示我们需要创建一个新的**Index Pattern**。此时点击“Management->Index Pattern”，然后创建一个新的Index Pattern就可以了，因为logstash将日志信息存储到ElasticSearch时会默认创建格式为“logstash-yyyy.mm.dd”的Index，为了方便我们对后续创建的Index进行检索，这里我们创建一个名为“logstash-*”的Index Pattern，并选择“**time filter**”字段为@timestamp，该字段的值是logstash收集日志时自动添加的一个字段“`add_field => [ "received_at", "%{@timestamp}"]`”。
+
+### Create Index Pattern
+
+ElasticSearch创建Index Pattern成功之后，点击“logstash-*”界面展示如下，从中可以看到一些ElasticSearch附加上的字段，翻页可以看到LogStash解析、存储到ElasticSearch的字段，如receive_at、receive_from、syslog_hostname、syslog_message、syslog_pid、syslog_program、syslog_timestamp。
+
+logstash-* Index Pattern信息：
+
+![Kibana-Create-IndexPattern](assets/markdown-img-paste-20181012122302272.png)
+
+logstash-* Index Pattern信息：
+
+![Kibana-Create-IndexPattern](assets/markdown-img-paste-20181012122639756.png)
+
+### Kibana Query Filter
+
+这里对上报的system.log日志信息进行可视化展示，看下效果，也介绍下常见的操作，现在点击Kibana的Discover Tab，我们可以选择日志上报的时间范围，这个时间范围可以在右上角进行设置，我选择的是最近1hour的范围限制，此时列出了最近1个小时的日志信息。此外，我还希望根据进程名对进程相关的日志信息进行快速查看，所以在左边栏的available fields栏中点击syslog_program右侧的add按钮，将其添加为可供快速使用的过滤条件字段，这时候就可以直接选择进程名只查看该进程相关的日志。
+
+![Kibana-Discover](assets/markdown-img-paste-20181012123328785.png)
+
+也可以点击上方的Add a filter按钮，添加新的检索条件，如对日志中的message字段进行检索：
+
+![Kibana-Add-A-Filter](assets/markdown-img-paste-20181012124003441.png)
+
+Kibana利用了ElasticSearch的强大的检索、数据处理功能，然后利用自身强大的可视化能力将信息进一步展示出来方便查看。
