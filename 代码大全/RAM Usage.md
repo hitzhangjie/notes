@@ -11,7 +11,7 @@ int getrusage(int who, struct rusage *usage);
 ```c
 #include <sys/resource.h>
 
-long get_process_rss() 
+long get_process_rss()
 {
     struct rusage ru;
     getrusage(RUSAGE_SELF, &ru);
@@ -24,7 +24,7 @@ long get_process_rss()
 ```c
 #include <sys/resource.h>
 
-long get_thread_rss() 
+long get_thread_rss()
 {
     struct rusage ru;
     getrusage(RUSAGE_THREAD, &ru);
@@ -39,12 +39,10 @@ long get_thread_rss()
 ```c
 #include <sys/resource.h>
 
-long get_subprocess_rss() 
+long get_subprocess_rss()
 {
     struct rusage ru;
     getrusage(RUSAGE_CHILDREN, &ru);
     return ru.ru_maxrss;
 }
 ```
-
-
