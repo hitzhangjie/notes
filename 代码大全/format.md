@@ -1,3 +1,4 @@
+```go
 package format
 
 //
@@ -11,3 +12,4 @@ func main() {
 func PrintAlign(conf, comment string) {
 	fmt.Printf("%-60s%s\n", conf, fmt.Sprintf("#%s", comment))
 }
+```

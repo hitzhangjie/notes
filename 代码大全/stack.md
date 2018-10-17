@@ -1,3 +1,4 @@
+```go
 package stack
 
 // GetCallerFunc 获取调用函数栈中的函数名，可以通过参数skip决定跳过几个stack frame来
@@ -26,3 +27,4 @@ func GetCallerFunc(skip int) (string, error) {
 
 	return fmt.Sprintf("[%s:%d] %s", baseName, lineNo, funcName), nil
 }
+```

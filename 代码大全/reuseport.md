@@ -1,3 +1,4 @@
+```go
 package network
 
 import (
@@ -34,3 +35,4 @@ func ReuseportListen(network, address string) {
 
 	select {}
 }
+```
