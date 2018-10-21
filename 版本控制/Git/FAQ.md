@@ -15,9 +15,11 @@ git是趋势，当全世界的开发人员都在使用github，当来自全世�
 
 - ~/.gitconfig中增加如下配置
 
-```
-[core]
-quotepath = false
+```sh
+git config core.quotepath false
+git config --global gui.encoding utf-8
+git config --global i18n.commitEncoding utf-8
+git config --global i18n.logOutputEncoding utf-8
 ```
 - ~/.bashrc中增加如下配置
 
