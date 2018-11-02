@@ -7,7 +7,7 @@
 ## 2 核心类
 
 ### 2.1 Task
-   
+
 Task就是协程实体，自定义协程实体需要 **继承Task**，Task中方法execute()抛出 **Pausable异常**，Pausable方法并不是真的异常，而只是为了 **kilim.tools.Weaver 通过反射识别出需要暂停的方法**，然后 **“编织”、“织入”一些特殊的字节码，使得该方法可以在运行期间暂停、恢复执行**。
 
 在自定义协程实体中，如果某个方法需要获得暂停、恢复执行的能力，那就要在定义时抛出Pausable异常。
@@ -18,8 +18,8 @@ Java是基于vm的语言，Java方法的暂停、恢复执行不能通过保存�
 
 - Fiber模拟了一个活动记录，记录了每个Pausable方法对应的pc、state信息
 - State记录了一些状态信息，包括两个成员
-    - int类型成员pc指示当前Pausing的第${pc}th个Pausable方法
-    - Object类型成员寄存了当前Pausing方法中后续执行所需要的部分变量
+  - int类型成员pc指示当前Pausing的第${pc}th个Pausable方法
+  - Object类型成员寄存了当前Pausing方法中后续执行所需要的部分变量
 
 Kilim中的后处理器Weaver会针对每个Pausable方法进行特殊处理，在其参数列表中追加一个Fiber参数，这个Fiber参数在整个调用链中是共享的，可以通过它追查到所有的Pausable方法信息，Fiber通过down()进入下一个Pausable方法的栈帧，Pausable方法返回后通过up()返回到上一个Pausable方法对应的栈帧。
 
@@ -34,8 +34,3 @@ Scheduler是Task调度器，它维护了一个线程池，并负责将Task交给
 get、put：don't block thread, also don't pause fiber
 getb、putb：block thread，这个特别重
 getnb、putnb：don't block thead or don't pause fiber
-
-
-
-
-

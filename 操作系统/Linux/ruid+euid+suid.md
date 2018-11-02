@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 ```
+
 ```bash
 $ gcc -o main main.c
 $ sudo chown lightdm:lightdm main <= lightdm id:108

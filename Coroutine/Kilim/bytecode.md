@@ -4,18 +4,20 @@
 
 JVM字节码还是要好好研究一下的，不然要做字节码增强就无从谈起了。ASM字节码操作库只是用来方便我们修改字节码的，需要增加哪些字节码还是需要我们自己确定下来的。
 
-[1][JVM byte code for dummies](https://www.youtube.com/watch?v=rPyqB1l4gko)
+[1]. [JVM byte code for dummies](https://www.youtube.com/watch?v=rPyqB1l4gko)
 
 ---
 
 # Byte Code
 
 ## 什么是字节码指令？
+
 - 一字节指令
 - 256个opcode（unsigned byte）
 - 当前JVM中使用了约200个
 
 ## 字节码指令的变化？
+
 - JVM中目前只使用了200个opcode，剩余的留作备用
 - 自Java 1.0诞生，有些opcode被废弃了，有些被新添加进来
 - 但是自Java 7诞生至现在并没有增加多少指令opcode
@@ -24,30 +26,32 @@ JVM字节码还是要好好研究一下的，不然要做字节码增强就无�
 
 # Microsoft's CLR
 
-
 ## CLR是一款JVM
+
 - 它是基于栈的，不是基于解释器的
 - 两字节的wordcodes
 - 有与JVM类似的操作
 
 ## CLR优缺点
+
 CLR直接将生成的中间代码当做字节码，然后编译成机器代码
+
 - 刚启动时执行速度比较快
 - 不能像大多数现有JVM一样进行运行时优化
-	- 无法对运行时热点代码进行分析然后再次优化
-	- 无法对运行时引用是否为null、数组是否越界进行检查
-	- 等等
+  - 无法对运行时热点代码进行分析然后再次优化
+  - 无法对运行时引用是否为null、数组是否越界进行检查
+  - 等等
 
 ---
 
 # Why Learn Byte Code
 
 - 更好地了解平台相关的细节
-	- from top to bottom
+  - from top to bottom
 - 字节码生成，简单、有趣
-	- 建立自己的语言？
+  - 建立自己的语言？
 - 将来可能遇到阅读字节码的场景
-	- 很多第三方库都会生成字节码
+  - 很多第三方库都会生成字节码
 
 ---
 
@@ -55,8 +59,8 @@ CLR直接将生成的中间代码当做字节码，然后编译成机器代码
 
 ```java
 public class HelloWorld {
-	public static void main(String ... args) {
-    	System.out.println("Hello World");
+    public static void main(String ... args) {
+        System.out.println("Hello World");
     }
 }
 ```
@@ -117,7 +121,7 @@ class HelloWorld {
 }
 ```
 
---- 
+---
 
 # javap -c -verbose
 
@@ -171,9 +175,9 @@ java/lang/System.out:Ljava/io/PrintStream;
   #27 = Utf8               println
   #28 = Utf8               (Ljava/lang/String;)V
 ```
-  
+
 ---
-  
+
 ```
 {
   HelloWorld();
@@ -216,6 +220,7 @@ javap -c -verbose，-verbose选项使得输出的内容更加丰富
 - 字节码信息更丰富
 列出了descriptor、flags，code增加了stack、locals、args_size
 ```
+
 <br>
 <br>
 **至此向大家介绍了javap的常见使用方式**  
@@ -237,5 +242,3 @@ javap -c -verbose，-verbose选项使得输出的内容更加丰富
 下面将进行描述，ready？ go！
 
 ---
-
-

@@ -27,15 +27,16 @@ rpcbind（或portmapper），[点击查看wiki](https://en.wikipedia.org/wiki/Po
 “像访问本地资源一样来访问其他主机上的资源”，决定了在实现形式上，RPC的client、server端都需要实现服务定义的方法，只不过client、server端对该方法的实现逻辑是不同的。
 
 - client端的方法实现，方法体内部会发起RPC相关网络请求
-    - 先发起portmap请求，即向远程主机上的rpcbind（或portmapper）服务发起查询请求。查询服务program number、服务版本version number（版本中定义了不同的过程）、协议类型对应的服务监听端口port number；
-    - 收到响应的端口号后，再发起rpc请求，向服务主机、端口发起网络请求，并接收响应；
+  - 先发起portmap请求，即向远程主机上的rpcbind（或portmapper）服务发起查询请求。查询服务program number、服务版本version number（版本中定义了不同的过程）、协议类型对应的服务监听端口port number；
 
-        >rpc请求中要调用的远程过程以及参数信息都封装在PDU的continuation data中，rpc响应中返回的计算结果也封装在PDU的continuation data中。
+  - 收到响应的端口号后，再发起rpc请求，向服务主机、端口发起网络请求，并接收响应；
+
+    > rpc请求中要调用的远程过程以及参数信息都封装在PDU的continuation data中，rpc响应中返回的计算结果也封装在PDU的continuation data中。
 - server端的方法实现，方法体内部会实现相关计算并return返回值
-    - 启动时先发起portmap请求，请求rpcbind取消其program number、version number上的端口映射设置；
-    - 收到响应后再分别针对不同方法、协议类型发起portmap请求，请求rpcbind重新注册program number、version number、协议类型对应的port number；
+  - 启动时先发起portmap请求，请求rpcbind取消其program number、version number上的端口映射设置；
+  - 收到响应后再分别针对不同方法、协议类型发起portmap请求，请求rpcbind重新注册program number、version number、协议类型对应的port number；
 
-        >因为server端启动的时候，监听套接字的时候操作系统会自动分配端口号，server端就将对应的端口号向rpcbind发起注册，由rpcbind来维护program number、version number、协议类型与port number之间的映射关系。
+    > 因为server端启动的时候，监听套接字的时候操作系统会自动分配端口号，server端就将对应的端口号向rpcbind发起注册，由rpcbind来维护program number、version number、协议类型与port number之间的映射关系。
 
 粗略地看了下rpcbind源码以及rpcgen生成的client、server stub源码，结合tcpdump、wireshark自己抓包看了下工作过程。感兴趣地可以结合rfc 684、rfc 707再全面地了解下。
 

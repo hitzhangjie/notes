@@ -14,14 +14,13 @@ CPS：Continuation Passing Style Programming
 
 好了，可以继续阅读代码了。
 
-
 kilim代码中有部分是跟http相关的，其为了解析http协议，使用了基于ragel生成的协议解析器。
 
 [ragel](https://en.wikipedia.org/wiki/Ragel)，是一个基于正则表达式等构造的有穷状态机进行编译生成面向c、c++、汇编、java等语言的协议解析器的工具，当然也不只是用于协议了，也可以用于文本解析、输入校验。 
 
 状态机相关实现，可以参考overflow这位大哥的回答：[state-machine-tutorials](https://stackoverflow.com/a/1371654/3817040)
 
->Basically you need 2 arrays - one for state function pointers and one for state transition rules. Every state function returns the code, you lookup state transition table by state and return code to find the next state and then just execute it.
+> Basically you need 2 arrays - one for state function pointers and one for state transition rules. Every state function returns the code, you lookup state transition table by state and return code to find the next state and then just execute it.
 
 ```c
 int entry_state(void);
@@ -73,6 +72,3 @@ int main(int argc, char *argv[]) {
 关于ragel，这里有个视频教程[ragel tutorial](https://www.youtube.com/watch?v=Tr83XxNRg3k)
 
 本来想系统地学习一下ragel的，啊，看它的文档觉得好复杂！先简单了解下吧，总之就是一个根据ragel语法定义状态机迁移过程的一个玩意，同时ragel程序会读取这个状态机定义并生成c、c++、java语言代码，然后把这份代码拷贝到自己的工程里面就可以用来解析、校验输入了，比如用作协议头解析使用。
-
-
-

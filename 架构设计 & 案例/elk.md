@@ -1,6 +1,7 @@
 # What is ELK Stack ?
 
 ELK Stack，包括了ElasticSearch(E)、LogStash(L)、Kibana(K)。这三个产品都是由Elastic开发、维护的，其中：
+
 - ElasticSearch是一个基于Lucence搜索引擎构建的NoSQL数据库；
 - LogStash是一个日志流水工具，它从不同的日志数据源读取日志信息、解析、转换，并导出到不同的数据接收组件，如ElasticSearch；
 - Kibana是一个在ElasticSearch之上的数据可视化工具，Kibana通过查询ElasticSearch获取数据并完成可视化。
@@ -52,25 +53,31 @@ ELK Stack的安装方式有多种，特别是考虑到在不同的操作系统�
 ## Environment Specifications
 
 - 安装Java
-ELK Stack需要Java运行时支持，这里安装的是ElasticSearch v6，需要安装Java 8或更高版本。
+
+  ELK Stack需要Java运行时支持，这里安装的是ElasticSearch v6，需要安装Java 8或更高版本。
 
 - 安装ElasticSearch
-```sh
-wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
-sudo apt-get install apt-transport-https
-echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-6.x.list
-sudo apt-get update
-sudo apt-get install elasticsearch
-```
-ElasticSearch配置文件`/etc/elasticsearch/elasticsearch.yml`允许指定一些配置项，如节点名称、es监听的ip:port、数据存储位置、占用内存大小、日志文件位置等等。下面给出了一个配置示例。
-```sh
-sudo vim /etc/elasticsearch/elasticsearch.yml
-network.host: "localhost"
-http.port:9200
-```
-执行以下命令启动ES：`sudo service elasticsearch start`。为了确定ES是不是真的正确运行起来了，可以使用`curl`或者`浏览器`来访问一下`http://localhost:9200`，如果ES正常运行起来了那么将返回如下格式的信息。
-```json
-{
+
+  ```sh
+  wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+  sudo apt-get install apt-transport-https
+  echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-6.x.list
+  sudo apt-get update
+  sudo apt-get install elasticsearch
+  ```
+
+  ElasticSearch配置文件`/etc/elasticsearch/elasticsearch.yml`允许指定一些配置项，如节点名称、es监听的ip:port、数据存储位置、占用内存大小、日志文件位置等等。下面给出了一个配置示例。
+
+  ```sh
+  sudo vim /etc/elasticsearch/elasticsearch.yml
+  network.host: "localhost"
+  http.port:9200
+  ```
+
+  执行以下命令启动ES：`sudo service elasticsearch start`。为了确定ES是不是真的正确运行起来了，可以使用`curl`或者`浏览器`来访问一下`http://localhost:9200`，如果ES正常运行起来了那么将返回如下格式的信息。
+
+  ```json
+  {
     "name" : "33QdmXw",
     "cluster_name" : "elasticsearch",
     "cluster_uuid" : "mTkBe_AlSZGbX-vDIe_vZQ",
@@ -84,29 +91,36 @@ http.port:9200
         "minimum_index_compatibility_version" : "5.0.0"
     },
     "tagline" : "You Know, for Search"
-}
-```
-如果要安装一个ES集群的话，安装过程会有所不同，配置也有些差异，可以参考这里的安装说明，点击查看 [ES集群部署](https://logz.io/blog/elasticsearch-cluster-tutorial/)。
+  }
+  ```
+
+  如果要安装一个ES集群的话，安装过程会有所不同，配置也有些差异，可以参考这里的安装说明，点击查看 [ES集群部署](https://logz.io/blog/elasticsearch-cluster-tutorial/)。
 
 ## Installing LogStash
 
 由于在安装ES的时候已经正确配置过apt repository了，这里直接借助apt命令来安装就可以了：
+
 ```sh
 sudo apt-get install logstash
 ```
+
 在运行LogStash之前，还需要配置一个数据流水线，我们在安装、启动Kibana之后再来配置该数据流水线。
 
 ## Installing Kibana
 
 和安装LogStash一样，直接运行apt命令来安装Kibana就可以了：
+
 ```sh
 sudo apt-get install logstash
 ```
+
 现在要将Kibana与ElasticSearch结合起来，使得Kibana能访问ElasticSearch拉取数据信息，打开Kibana的配置文件`/etc/kibana/kibana.yml`，在配置文件中增加如下配置项：
+
 ```sh
 server.port: 5601
 elasticsearch.url: "http://localhost:9200"
 ```
+
 该配置表名Kibana监听端口5601，并通过`http://localhost:9200`来访问ElasticSearch拉取数据。
 现在启动Kibana：`sudo service kibana start`，并打开浏览器访问地址`http://localhost:5601`来确认一下Kibana是否正常运行，如果Kibana正常运行，浏览器中应该展示出如下界面：
 
@@ -117,6 +131,7 @@ elasticsearch.url: "http://localhost:9200"
 现在需要继续安装Beats来进行日志收集，并配置流水线将Beat的日志收集能力与LogStash的日志聚集处理能力结合起来，然后还需要将LogStash的日志导出与ElasticSearch结合起来。
 
 执行以下命令完成Beats的安装、启动：
+
 ```sh
 sudo apt-get install metricbeat
 sudo service metricbeat start
@@ -223,6 +238,7 @@ brew services list
 LogStash是一个日志收集、处理组件，它可以从多种不同的数据源收集日志数据，再将日志解析、处理后输出到不同的目的地，如ElasticSearch等。
 
 LogStash支持的输入类型（日志数据源）包括：
+
 - 标准输入 stdin
 - 读取文件 file
 - 读取网络数据 tcp/udp
@@ -232,6 +248,7 @@ LogStash支持的输入类型（日志数据源）包括：
 - 读取Collectd数据
 
 LogStash支持的输出类型类型包括：
+
 - 标准输出 stdout
 - 保存成文件 file
 - 保存到ElasticSearch
@@ -245,6 +262,7 @@ LogStash支持的输出类型类型包括：
 ### stdin -> stdout
 
 首先，创建如下配置文件“**logstash-stdin-stdout.conf**”，文件内容如下：
+
 ```conf
 input {
     stdin{}
@@ -268,6 +286,7 @@ output {
 ### file -> stdout
 
 首先，还是创建一个配置文件“**logstash-file-stdout.conf**”，文件内容如下所示：
+
 ```conf
 input {
     file {

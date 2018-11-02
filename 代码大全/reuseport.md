@@ -13,26 +13,26 @@ func ReuseportListen(network, address string) {
 
     cpus := runtime.NumCPU()
 
-	for i := 0; i < cpus; i++ {
+    for i := 0; i < cpus; i++ {
 
-		go func(idx int) {
-			listener, err := reuseport.Listen(network, address)
-			if err != nil {
-				panic(err)
-			}
-			defer listener.Close()
+        go func(idx int) {
+            listener, err := reuseport.Listen(network, address)
+            if err != nil {
+                panic(err)
+            }
+            defer listener.Close()
 
-			for {
-				_, err := listener.Accept()
-				if err != nil {
-					panic(err)
-				}
-				fmt.Printf("listener:%v create conn\n", idx)
-			}
+            for {
+                _, err := listener.Accept()
+                if err != nil {
+                    panic(err)
+                }
+                fmt.Printf("listener:%v create conn\n", idx)
+            }
 
-		}(i)
-	}
+        }(i)
+    }
 
-	select {}
+    select {}
 }
 ```

@@ -6,25 +6,25 @@ package stack
 // 可能希望提取错误日志对应的栈帧或者主调函数信息，这个方法就非常有用。
 func GetCallerFunc(skip int) (string, error) {
 
-	fpcs := make([]uintptr, 1)
-	// Skip 2 levels to get the caller
-	n := runtime.Callers(skip, fpcs)
-	if n == 0 {
-		//fmt.Println("MSG: NO CALLER")
-		return "", fmt.Errorf("MSG: NO CALLER")
-	}
+    fpcs := make([]uintptr, 1)
+    // Skip 2 levels to get the caller
+    n := runtime.Callers(skip, fpcs)
+    if n == 0 {
+        //fmt.Println("MSG: NO CALLER")
+        return "", fmt.Errorf("MSG: NO CALLER")
+    }
 
-	caller := runtime.FuncForPC(fpcs[0] - 1)
-	if caller == nil {
-		//fmt.Println("MSG CALLER WAS NIL")
-		return "", fmt.Errorf("MSG: CALLER IS NIL")
-	}
+    caller := runtime.FuncForPC(fpcs[0] - 1)
+    if caller == nil {
+        //fmt.Println("MSG CALLER WAS NIL")
+        return "", fmt.Errorf("MSG: CALLER IS NIL")
+    }
 
-	// Print the file name and line number
-	fileName, lineNo := caller.FileLine(fpcs[0] - 1)
-	baseName := fileName[strings.LastIndex(fileName, "/")+1:]
-	funcName := caller.Name()
+    // Print the file name and line number
+    fileName, lineNo := caller.FileLine(fpcs[0] - 1)
+    baseName := fileName[strings.LastIndex(fileName, "/")+1:]
+    funcName := caller.Name()
 
-	return fmt.Sprintf("[%s:%d] %s", baseName, lineNo, funcName), nil
+    return fmt.Sprintf("[%s:%d] %s", baseName, lineNo, funcName), nil
 }
 ```

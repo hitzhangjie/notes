@@ -19,13 +19,13 @@ linux 0.11内核里面讲的是do_execvp会将所有信号的sa.sa_handler重置
 
 ![-w560](media/15129185927219.jpg)
 
-
 新学习到的一些好命令：
 jobs -l、jobs -p
 ps $(jobs -p)、ps -f、ps -j，ps --forest，这个好，可以显示出进程树！
 ps可以根据指定的输出列字段进行排序（前提是输出了对应的列），例如：ps aux --sort -uid,+cmd，会按照uid降序、cmd升序排列，这里可排序的字段名是小写的，实际输出展示出来的字段名是大写的，切记！
 pgrep可以搜索进程，常用选项-a、-f。
 top命令这里学习了一下，以前都没怎么系统学习过top命令：
+
 - f对字段进行设置，包括想显示那些字段（space控制），s可以设置排序字段，Shift+R可以控制升序、降序进行排列；
 - z可以设置top显示颜色；
 - Shift+V可以按照tree视图进行显示；
@@ -41,7 +41,6 @@ SIGTERM：kill如果不指定信号类型，会发送SIGTERM，基本上与SIGIN
 SIGKILL & SIGSTOP：进程的信号处理函数无法捕获SIGKILL和SIGSTOP，这个信号一般用于无条件终止进程；
 kill -l可以显示出所有可用的信号类型；
 kill -s $signal $pid：向指定进程发送信号；
-
 
 killall $prog，杀死所有进程名为$prog的进程；
 pkill $prog，杀死进程名为$prog的所有进程，类似于killall；
@@ -72,7 +71,6 @@ systemd是什么鬼？systemd与ubuntu开发的upstart是竞争对手，目前�
 
 ![-w652](media/15129186201931.jpg)
 
-
 另外systemd使用cgroups以一种更加clean的方式来计算两次fork之后的daemon进程pid，而upstart使用expect脚本来获取，脚本一旦写错？呵呵，影响系统整体运行，作为OS的重要初始化系统怎么能允许这种隐患存在？systemd跟牛逼一点！还可以对当前系统做快照、日志……systemd一统江湖！
 
 这里详细参考笔记《Linux线程实现机制分析》，这篇笔记摘自ibm developWorks！
@@ -83,4 +81,3 @@ systemd是什么鬼？systemd与ubuntu开发的upstart是竞争对手，目前�
 6.轻量级进程本质上是进程，它有自己的进程id，它被用于调度pthread线程库中的用户级线程，pthread线程库管理线程id的分配工作；
 7.pthread创建用户级线程的时候，用户级线程的线程栈是通过mmap映射到进程地址空间中的，另外有个特殊的线程，称之为pthread manager线程，它是通过malloc在堆中分配的栈；
 8.关于用户级线程库进行线程切换过程中做了哪些工作，这个还需要继续进行学习！fixme！！！！！可能是通过jmpbuf\setjmp\longjmp来实现的；
-

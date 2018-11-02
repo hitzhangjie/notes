@@ -35,7 +35,6 @@ void mill_list_insert(struct mill_list *self, struct mill_list_item *item, struc
 /* Removes the item from the list and returns pointer to the next item in the
    list. Item must be part of the list. */
 struct mill_list_item *mill_list_erase(struct mill_list *self, struct mill_list_item *item);
-
 ```
 
 当我们创建一个list时，我们创建一个struct mill_list变量，当我们要插入元素到list中时，实际上插入的是一个mill_list_item，当我们要遍历一个list时实际上是通过mill_list.first/last以及mill_list_item.next/prev来进行遍历。
@@ -68,7 +67,7 @@ struct mill_list_item *iter = students.first;
 while(iter) {
     struct Student *stu = (struct Student *)mill_cont(iter, struct Student, item);
     printf("student name:%s, age:%d, sex:%d\n", stu->name, stu->age, stu->sex);
-    
+
     iter = iter->next;
 }
 ```
@@ -120,4 +119,3 @@ struct mill_list_item *mill_list_erase(struct mill_list *self, struct mill_list_
     return next;
 }
 ```
-
