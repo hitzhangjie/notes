@@ -1,9 +1,12 @@
+# golang test
+
 golang提供了内置的test、benchmark测试能力，学会使用golang的test、benchmark test以及养成良好的测试习惯，是能写出健壮、高效的golang程序的前提。
 
 这里对golang中常用的test、benchmark test进行了简单的总结，demo就以示例代码和注释说明的方式来演示，常用自然会习以为常！
 
+# testing.T
+
 ```go
-// learn to to test & benchmark
 package test
 
 import (
@@ -37,6 +40,18 @@ func TestSimpleTask(t *testing.T) {
 	}
 	fmt.Println("never reached")
 }
+```
+
+# testing.B
+
+```go
+package test
+
+import (
+	"testing"
+	"fmt"
+	"sync"
+)
 
 // go test -bench=. -run=none -benchmem
 //
