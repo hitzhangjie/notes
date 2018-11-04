@@ -1,0 +1,5 @@
+调用链，在分布式环境下对请求链路进行全局性的监控，能够及时帮助定位到链路中出现问题的环节。Google构建了dapper调用链系统并发表了相关论文，之后zipkin、jaeger基于这篇论文也诞生了，除了这两个比较常见的公共组件，还有appdash、lightstep这两个比较小众的。
+
+为了能够屏蔽不同调用链公共组件的内部实现细节，以及api上的差异，opentracing提供了统一的api来支持对不同调用链backend的trace数据生成、上报，除了在初始化的时候要考虑不同调用链backend的差异之外，其他时候可以通过一致的api与之进行交互。
+
+下面是一个基于go的opentracing的教程，总共只有几个章节，学习完基本上就可以在项目中集成调用链相关能力了，[查看教程](https://github.com/yurishkuro/opentracing-tutorial/tree/master/go)，也可以参考在GoNeat中调用链集成部分。
