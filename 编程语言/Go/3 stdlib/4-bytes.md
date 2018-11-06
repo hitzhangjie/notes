@@ -1,4 +1,4 @@
-# 3 bytes
+# 4 bytes
 
 package **bytes** provides many utility functions for byte slice, it is analogous to package **strings**, which provides many utility functions for string.
 

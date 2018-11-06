@@ -14,10 +14,10 @@ C++通过“模板”来支持“范型”编程，之所以加引号，是因�
 
 那么这几种方式的差别是什么呢？
 
-- 控制流执行方式不同  
+- 控制流执行方式不同
 `try { codeblock } catch (ex e1){ handle e1 } catch (ex e2){handle e2}`，只有当codeblock抛出异常且被catch时对应的错误处理代码才会执行，但是panic、recover不同，`defer func() { e := recover ...}()`注册的函数在函数退出阶段一定会执行；
 
-- 异常的传播方式不同  
+- 异常的传播方式不同
 `try-catch`错误处理代码是在catch之后的block进行，如果没有被catch到则会继续向上层抛出异常等上层捕获处理……如果最终没有被catch并处理，则进程挂掉。panic的抛出有别于异常向上抛出的过程，某个goroutine中产生的panic只可以在当前goroutine结束前recover，如果当前goroutine没有recover处理该panic，则进程立即挂掉。
 
 - 异常的处理方式不同

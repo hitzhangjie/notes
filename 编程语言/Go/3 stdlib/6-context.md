@@ -1,4 +1,4 @@
-# 5 context
+# 6 context
 
 package context defines the Context type, which carries **deadlines, cancelation signals, and other request-scoped values** across API boundaries and between processes.
 
@@ -6,7 +6,7 @@ it is very useful to control the cancellation of flow based on deadline, timeout
 
 following is an example showing how to use context with deadline, timeout, cancel and value.
 
-## 5.1 context.WithDeadline
+## 6.1 context.WithDeadline
 
 ```go
 func testCtxWithDeadline() {
@@ -49,7 +49,7 @@ func doSomething(ctx context.Context, ok chan int) {
 }
 ```
 
-## 5.2 context.WithTimeout
+## 6.2 context.WithTimeout
 
 ```go
 func testCtxWithTimeout() {
@@ -74,7 +74,7 @@ func testCtxWithTimeout() {
 }
 ```
 
-## 5.3 context.WithCancel
+## 6.3 context.WithCancel
 
 ```go
 func testCtxWithCancel() {
@@ -106,7 +106,7 @@ func testCtxWithCancel() {
 }
 ```
 
-## 5.4 context.WithValue
+## 6.4 context.WithValue
 
 ```go
 func testCtxWithValue() {

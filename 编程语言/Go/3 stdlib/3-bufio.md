@@ -1,8 +1,8 @@
-# 2 bufio
+# 3 bufio
 
 bufio implements **buffered io**, bufio **wrappes interface io.Reader and io.Writer**, it uses underlying buffer to store the data that is already read or to be written, and **based on this, bufio implements reading byte, word, line, slice and writing byte, rune, string**.
 
-## 2.1 reader
+## 3.1 reader
 
 following is a bufio.Reader example, this example show how to byte, rune, bytes, slice and line.
 
@@ -30,7 +30,7 @@ func testReader() {
 }
 ```
 
-## 2.2 scanner
+## 3.2 scanner
 
 following is a bufio.Scanner example, this example shows how to scan byte, word and line. **Before starting the scan operation, SplitMode must be specified**, bufio.ScanLine is the default SplitMode.
 
@@ -63,7 +63,7 @@ func testScanByte() {
 }
 ```
 
-## 2.3 writer
+## 3.3 writer
 
 following is a bufio.Writer example, this example shows how to write a byte, string into bytes.Buffer or os.Stdout.
 
@@ -89,7 +89,7 @@ func testWriter() {
 }
 ```
 
-## 2.4 summary
+## 3.4 summary
 
 package bufio wraps io.Reader and io.Writer interface, it is very convient to do some reading or writing tasks with the help of it.
 

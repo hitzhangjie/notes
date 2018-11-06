@@ -1,4 +1,4 @@
-# 4 container
+# 5 container
 
 package container provides 3 common data structures, **list, ring, heap**.
 
@@ -6,7 +6,7 @@ package container provides 3 common data structures, **list, ring, heap**.
 **ring**, is a circular doublely linked list, it can be used as list.
 **heap**, is a minimum heap implemention, but if we change the meaning of ```Interface.Less(i,j int)``` to ```LargerThan(i,j int)```, then we can build a maximum heap.
 
-## 4.1 list
+## 5.1 list
 
 **how to use it as stack?**
 
@@ -66,10 +66,10 @@ func testList() {
 }
 ```
 
-## 4.2 ring
+## 5.2 ring
 
 
-## 4.3 heap
+## 5.3 heap
 
 **how to use heap?**
 
@@ -140,7 +140,7 @@ func testHeap() {
 }
 ```
 
-## 4.4 summary
+## 5.4 summary
 
 package container provides 3 common data structures, it could be very useful if we have some occations relevant to FILO, FIFO or selecting Maxium/Minimum element.
 
