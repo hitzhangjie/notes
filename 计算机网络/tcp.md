@@ -128,20 +128,20 @@ Silly Window Syndrome翻译成中文就是“糊涂窗口综合症”。正如�
 
 拥塞状态时的算法主要指快速重传（Fast Retransmit），前面我们说过，当丢包的时候，会有两种情况：
 
-1）等到RTO超时，重传数据包。TCP认为这种情况太糟糕，反应也很强烈。
+1）等到RTO（Retransmit Timout）超时，重传数据包。TCP为每一个发送的数据包启动一个计时器，在计时器超时之前收到了这个数据包的ACK则撤销计时器，否则重传这个数据包。TCP认为这种情况太糟糕，反应也很强烈，因为必须要等到计时器超时。
 
-- sshthresh =  cwnd /2
-- cwnd 重置为 1
-- 进入慢启动过程
+- sshthresh =  cwnd /2；
+- cwnd 重置为 1；
+- 进入慢启动过程；
 
-2）Fast Retransmit算法，也就是在收到3个duplicate ACK时就开启重传，而不用等到RTO超时。
+2）Fast Retransmit算法，也就是在收到3个duplicate ACK时就开启重传，而不用等到1）中描述的RTO超时。
 
-- TCP Tahoe的实现和RTO超时一样。
+- TCP Tahoe的实现和RTO超时一样；
 
 - TCP Reno的实现是：
-  - cwnd = cwnd /2
-  - sshthresh = cwnd
-  - 进入快速恢复算法——Fast Recovery
+  - cwnd = cwnd /2；
+  - sshthresh = cwnd；
+  - 进入快速恢复算法（Fast Recovery）；
 
 上面我们可以看到RTO超时后，sshthresh会变成cwnd的一半，这意味着，如果cwnd<=sshthresh时出现的丢包，那么TCP的sshthresh就会减了一半，然后等cwnd又很快地以指数级增涨爬到这个地方时，就会成慢慢的线性增涨。我们可以看到，TCP是怎么通过这种强烈地震荡快速而小心得找到网站流量的平衡点的。
 
@@ -169,9 +169,9 @@ Silly Window Syndrome翻译成中文就是“糊涂窗口综合症”。正如�
 
 于是，1995年，TCP New Reno（参见 [RFC 6582](http://tools.ietf.org/html/rfc6582) ）算法提出来，主要就是在没有SACK的支持下改进Fast Recovery算法的。
 
-- 当sender这边收到了3个Duplicated Acks，进入Fast Retransimit模式，开发重传重复Acks指示的那个包。如果只有这一个包丢了，那么，重传这个包后回来的Ack会把整个已经被sender传输出去的数据ack回来。如果没有的话，说明有多个包丢了。我们叫这个ACK为Partial ACK。
+- 当sender这边收到了3个Duplicated Acks，进入Fast Retransimit模式，开始重传重复Acks指示的那个包。如果只有这一个包丢了，那么，重传这个包后回来的Ack会把整个已经被sender传输出去的数据ack回来。如果没有的话，说明有多个包丢了。我们叫这个ACK为Partial ACK。
 
-- 一旦Sender这边发现了Partial ACK出现，那么，sender就可以推理出来有多个包被丢了，于是乎继续重传sliding window里未被ack的第一个包。直到再也收不到了Partial Ack，才真正结束Fast Recovery这个过程
+- 一旦Sender这边发现了Partial ACK出现，那么，sender就可以推理出来有多个包被丢了，于是乎继续重传sliding window里未被ack的第一个包。直到再也收不到了Partial Ack，才真正结束Fast Recovery这个过程。
 
 我们可以看到，这个“Fast Recovery的变更”是一个非常激进的玩法，他同时延长了Fast Retransmit和Fast Recovery的过程。
 
