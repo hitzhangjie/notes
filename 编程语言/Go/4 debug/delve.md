@@ -29,6 +29,16 @@ delve（简称dlv）是一款专门面向go语言调试而开发的一款调试�
 hostA上运行调试：`dlv --headless --listen=:8000 exec ./hello -- -p1=1 -p2=2`
 hostB上运行调试：`dlv connect hostA:port`
 
+# 调试命令
+
+## 打印变量
+
+打印的变量内容如果过长，dlv `print expression`不会将完整的内容打印出来，而是默认只打印前64字节，这个时候有几个办法来解决，可以根据调试场景决定使用哪一种：
+
+- 用slice截取的方式打印：print variable[64:]
+- 调整打印字符串最大长度：config max-string-len 1000
+- 持久化上述配置，将上述配置添加到dlv默认配置文件：~/.dlv/config.yaml
+
 # 总结
 
 本文主要对dlv的使用做了一些简单的整理、总结。
