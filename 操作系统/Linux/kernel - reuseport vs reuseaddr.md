@@ -4,7 +4,9 @@
 
 - TCP/UDP连接（UDP无连接但可以connect），由五元组表示：<协议类型，源ip，源端口，目的ip，目的端口>；
 - REUSEADDR解决的是监听本地任意地址0.0.0.0:port与另一个监听本地特定地址相同端口a.b.c.d:port的问题；
-- REUSEPORT解决多个sockets（可能归属于相同后者不同的进程）是否允许bind到相同端口的问题，Linux下为了避免port hijack，只允许euid相同的进程bind到相同的port（bind设置socket源port，connect设置socket目的端口），同时对于tcp listen socket、udp socket还会进行“均匀的”流量分发，也是一个轻量的负载均衡方案。
+  - REUSEPORT解决多个sockets（可能归属于相同后者不同的进程）是否允许bind到相同端口的问题，Linux下为了避免port hijack，只允许euid相同的进程bind到相同的port（bind设置socket源port，connect设置socket目的端口），同时对于tcp listen socket、udp socket还会进行“均匀的”流量分发，也是一个轻量的负载均衡方案。
+
+原文出自：[reuseport & reuseaddr, how they differ?](https://stackoverflow.com/a/14388707/3817040)
 
 Welcome to the wonderful world of portability... or rather the lack of it. Before we start analyzing these two options in detail and take a deeper look how different operating systems handle them, it should be noted that the BSD socket implementation is the mother of all socket implementations. Basically all other systems copied the BSD socket implementation at some point in time (or at least its interfaces) and then started evolving it on their own. Of course the BSD socket implementation was evolved as well at the same time and thus systems that copied it later got features that were lacking in systems that copied it earlier. Understanding the BSD socket implementation is the key to understanding all other socket implementations, so you should read about it even if you don't care to ever write code for a BSD system.
 
