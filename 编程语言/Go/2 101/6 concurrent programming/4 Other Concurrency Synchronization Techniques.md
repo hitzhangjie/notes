@@ -103,8 +103,8 @@ func main() {
 
 大多数情况下c.Signal()和c.Broadcast()是在c.Wait()执行结束后才执行的，这种情况下协程a因为等待c而阻塞，协程b执行c.Signal()或者c.Broadcast()唤醒a是没有任何问题的，但是：
 
-- 假如a在执行c.Wait()过程中刚刚释放锁c.L就收到了协程b的c.Signal()，协程b可能不会进入阻塞状态；
-- 假如a在执行c.Wait()过程中刚刚释放锁c.L就收到了协程b的c.Broadcast()，协程b不会进入阻塞状态；
+- 假如a在执行c.Wait()过程中刚刚释放锁c.L就收到了协程b的c.Signal()，协程a可能不会进入阻塞状态；
+- 假如a在执行c.Wait()过程中刚刚释放锁c.L就收到了协程b的c.Broadcast()，协程a可能不会进入阻塞状态；
 
 下面是一个sync.Cond的示例：
 
