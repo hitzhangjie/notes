@@ -113,3 +113,33 @@ func BenchmarkFoo(b *testing.B) {
 }
 ```
 
+# testing.M
+
+TestMain可以对测试进行控制，借助TestMain我们可以做到如下4点，伪代码如下：
+
+```go
+func TestMain(m *testing.M) {
+    setup()
+    code := m.Run() 
+    shutdown()
+    os.Exit(code)
+}
+```
+
+- Setup
+- How and when to run the tests
+- Shutdown
+- Exit behavior
+
+下面是一个测试示例，在Setup部分我们用来解析命令行选项配置，接下来测试的时候我们可以给go test传递命令行选项-verbose，如`go test -run=$yourTestCase -verbose=false`.
+
+```go
+var verbose = flag.Bool("verbose", true, "verbose")
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	ret := m.Run()
+	os.Exit(ret)
+}
+```
+
