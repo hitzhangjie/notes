@@ -4,7 +4,7 @@
 
 golang对操作系统的系统调用作了封装，提供了syscall这样的库让我们执行系统调用。例如，Read系统调用实现如下：
 
-```text
+```go
 func Read(fd int, p []byte) (n int, err error) {
     n, err = read(fd, p)
     if raceenabled {
@@ -40,7 +40,7 @@ TEXT    ·Syscall(SB),NOSPLIT,$0-56
     MOVQ 16(SP), DI 
     MOVQ 24(SP), SI 
     MOVQ 32(SP), DX 
-    MOVQ $0, R10 
+    MOVQ $0, R10 s
     MOVQ $0, R8 
     MOVQ $0, R9 
     MOVQ 8(SP), AX   // syscall entry
@@ -63,7 +63,7 @@ TEXT    ·Syscall(SB),NOSPLIT,$0-56
 
 我们前面说过，系统调用是一个相对耗时的过程。一旦P中的某个G进入系统调用状态而阻塞了该P内的其他协程。此时调度器必须得做点什么吧，这就是调度器在进入系统调用前call runtime·entersyscall目的所在。
 
-```text
+```go
 void
 ·entersyscall(int32 dummy)
 {
@@ -129,7 +129,7 @@ runtime·reentersyscall(uintptr pc, uintptr sp)
 
 从系统调用返回后，也要告诉调度器，因为需要调度器做一些事情，根据前面系统调用的实现，具体实现是：
 
-```text
+```go
 void
 ·exitsyscall(int32 dummy)
 {
@@ -214,7 +214,7 @@ G从系统调用返回的过程，其实就是失足妇女找男人的逻辑：
 
 当然第二种的结局比较圆满，这个女人从此死心塌地守着这个家，于是p->m又回来了，孩子们(g)又可以继续活下去了。 第一种就比较难办了，女人（m）心灰意冷，将产下的儿子（陷入系统调用的g）交于他人（全局g的运行队列）抚养，远走他乡，从此接收命运的安排（参与调度，以后可能服务于别的p）。 对于第二种可能性，只能说女人的命运比较悲惨了：
 
-```text
+```go
 static void
 exitsyscall0(G *gp)
 {
@@ -259,7 +259,7 @@ exitsyscall0(G *gp)
 
 话说到这里，其实这个M当前没有运行的价值了（无法找到p运行它），那么我们就将她挂起，直到被其他人唤醒。 m被挂起调用的函数是stopm()
 
-```text
+```go
 // Stops execution of the current m until new work is available. 
 // Returns with acquired P. 
 static void stopm(void)
@@ -303,7 +303,7 @@ retry:
 
 前面我们重点讲了一个m是如何陷入系统调用和如何返回的心酸之路。我们忽略了p的感情，因为他才是真正的受害者，它被剥夺了m，从此无人理会它嗷嗷待哺的孩子们(g)，并且状态还被变成了Psyscall，相当于贴上了屌丝标签，别无他法，只能等待陷入系统调用的m返回，再续前缘。 当然，这样做是不合理的，因为如果m进入系统调用后乐不思蜀，那P的孩子们都得饿死，这在现实社会中可以发生，但在数字世界里是决不允许的。 OK，组织绝对不会忽略这种情况的，于是，保姆（管家）出现了，它就是sysmon线程，这是一个特殊的m，专门监控系统状态。 sysmon周期性醒来，并且遍历所有的p，如果发现有Psyscall状态的p并且已经处于该状态超过一定时间了，那就不管那个负心的前妻，再次p安排一个m，这样p内的任务又可以得到处理了。
 
-```text
+```go
 func sysmon() {
     ......
     retake(now);
@@ -357,7 +357,7 @@ handoffp()找到的新的m可能是别人以前的m(私生活好混乱)。由于
 
 这里的startm以被唤醒的m为例继续说明，关于新创建的m被唤醒的m继续执行它被阻塞的下一条语句：
 
-```text
+```go
 stopm() 
 {
     ......
@@ -413,4 +413,3 @@ func schedule() {
 }
 ```
 
-编辑于 2017-10-25
