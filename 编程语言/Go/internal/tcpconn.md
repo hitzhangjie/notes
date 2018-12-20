@@ -176,6 +176,274 @@ func main() {
 }
 ```
 
-**4 tcp状态转换图**
+**4 c++版的tcp client**
+
+一个类似上述go版tcp client的c++版实现，看看要多少代码吧。
+
+```c++
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <sys/un.h>
+#include <sys/socket.h>
+#include <sys/unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <sys/epoll.h>
+
+#define MAX_EVENTS 1024
+
+static int processClient();
+
+int main(int argc, char *argv[])
+{
+    int fd;
+    int ret;
+
+    struct sockaddr_in addr = { 0 };
+    struct in_addr x;
+    inet_aton("127.0.0.1", &x);
+    addr.sin_family = AF_INET;
+    addr.sin_addr = x;
+    addr.sin_port = htons(5555);
+
+    int set = 30;
+    int i = 0;
+    int fdFlag = 0;
+
+    int epollFd = epoll_create(MAX_EVENTS);
+    if (epollFd == -1)
+    {
+        printf("epoll_create failed\n");
+        return -1;
+    }
+
+    struct epoll_event ev;      // epollÊ¼þ½ṹÌ 
+    struct epoll_event events[MAX_EVENTS];  // Ê¼þ¼à¶ÓÐ 
+
+    // connect to server
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd == -1)
+    {
+        printf("error:%s\n", strerror(errno));
+        return -1;
+    }
+    // set timer is valid ?
+    //setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &set, sizeof(set));
+
+    // set socket non block?
+    if ((fdFlag = fcntl(fd, F_GETFL, 0)) < 0)
+        printf("F_GETFL error");
+    fdFlag |= O_NONBLOCK;
+
+    if (fcntl(fd, F_SETFL, fdFlag) < 0)
+        printf("F_SETFL error");
+
+    //  connect to server
+    ret = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
+    if (ret == -1)
+    {
+        if (errno == EINPROGRESS)
+        {
+            printf(" connect error:%s\n", strerror(errno));
+            //return -1;
+        }
+        else
+        {
+            printf(" connect error:%s\n", strerror(errno));
+            return -1;
+        }
+    }
+
+    // epoll watch socket EPOLLOUT
+    ev.events = EPOLLOUT;
+    ev.data.fd = fd;
+    if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &ev) == -1)
+    {
+        printf("epoll_ctl:server_sockfd register failed");
+        return -1;
+    }
+
+    int nfds;
+
+    // check whether tcpconn established, howto? write-ready!
+    while (1) {
+        nfds = epoll_wait(epollFd, events, MAX_EVENTS, -1);
+        if (nfds == -1) {
+            printf("start epoll_wait failed");
+            return -1;
+        }
+        if (nfds == 0) {
+            continue;
+        }
+        if (events[0].events & EPOLLOUT) {
+            printf(" connection is established\n");
+            break;
+        }
+    }
+    
+    // sleep 3 seconds, before wakeup let the server close connection!
+    // nc -kl 5555 -w 1
+    sleep(3);
+
+    char sendbuf[512] = { 0 };
+    char recvbuf[5120] = { 0 };
+    int count = 0;
+
+    // check whether epoll_wait can detect half-open tcpconn
+    ev.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
+    ev.data.fd = fd;
+    if (epoll_ctl(epollFd, EPOLL_CTL_MOD, fd, &ev) == -1)
+    {
+        printf("epoll_ctl:server_sockfd register failed\n");
+        return -1;
+    }
+    while (1) {
+        nfds = epoll_wait(epollFd, events, MAX_EVENTS, -1);
+        if (nfds == -1) {
+            printf("start epoll_wait failed\n");
+            return -1;
+        }
+        if (nfds == 0) {
+            printf("epoll_wait: no events ready\n");
+            continue;
+        }
+        int i = 0;
+        for (i=0; i<nfds; i++) {
+            /*
+            if (events[i].events & EPOLLRDHUP) {
+                printf(" epoll_wait: EPOLLRDHUP, peer close connection\n");
+                close(events[i].data.fd);
+                return -1;
+            }
+            */
+            if (events[i].events & EPOLLIN) {
+                printf(" epoll_wait: read-ready\n");
+    
+                memset(recvbuf, 0, sizeof(recvbuf));
+                count = recv(events[i].data.fd, recvbuf, sizeof(recvbuf), 0);
+                printf("read bytes size:%d, data:%s\n", count, recvbuf);
+                if (count == -1)
+                {
+                    /* If errno == EAGAIN, that means we have read all data.
+                       So go back to the main loop. */
+                    if (errno != EAGAIN)
+                    {
+                        printf("read error\n");
+                        close(events[i].data.fd);
+                        return -1;
+                    }
+                }
+                else if (count == 0)
+                {
+                    /* End of file. The remote has closed the connection. */
+                    close(events[i].data.fd);
+                    printf("tcpconn is closed by peer\n");
+                    return -1;
+                }
+            }
+        }
+    }
+
+
+    // when write-ready, send data to server
+    // when read-ready, read data from server
+    int token_length = 5;
+    char *token_str = "12345";
+    char *ch = "yumgkevin";
+    char socketId[10] = { 0 };
+
+    while (1)
+    {
+        nfds = epoll_wait(epollFd, events, MAX_EVENTS, -1);
+        if (nfds == -1)
+        {
+            printf("start epoll_wait failed");
+            return -1;
+        }
+
+        for (i = 0; i < nfds; i++)
+        {
+            /* 
+               if ((events[i].events & EPOLLERR) || (events[i].events &
+               EPOLLHUP) || (!(events[i].events & EPOLLIN)) ||
+               (!(events[i].events & EPOLLOUT)) ) { printf("enter 1");
+               fprintf (stderr, "epoll error\n"); close (events[i].data.fd);
+               continue; } */
+            if (events[i].events & EPOLLOUT)
+            {
+                printf("write-ready, send data to server\n");
+                memset(sendbuf, 0, sizeof(sendbuf));
+                memset(socketId, 0, sizeof(socketId));
+
+                strcpy(sendbuf, token_str);
+                strcat(sendbuf, "hellow, world");
+                strcat(sendbuf, ch);
+                sprintf(socketId, "%d", events[i].data.fd);
+                strcat(sendbuf, socketId);
+                strcat(sendbuf, "\r\n");
+
+                ret = send(events[i].data.fd, sendbuf, strlen(sendbuf), 0);
+                if (ret == -1)
+                {
+                    if (errno != EAGAIN)
+                    {
+                        printf("error:%s\n", strerror(errno));
+                        close(events[i].data.fd);
+                    }
+                    continue;
+                }
+                printf("send buf content is %s, size is %d\n", sendbuf, ret);
+                // add revelant socket read event
+                ev.data.fd = events[i].data.fd;
+                ev.events = EPOLLIN | EPOLLET;
+                epoll_ctl(epollFd, EPOLL_CTL_MOD, events[i].data.fd, &ev);
+            }
+            else if (events[i].events & EPOLLIN)
+            {
+                printf("read-ready, read data from server\n");
+                count = 0;
+                memset(recvbuf, 0, sizeof(recvbuf));
+                count = recv(events[i].data.fd, recvbuf, sizeof(recvbuf), 0);
+                if (count == -1)
+                {
+                    /* If errno == EAGAIN, that means we have read all data.
+                       So go back to the main loop. */
+                    if (errno != EAGAIN)
+                    {
+                        printf("read error\n");
+                        close(events[i].data.fd);
+                    }
+                    continue;
+                }
+                else if (count == 0)
+                {
+                    /* End of file. The remote has closed the connection. */
+                    close(events[i].data.fd);
+                    continue;
+                }
+                printf("receive data is:%s", recvbuf);
+                // add revelant socket write event
+                ev.data.fd = events[i].data.fd;
+                ev.events = EPOLLOUT;
+                epoll_ctl(epollFd, EPOLL_CTL_MOD, events[i].data.fd, &ev);
+            }
+        }
+    }
+
+    // close socket
+    close(fd);
+
+    return 0;
+}
+```
+
+**5 tcp状态转换图**
 
 ![tcp state diagram](assets/tcp-state-diagram.gif)

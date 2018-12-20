@@ -28,5 +28,5 @@ Syscall定义在asm_linux_amd64.s里面，代码中有runtime.entersyscall(SB)�
 
 ![image-20181211095017231](assets/image-20181211095017231-4493017.png)
 
-epoll相关的epollwa	it也是阻塞的。
+epoll相关的epollwait也是阻塞的。
 ![image-20181211095200708](assets/image-20181211095200708-4493120.png)
