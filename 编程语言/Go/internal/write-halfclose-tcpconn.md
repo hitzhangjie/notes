@@ -40,6 +40,55 @@
 
 失败重试！失败后重试一次、两次已经成为了大家写代码时候的常态，但是一个网络框架，是否应该减少这种负担？可能上面我们讨论的情形在线上环境中并不多见，但它确实是一个已知的问题！如果请求量比较大，连接不会因为空闲被关掉，那么这个问题出现的概率很少，但是假如请求量确实不大，这个问题就会凸显出来了。
 
+为此我们想了一种改良的方法来检测是否出现了对端关闭连接的情况，思路是这样的，因为不方便再去poll类似的EPOLLIN、EPOLLRDHUP事件，这里再从连接池获取空闲连接时，借助系统调用`n, err := syscall.Read(fd, buf)`直接去非阻塞读一下，如果返回err == nil 并且 n==0，那么就可以判定对端连接写关闭，这里参考了conn.Read(...)的内部实现`poll/fd_unix.go:145~180, fd.eofError(n, err)`，示例代码如下。
+
+```go
+func readClosed(conn net.Conn) bool {
+
+    var (
+        readClosed bool
+        rawConn    syscall.RawConn
+        err        error
+    )
+
+    f := func(fd uintptr) bool {
+        one := []byte{0}
+        n, e := syscall.Read(int(fd), one)
+
+        if e != nil && e != syscall.EAGAIN {
+            // connection broken, close it
+            readClosed = true
+        }
+        if e == nil && n == 0 {
+            // peer half-close tcpconn, refer to poll/fd_unix.go:145~180, fd.eofError(n, err)
+            readClosed = true
+        }
+        // only detect whether peer half-close tcpconn, don't block to wait for read-ready.
+        return true
+    }
+
+    switch conn.(type) {
+    case *net.TCPConn:
+        tcpconn, _ := conn.(*net.TCPConn)
+        rawConn, err = tcpconn.SyscallConn()
+    case *net.UnixConn:
+        unixconn, _ := conn.(*net.UnixConn)
+        rawConn, err = unixconn.SyscallConn()
+    default:
+        return false
+    }
+
+    err = rawConn.Read(f)
+    if err != nil || readClosed {
+        return true
+    }
+
+    return false
+}
+```
+
+这种方式能够显著改善上述场景下因为tcp server端close idle connection而导致的tcp client请求失败的问题，代价就是获取tcp client获取连接时多了一次非阻塞的系统调用来判断连接是否正常！其实连接池本身是有对空闲连接定时做检查的，当前设的是5s，但是在没有请求的情况下空轮询也不是一个特别clean的做法，而很难保证彻底避免上述问题。所以最终我们每次从连接池返回连接时先主动监测一次，因为fd现在是非阻塞read，所以代价也是可以接受的。
+
 如果我们利用tcp全双工能力，实现client、server的全双工通信模式，一边发送多个请求、一边接收多个响应，假如接收响应的时候发现io.EOF，那么后续的发送直接返回失败就行了。但是假如网络抖动的情况下，这种全双工通信模式容易出现失败激增的毛刺。
 
 这种情境下，貌似UDP会是更好的选择，当然也要考虑服务端是否支持UDP。
