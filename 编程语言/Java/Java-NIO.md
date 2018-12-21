@@ -719,7 +719,7 @@ serverSocketChannel.close();
 ### 11.5 Reading Partial Messages
 当从一个SeletableChannel中读取数据时并不清楚读取到的数据是否是一个完整的消息，这里读取到的数据Data Block可能不足一个完整的Message，可能刚好是一个完整的Message，当然也可能包括了一个完整的Message和另一部分或完整或不完整的Message数据，如下图所示。
 
-![Read-Partial-Message]
+![Read-Partial-Message](assets/NIO-ReadMessage-1.png)
 
 在处理不完整消息数据的时候面临着两个挑战：
 - 如何检测在数据块里面是否包括了一个完整的Message；
@@ -731,7 +731,7 @@ serverSocketChannel.close();
 
 检测Message数据完整性和存储Message的不完整数据的工作，都是由Message Reader来完成的，为了避免不同的channel上到达的Message数据混淆在一起，我们为每个channel分配一个单独的Message Reader。Message Reader示意图如下所示。
 
-![Message-Reader]
+![Message-Reader](assets/NIO-ReadMessage-2.png)
 
 一旦从selector获取到一个可以进行读操作的channel实例，与之关联的Message Reader就开始工作，从channel中读取数据并将其组装成一个个完整的Message，完整的Message将被丢到流水线执行后续处理工作。
 
@@ -806,7 +806,7 @@ TLV编码能让程序尽快感知到Message的长度便于程序为其分配内�
 
 Message Writer的工作示意图如下所示。
 
-![Message-Writer]
+![Message-Writer](assets/NIO-WriteMessage-1.png)
 
 Message Writer之前可能将部分Message的数据写入到了channel中，这种情况下Message Writer需要被定时或者时不时地多调用几次以将同一个Message的剩余数据写入到channel中。
 
@@ -837,13 +837,13 @@ select返回很多事件就绪的channel绝对不是一个好事情，是否IO�
 
 下图是该教程所阐述的一个非阻塞模式下服务的工作过程示意图。
 
-![Full-NIO-Server]
+![Full-NIO-Server](assets/NIO-Server-1.png)
 
 如果看了这里的教程之后依然觉得有些困惑或者感觉有点复杂的话，可以查看一下作者的一个nio server的实现，[github java-nio-server](https://github.com/jjenkov/java-nio-server)。阅读这里的代码将有助于加深自己对java nio server的理解。
 
 这里的java-nio-server的示意图如下所示。
 
-![NIO-Server-Impl]
+![NIO-Server-Impl](assets/NIO-server-2.png)
 
 这里的server实现中主要包括两个线程：
 - 线程Accepter Thread用来从ServerSocketChannel中建立连接获取SocketChannel；
@@ -915,7 +915,7 @@ Java NIO Pipe是一种两个线程之间的单向数据传输的通道，它包�
 
 下图是一个Pipe的工作示意图。
 
-![NIO-Pipe]
+![NIO-Pipe](assets/NIO-Pipe.png)
 
 ### 13.1 创建一个Pipe
 可以通过Pipe.open()方法来打开一个Pipe，也就是创建了一个Pipe。
@@ -970,7 +970,7 @@ int bytesRead = inChannel.read(buf);
 | 阻塞IO            | 非阻塞IO + selector |
 
 ### 14.1 Stream Oriented vs Buffer Oriented
-NIO和NIO第一个较大不同就是IO是面向流（stream）的，而NIO是面向数据块（buffer）的。什么意思呢？
+NIO和IO第一个较大不同就是IO是面向流（stream）的，而NIO是面向数据块（buffer）的。什么意思呢？
 
 面向流的IO，从流中一次只可以读取一个字节，如何对读取到的字节进行处理是由程序决定，这些读取到的字节不会被cache到某个地方。这意味着不能在流中前后移动，如果需要在流中实现前后移动的目的的话，需要将流中的数据先cache起来。
 
@@ -1019,7 +1019,7 @@ String phoneLine  = reader.readLine();
 
 通过看程序执行到了哪行代码我们就可以判断当前文件处理的进度。例如，当第一个reader.readLine()方法执行结束后，就意味着程序一定是完整地读取完了“Name: Anne”这行，并且这个调用会在完整读取这行数据之后才会返回，这就是我们可以根据程序执行的位置来推测文件处理进度的根本原因。对后面各行数据的处理方式也是一样的。处理逻辑参考下图。
 
-![Java-IO]
+![Java-IO](assets/IO-1.png)
 
 一个采用了NIO的程序，其数据处理方式存在一些不同。下面是一个简化版的示例。
 
@@ -1049,18 +1049,18 @@ processData(buffer);
 
 上述简化版示例代码中判断是否满的while(...)执行逻辑示意图如下所示。
 
-![Java-NIO]
+![Java-NIO](assets/IO-2.png)
 
 #### 14.4.3 总结
 NIO使得我们可以借助selector对很多的channel（网络连接或者文件）进行管理，使用的线程数量也少，不足之处在于增加了数据处理的难度，至少比标准IO模式下的数据处理要复杂多了，主要是麻烦在read partial message、write partial message、buffer resize这几个点上。
 
-如果需要同时处理成千上万的连接，这些连接上只是发送很少量的数据，例如一个聊天服务器，这种情境下使用NIO来实现应该能获得更高的性能，因为连接上收发的数据量都比较小，基于NIO来实现的话可以尽量减少r处理ead partial message、write partial message的代价。这种情况下可以采用一个线程管理多个连接的设计思路，这个线程通过selector监视并处理多个连接上的io事件。如下图所示。
+如果需要同时处理成千上万的连接，这些连接上只是发送很少量的数据，例如一个聊天服务器，这种情境下使用NIO来实现应该能获得更高的性能，因为连接上收发的数据量都比较小，基于NIO来实现的话可以尽量减少处理read partial message、write partial message的代价。这种情况下可以采用一个线程管理多个连接的设计思路，这个线程通过selector监视并处理多个连接上的io事件。如下图所示。
 
-![OneThread-MultiConn]
+![OneThread-MultiConn](assets/IO-3.png)
 
 但是假如服务中有不少连接上的流量比较大，比如可能是在传输文件，这种情况下可能使用Java IO来实现会更好一点，因为如果采用NIO的话，这里的大流量连接上的数据处理就会变得更加复杂，因为服务要不停地处理read partial message、write partial message的情况。这种情况下采用一个线程负责建立入连接请求，然后将建立的连接丢给线程池处理的思路比较靠谱。如下图所示。
 
-![OneAcceptorThread-MultiWorkerThread]
+![OneAcceptorThread-MultiWorkerThread](assets/IO-4.png)
 
 ## 15 NIO Path
 Java NIO 2中增加了一种新的接口，java.nio.file.Path，通过它可以来定义一个绝对路径或者相对路径，这里的路径指的是文件在文件系统中的路径信息。
