@@ -4,7 +4,7 @@
 
 # 认识“Nested Monitor Lockout”
 
-结合下面这个Lock实现，我们来认识下Nested Monitor Lockout这个问题是什么。
+结合下面这个Lock实现，我们来认识下Nested Monitor Lockout这个问题是什么（Lockout，表示加锁失败）。
 
 ```java
 //lock implementation with nested monitor lockout problem  
