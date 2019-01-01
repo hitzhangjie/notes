@@ -188,11 +188,11 @@ public class AtomicCounter {
 
 **1）Why is it Called Optimistic Locking?**
 
-The code shown in the previous section is called optimistic locking. Optimistic locking is different from traditional locking, sometimes also called pessimistic locking. Traditional locking blocks the access to the shared memory with a synchronized block or a lock of some kind. A synchronized block or lock may result in threads being suspended.
+前面示例中的代码常成为“**乐观锁**”，乐观锁与**传统的锁实现（悲观锁）**不同，悲观锁往往是通过synchronized block或者其他类型的lock实现来对共享内存进行排他性访问，悲观锁会导致线程挂起。
 
-Optimistic locking allows all threads to create a copy of the shared memory without any blocking. The threads may then make modifications to their copy, and attempt to write their modified version back into the shared memory. If no other thread has made any modifications to the shared memory, the compare-and-swap operation allows the thread to write its changes to shared memory. If another thread has already changed the shared memory, the thread will have to obtain a new copy, make its changes and attempt to write them to shared memory again.
+乐观锁可以通过非阻塞的方式让多个线程来创建共享内存的一份拷贝，线程可以对各自的拷贝进行修改，然后尝试写会共享内存。如果没有其他线程对共享内存进行过修改，CAS操作允许线程无阻塞的方式对共享内存进行更新；如果已经有其他线程对共享内存进行了修改呢，线程将不得不重新获取共享内存的值，然后再次尝试CAS。
 
-The reason this is called optimistic locking is that threads obtain a copy of the data they want to change and apply their changes, under the optimistic assumption that no other thread will have made changes to the shared memory in the meantime. When this optimistic assumption holds true, the thread just managed to update shared memory without locking. When this assumption is false, the work was wasted, but still no locking was applied.
+称之为乐观锁的原因，在于线程可以在它们相对共享内存变量进行修改时去读取一下数据的值，然后以一种乐观的方式去尝试修改共享内存的值，如果成功就成功，如果失败就返回失败，然后继续再次尝试。整个过程中是没有使用过锁的，线程也不会阻塞。
 
 Optimistic locking tends to work best with low to medium contention on the shared memory. If the content is very high on the shared memory, threads will waste a lot of CPU cycles copying and modifying the shared memory only to fail writing the changes back to the shared memory. But, if you have a lot of content on shared memory, you should anyways consider redesigning your code to lower the contention.
 
@@ -247,7 +247,7 @@ A common solution to the A-B-A problem is to not just swap a pointer to an inten
 
 In Java you cannot merge a reference and a counter together into a single variable. Instead Java provides the
 
-AtomicStampedReference class which can swap a reference and a stamp atomically using a compare-and-swap operation.
+**AtomicStampedReference** class which can swap a reference and a stamp atomically using a compare-and-swap operation.
 
 # A Non-blocking Algorithm Template
 
@@ -255,60 +255,48 @@ Below is a code template intended to give you an idea about how non-blocking alg
 
 NOTE: I am not an expert in non-blocking algorithms, so the template below probably has some errors. Do not base your own non-blocking algorithm implementation on my template. The template is only intended to give you an idea of how the code for a non-blocking algorithm could look. If you want to implement your own non-blocking algorithms, study some real, working non-blocking algorithm implementations first, to learn more about how they are implemented in practice.
 
-​```java
+```java
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicStampedReference;
 
 public class NonblockingTemplate {
 
-    public static class IntendedModification {
-        public AtomicBoolean completed =
-            new AtomicBoolean(false);
+	public static class IntendedModification {
+        public AtomicBoolean completed = new AtomicBoolean(false);
     }
     
-    private AtomicStampedReference < IntendedModification >
-        ongoingMod =
-        new AtomicStampedReference < IntendedModification > (null, 0);
+    private AtomicStampedReference <IntendedModification> ongoingMod 
+        = new AtomicStampedReference <IntendedModification> (null, 0);
     
     //declare the state of the data structure here.
-
-
     public void modify() {
-        while (!attemptModifyASR());
+        while (!attemptModifyASR())
+            ;
     }
     
     public boolean attemptModifyASR() {
     
         boolean modified = false;
     
-        IntendedModification currentlyOngoingMod =
-            ongoingMod.getReference();
+        IntendedModification currentlyOngoingMod = ongoingMod.getReference();
         int stamp = ongoingMod.getStamp();
     
         if (currentlyOngoingMod == null) {
             //copy data structure state - for use
             //in intended modification
-    
             //prepare intended modification
-            IntendedModification newMod =
-                new IntendedModification();
-    
-            boolean modSubmitted =
-                ongoingMod.compareAndSet(null, newMod, stamp, stamp + 1);
+            IntendedModification newMod = new IntendedModification();
+            boolean modSubmitted = ongoingMod.compareAndSet(null, newMod, stamp, stamp + 1);
     
             if (modSubmitted) {
-    
                 //complete modification via a series of compare-and-swap operations.
                 //note: other threads may assist in completing the compare-and-swap
                 // operations, so some CAS may fail
-    
                 modified = true;
             }
-    
         } else {
             //attempt to complete ongoing modification, so the data structure is freed up
             //to allow access from this thread.
-    
             modified = false;
         }
     
@@ -328,17 +316,17 @@ In addition to Java's built-in non-blocking data structures there are also some 
 
 There are several benefits of non-blocking algorithms compared to blocking algorithms. This section will describe these benefits.
 
-# Choice
+## Choice
 
 The first benefit of non-blocking algorithms is, that threads are given a choice about what to do when their requested action cannot be performed. Instead of just being blocked, the request thread has a choice about what to do. Sometimes there is nothing a thread can do. In that case it can choose to block or wait itself, thus freeing up the CPU for other tasks. But at least the requesting thread is given a choice.
 
 On a single CPU system perhaps it makes sense to suspend a thread that cannot perform a desired action, and let other threads which can perform their work run on the CPU. But even on a single CPU system blocking algorithms may lead to problems like deadlock, starvation and other concurrency problems.
 
-# No Deadlocks
+## No Deadlocks
 
 The second benefit of non-blocking algorithms is, that the suspension of one thread cannot lead to the suspension of other threads. This means that deadlock cannot occur. Two threads cannot be blocked waiting for each other to release a lock they want. Since threads are not blocked when they cannot perform their requested action, they cannot be blocked waiting for each other. Non-blocking algorithms may still result in live lock, where two threads keep attempting some action, but keep being told that it is not possible (because of the actions of the other thread).
 
-# No Thread Suspension
+## No Thread Suspension
 
 Suspending and reactivating a thread is costly. Yes, the costs of suspension and reactivation has gone down over time as operating systems and thread libraries become more efficient. However, there is still a high price to pay for thread suspension and reactivation.
 
@@ -346,9 +334,8 @@ Whenever a thread is blocked it is suspended, thus incurring the overhead of thr
 
 On a multi CPU system blocking algorithms can have more significant impact on the overall performance. A thread running on CPU A can be blocked waiting for a thread running on CPU B. This lowers the level of parallelism the application is capable of achieving. Of course, CPU A could just schedule another thread to run, but suspending and activating threads (context switches) are expensive. The less threads need to be suspended the better.
 
-# Reduced Thread Latency
+## Reduced Thread Latency
 
 Latency in this context means the time between a requested action becomes possible and the thread actually performs it. Since threads are not suspended in non-blocking algorithms they do not have to pay the expensive, slow reactivation overhead. That means that when a requested action becomes possible threads can respond faster and thus reduce their response latency.
 
 The non-blocking algorithms often obtain the lower latency by busy-waiting until the requested action becomes possible. Of course, in a system with high thread contention on the non-blocking data structure, CPUs may end up burning a lot of cycles during these busy waits. This is a thing to keep in mind. Non-blocking algorithms may not be the best if your data structure has high thread contention. However, there are often ways do redesign your application to have less thread contention.
-```
