@@ -1,6 +1,31 @@
 # volatile
 
-volatile字面意思是“**不稳定的、易失的**”，volatile修饰的变量在语义上表示程序执行期间可能会被外部的线程修改，volatile一般会要求编译器对**变量修改的内存可见性**做出保证，即在**多处理器、多核**条件下，假如一个全局变量被多个跑在不同处理器或者核心上的线程访问，其中一个线程对变量进行了修改的话，编译器不管如何优化代码应该保证线程对该volatile变量的修改操作对其他线程可见。
+volatile字面意思是“**不稳定的、易失的**”，不同的编程语言中存在volatile关键字，也有共同之处，如“**表示程序执行期间可能会被外部的操作修改**”，如被外部IO设备修改或者被其他线程修改等。这只是字面上给我们的一般性认识，然而具体到不同的编程语言中volatile的语义可能相差甚远。
+
+以常见的编程语言C、C++、Java为例，它们都有一个关键字volatile，但是不同语言对volatile的定义却并非完全相同。
+
+- Java中对volatile的定义：
+
+  >8.3.1.4. `volatile` Fields
+  >
+  >The Java programming language allows threads to access shared variables ([§17.1](https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.1)). As a rule, to ensure that shared variables are consistently and reliably updated, a thread should ensure that it has exclusive use of such variables by obtaining a lock that, conventionally, enforces mutual exclusion for those shared variables.
+  >
+  >The Java programming language provides a second mechanism, `volatile` fields, that is more convenient than locking for some purposes.
+  >
+  >A field may be declared `volatile`, in which case the Java Memory Model ensures that all threads see a consistent value for the variable ([§17.4](https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.4)).
+
+  Java清晰地表达了这样一个观点，Java内存模型中会保证volatile变量的线程可见性，接触过Java并发编程的开发者应该都清楚，这是一个不争的事实。
+
+- CC++中对volatile的定义：
+
+  为了引起大家对CC++ volatile的重视，这里先贴一个页面“[Is-Volatile-Useful-with-Threads](https://isocpp.org/blog/2018/06/is-volatile-useful-with-threads-isvolatileusefulwiththreads.com)”，网站中简明扼要的告知大家，“Friends don’t let friends use volatile for inter-thread communication in C and C++”。But why？
+
+  <img src="assets/is-volatile-useful-with-threads.png" style="width:440px;"/>
+
+  我们先看下c language specification中对volatile的定义：
+
+
+volatile一般会要求编译器对**变量修改的内存可见性**做出保证，即在**多处理器、多核**条件下，假如一个全局变量被多个跑在不同处理器或者核心上的线程访问，其中一个线程对变量进行了修改的话，编译器不管如何优化代码应该保证线程对该volatile变量的修改操作对其他线程可见。
 
 ## 1 diff btw java\c\c++
 
