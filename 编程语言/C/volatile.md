@@ -172,7 +172,7 @@ Stack Overflow上Dietmar Kühl提到，‘volatile’阻止了对变量的优化
 > - write-invalidate，当某个core（如core 1）的cache被修改为最新数据后，总线观测到更新，将写事件同步到其他core（如core n），将其他core对应相同内存地址的cache entry标记为invalidate，后续core n继续读取相同内存地址数据时，发现已经invalidate，会再次请求内存中最新数据。
 > - write-update，当某个core（如core 1）的cache被修改为最新数据后，将写事件同步到其他core，此时其他core（如core n）立即读取最新数据（如更新为core 1中数据）。
 
-write-back（写回法）中非常有名的cache一致性算法MESI，它是典型的强一致CPU，intel就凭借MESI优雅地实现了强一致CPU，现在intel优化了下MESI，得到了MESIF，它有效减少了广播中req/rsp数量，减少了带宽占用，提高了处理器处理的吞吐量。
+write-back（写回法）中非常有名的[cache一致性算法MESI](https://en.wikipedia.org/wiki/MESI_protocol)，它是典型的强一致CPU，intel就凭借MESI优雅地实现了强一致CPU，现在intel优化了下MESI，得到了[MESIF](https://www.realworldtech.com/common-system-interface/5/)，它有效减少了广播中req/rsp数量，减少了带宽占用，提高了处理器处理的吞吐量。关于MESI，这里有个示例动画可以帮助理解其工作原理，[查看MESI动画](https://www.scss.tcd.ie/~jones/vivio/caches/MESI.htm)。
 
 我们就先结合简单的MESI这个强一致性协议来试着理解下x86下为什么就可以保证强一致，结合多线程场景分析：
 
@@ -185,9 +185,9 @@ write-back（写回法）中非常有名的cache一致性算法MESI，它是典�
 
 还需要判断编译器（如gcc）是否有对volatile来做特殊处理，如安插MFENCE、LOCK指令之类的。上面编写的反汇编测试示例中，gcc生成的汇编没有看到lock相关的指令，但是因为我是在x86上测试的，而x86刚好是强一致CPU，我也不确定是不是因为这个原因，gcc直接图省事略掉了lock指令？所以现在要验证下，在其他非x86平台上，gcc -O2优化时做了何种处理。如果安插了类似指令，问题就解决了，我们也可以得出结论，c、c++中volatile在gcc处理下可以保证线程可见性，反之则不能得到这样的结论！
 
-于是乎，我在这个网站[godbolt.org](https://godbolt.org/)交叉编译测试了一下上面gcc处理的代码，换了几个不同的硬件平台也没发现有生成特定的类似导致MFENCE或者LOCK相关的指令。
+我在网站[godbolt.org](https://godbolt.org/)交叉编译测试了一下上面gcc处理的代码，换了几个不同的硬件平台也没发现有生成特定的类似MFENCE或者LOCK相关的致使处理器cache失效后重新从内存加载的指令。
 
-我对c、c++中volatile的真实设计“意图”或者作用产生了怀疑。然后，在stack overflow上我又找到了这样一个回答[https://stackoverflow.com/a/12878500](https://stackoverflow.com/a/12878500)，部分回答内容如下，重点内容已加粗显示。
+想了解下CC++中volatile的真实设计“意图”，然后，在stack overflow上我又找到了这样一个回答：[https://stackoverflow.com/a/12878500](https://stackoverflow.com/a/12878500)，重点内容已加粗显示。
 
 [[Nicol Bolas](https://stackoverflow.com/users/734069/nicol-bolas)](https://stackoverflow.com/users/734069/nicol-bolas)回答中提到：
 
@@ -201,6 +201,11 @@ write-back（写回法）中非常有名的cache一致性算法MESI，它是典�
 The volatile keyword has nothing to do with concurrency in C++ at all! It is used to have the compiler prevented from making use of the previous value, i.e., the compiler will generate code accessing a volatile value every time is accessed in the code. The main purpose are things like memory mapped I/O. **However, use of volatile has no affect on what the CPU does when reading normal memory: If the CPU has no reason to believe that the value changed in memory, e.g., because there is no synchronization directive, it can just use the value from its cache.** To communicate between threads you need some synchronization, e.g., an std::atomic<T>, lock a std::mutex, etc.
 
 最后看了个标准：<http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2016.html>
-简而言之，就是c、c++中当然也想提供java中volatile一样的线程可见性、阻止指令重排序，但是考虑到现有代码已经那么多了，突然改变volatile的语义，可能会导致现有代码的诸多问题，所以需要再权衡一下，到底要不要为volatile增加上述语义，所以暂时要不要实现并不明确……
+简而言之，就是CC++中当然也想提供java中volatile一样的线程可见性、阻止指令重排序，但是考虑到现有代码已经那么多了，突然改变volatile的语义，可能会导致现有代码的诸多问题，所以必须要再权衡一下，到底值不值得为volatile增加上述语义，当前C++标准委员会建议不改变volatile语义，而是通过新的std::atmoic等来支持上述语义。
 
-结合自己的实际操作、他人的高赞回答以及CC++相关标准的描述，这般看来CC++ volatile确实不能保证线程可见性。但是由于历史的原因、其他语言的影响、开发者自己的误解，这些导致开发者赋予了CC++ volatile很多本不属于它的能力，甚至大错特错，就连Linus Torvards也在内核文档中描述volatile时说，建议尽量用memory barrier替换掉volatile，他认为几乎所有可能出现volatile的地方都可能会潜藏着一个bug，并提醒开发者一定小心谨慎。
+结合自己的实际操作、他人的回答以及CC++相关标准的描述，我认为CC++ volatile确实不能保证线程可见性。但是由于历史的原因、其他语言的影响、开发者自己的误解，这些共同导致开发者赋予了CC++ volatile很多本不属于它的能力，甚至大错特错，就连Linus Torvards也在内核文档中描述volatile时说，建议尽量用memory barrier替换掉volatile，他认为几乎所有可能出现volatile的地方都可能会潜藏着一个bug，并提醒开发者一定小心谨慎。
+
+## 实践中如何操作
+
+- 开发者应该尽量编写可移植的代码，像x86这种强一致CPU，虽然结合volatile也可以保证线程可见性，但是既然提供了类似memory barrier()、std::atomic等更加靠谱的用法，为什么要编写这种晦涩难懂的代码呢？
+- 开发者应该编写可维护的代码，对于这种容易引起开发者误会的代码、特性，应该尽量少用，这虽然不能说成是语言设计上的缺陷，但是确实也不能算是一个优势，对于Java开发者接收CC++服务这种现实情况，怎么办？
