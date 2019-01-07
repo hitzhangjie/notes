@@ -1,6 +1,4 @@
-# CC++ volatile
-
-## 令人困惑的volatile
+## 1. 令人困惑的volatile
 
 volatile字面意思是“**不稳定的、易失的**”，不少编程语言中存在volatile关键字，也有共同之处，如“**表示程序执行期间数据可能会被外部操作修改**”，如被外设修改或者被其他线程修改等。这只是字面上给我们的一般性认识，然而具体到不同的编程语言中volatile的语义可能相差甚远。
 
@@ -10,7 +8,7 @@ volatile字面意思是“**不稳定的、易失的**”，不少编程语言�
 
 我曾经以为CC++中volatile可以保证保证线程可见性，因为Java中是这样的，直到后来阅读Linux内核看到Linus Torvards的一篇文档，他强调了volatile可能带来的坏处“任何使用volatile的地方，都可能潜藏了一个bug”，我为他的“危言耸听”感到吃惊，所以我当时搜索了不少资料来求证CC++ volatile的能力，事后我认为CC++ volatile不能保证线程可见性。但是后来部门内一次分享，分享中提到了volatile来保证线程可见性，我当时心存疑虑，事后验证时犯了一个错误导致我错误地认为volatile可以保证线程可见性。直到我最近翻阅以前的笔记，翻到了几年前对volatile的疑虑……我决定深入研究下这个问题，以便能顺利入眠。
 
-## 从规范认识volatile
+## 2. 从规范认识volatile
 
 以常见的编程语言C、C++、Java为例，它们都有一个关键字volatile，但是对volatile的定义却并非完全相同。
 
@@ -36,9 +34,7 @@ volatile字面意思是“**不稳定的、易失的**”，不少编程语言�
 
   C99清晰吗？上述解释看上去很清晰，但是要想彻底理解volatile的语义，绝非上述一句话就可以讲得清的，C99中定义了abstract machine以及sequence points，与volatile相关的描述有多处，篇幅原因这里就不一一列举了，其中与volatile相关的abstract machine行为描述共同确定了volatile的语义。
 
-
-
-## 对volatile持何观点
+## 3. 对volatile持何观点
 
 为了引起大家对CC++ volatile的重视并及时表明观点，先贴一个页面“[Is-Volatile-Useful-with-Threads](https://isocpp.org/blog/2018/06/is-volatile-useful-with-threads-isvolatileusefulwiththreads.com)”，网站中简明扼要的告知大家，“Friends don’t let friends use volatile for inter-thread communication in C and C++”。But why？
 
@@ -56,7 +52,7 @@ CC++规范没有显示要求volatile支持线程可见性，gcc也没有在标�
 
 但是CC++ volatile确实是有价值的，很多地方都要使用它，而且不少场景下似乎没有比它更简单的替代方法，下面首先列举CC++ volatile的**通用适用场景**，方便大家认识volatile，然后我们再研究为什么**CC++ volatile不能保证线程可见性**。CC++标准中确实没有说volatile要支持线程可见性，大家可以选择就此打住，但是我怀疑的是gcc在标准允许的空间内是怎么做的？操作系统、MMU、处理器是怎么做的？“标准中没有显示列出”，这样的理由还不足以让我停下探索的脚步。
 
-## CC++ need volatile
+## 4. CC++ need volatile
 
 CC++ volatile语义“不可优化型”、“顺序性”、“易变性”，如何直观感受它的价值呢？看C99中给出的适用场景吧。
 
@@ -112,15 +108,15 @@ CC++ volatile语义“不可优化型”、“顺序性”、“易变性”，�
 
 相信读到这里大家对CC++ volatile的适用场景有所了解了，它确实是有用的。那接下来我们针对开发者误解很严重的一个问题“volatile能否支持线程可见性”再探索一番，不能！不能！不能！
 
-## CC++ thread visibility
+## 5. CC++ thread visibility
 
-### 线程可见性问题
+### 5.1. 线程可见性问题
 
 多线程编程中经常会通过修改共享变量的方式来通知另一个线程发生了某种状态的变化，希望线程能及时感知到这种变化，因此我们关心“**线程可见性问题**”。
 
 在对称多处理器架构中（SMP），多处理器、核心通过总线共享相同的内存，但是各个处理器核心有自己的cache，线程执行过程中，一般会将内存数据加载到cache中，也可能会加载到寄存器中，以便实现访问效率的提升，但这也带来了问题，比如我们提到的线程可见性问题。某个线程对共享变量做了修改，线程可能只是修改了寄存器中的值或者cpu cache中的值，修改并不会立即同步回内存。即便同步回内存，运行在其他处理器核心上的线程，访问该共享数据时也不会立即去内存中读取最新的数据，无法感知到共享数据的变化。
 
-### diff volatile in java、cc++
+### 5.2. diff volatile in java、cc++
 
 有些编程语言中定义了关键字volatile，如Java、C、C++等，对比下Java volatile和CC++ volatile，差异简直是太大了，我们只讨论线程可见性相关的部分。
 
@@ -128,7 +124,7 @@ Java中语言规范明确指出volatile保证内存可见性，JMM存在“**本
 
 但是在C、C++规范里面没有要求volatile具备线程可见性语义，只要求其保证“**不可优化性、顺序性、易变性**”。
 
-### how gcc handle volatile
+### 5.3. how gcc handle volatile
 
 这里做个简单的测试：
 
@@ -159,7 +155,7 @@ int main() {
 
 这里变量a的值首先被设置到了0xc(%rsp)中，nopl空操作，然后a++时是将内存中的值移动到了寄存器%eax中，然后执行%eax+1再写回内存0xc(%rsp)中，while循环中每次循环执行都是先从内存里面取值，更新后再写回内存。但是这样就可以保证线程可见性了吗？No！
 
-### how cpu cache works
+### 5.4. how cpu cache works
 
 是否有这样的疑问？CC++中对volatile变量读写，发出的内存读写指令不会被CPU转换成读写CPU cache吗？这个属于硬件层面内容，对上层透明，编译器生成的汇编指令也无法反映实际执行情况！因此，只看上述反汇编示例是不能确定CC++ volatile支持线程可见性的，当然也不能排除这种可能性？
 
@@ -208,7 +204,7 @@ write-back（写回法）中非常有名的[cache一致性算法MESI](https://en
 
 结合自己的实际操作、他人的回答以及CC++相关标准的描述，我认为CC++ volatile确实不能保证线程可见性。但是由于历史的原因、其他语言的影响、开发者自己的误解，这些共同导致开发者赋予了CC++ volatile很多本不属于它的能力，甚至大错特错，就连Linus Torvards也在内核文档中描述volatile时说，建议尽量用memory barrier替换掉volatile，他认为几乎所有可能出现volatile的地方都可能会潜藏着一个bug，并提醒开发者一定小心谨慎。
 
-## 实践中如何操作
+## 6. 实践中如何操作
 
 - 开发者应该尽量编写可移植的代码，像x86这种强一致CPU，虽然结合volatile也可以保证线程可见性，但是既然提供了类似memory barrier()、std::atomic等更加靠谱的用法，为什么要编写这种兼顾volatile、x86特性的代码呢？
 - 开发者应该编写可维护的代码，对于这种容易引起开发者误会的代码、特性，应该尽量少用，这虽然不能说成是语言设计上的缺陷，但是确实也不能算是一个优势。
