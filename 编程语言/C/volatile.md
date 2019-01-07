@@ -172,7 +172,7 @@ Stack Overflow上Dietmar Kühl提到，‘volatile’阻止了对变量的优化
 > - write-invalidate，当某个core（如core 1）的cache被修改为最新数据后，总线观测到更新，将写事件同步到其他core（如core n），将其他core对应相同内存地址的cache entry标记为invalidate，后续core n继续读取相同内存地址数据时，发现已经invalidate，会再次请求内存中最新数据。
 > - write-update，当某个core（如core 1）的cache被修改为最新数据后，将写事件同步到其他core，此时其他core（如core n）立即读取最新数据（如更新为core 1中数据）。
 
-write-back（写回法）中非常有名的[cache一致性算法MESI](https://en.wikipedia.org/wiki/MESI_protocol)，它是典型的强一致CPU，intel就凭借MESI优雅地实现了强一致CPU，现在intel优化了下MESI，得到了[MESIF](https://www.realworldtech.com/common-system-interface/5/)，它有效减少了广播中req/rsp数量，减少了带宽占用，提高了处理器处理的吞吐量。关于MESI，这里有个示例动画可以帮助理解其工作原理，[查看MESI动画](https://www.scss.tcd.ie/~jones/vivio/caches/MESI.htm)。
+write-back（写回法）中非常有名的[cache一致性算法MESI](https://en.wikipedia.org/wiki/MESI_protocol)，它是典型的强一致CPU，intel就凭借MESI优雅地实现了强一致CPU，现在intel优化了下MESI，得到了[MESIF](https://www.realworldtech.com/common-system-interface/5/)，它有效减少了广播中req/rsp数量，减少了带宽占用，提高了处理器处理的吞吐量。关于MESI，这里有个可视化的MESI交互演示程序可以帮助理解其工作原理，[查看MESI可视化交互程序](https://www.scss.tcd.ie/~jones/vivio/caches/MESI.htm)。
 
 我们就先结合简单的MESI这个强一致性协议来试着理解下x86下为什么就可以保证强一致，结合多线程场景分析：
 
