@@ -32,7 +32,7 @@ volatile字面意思是“**不稳定的、易失的**”，不少编程语言�
   >
   >**volatile**: No cacheing through this lvalue: each operation in the abstract semantics must be performed (that is, no cacheing assumptions may be made, since the location is not guaranteed to contain any previous value). In the absence of this qualifier, the contents of the designated location may be assumed to be unchanged except for possible aliasing.
 
-  C99中也清晰地表名了volatile的语义，不要做cache之类的优化。这里的cache指的是software cacheing，即编译器生成指令将内存数据缓存到cpu寄存器，后续访问内存变量使用寄存器中的值；需要与之作出区分的是hardware cacheing，即cpu访问内存时将内存数据缓存到cpu cache，硬件操作完全内用户级程序透明。大家请将这两个点铭记在心，要想搞清楚CC++ volatile必须要先理解这里cache的区别。
+  C99中也清晰地表名了volatile的语义，不要做cache之类的优化。这里的cache指的是software cacheing，即编译器生成指令将内存数据缓存到cpu寄存器，后续访问内存变量使用寄存器中的值；需要与之作出区分的是hardware cacheing，即cpu访问内存时将内存数据缓存到cpu cache，硬件操作完全对上层应用程序透明。大家请将这两个点铭记在心，要想搞清楚CC++ volatile必须要先理解这里cache的区别。
 
   C99清晰吗？上述解释看上去很清晰，但是要想彻底理解volatile的语义，绝非上述一句话就可以讲得清的，C99中定义了abstract machine以及sequence points，与volatile相关的描述有多处，篇幅原因这里就不一一列举了，其中与volatile相关的abstract machine行为描述共同确定了volatile的语义。
 
@@ -44,7 +44,7 @@ volatile字面意思是“**不稳定的、易失的**”，不少编程语言�
 
 <img src="assets/is-volatile-useful-with-threads.png" style="width:440px;"/>
 
-isocpp专门挂了这么个页面来强调volatile在不同编程语言中的差异，可见其实一个多么难缠的问题。即便是有这么个页面要彻底搞清楚volatile，也不是说读完上面列出的几个技术博客就能解决，那也太轻描淡写了，所以我搜索、整理、讨论，希望能将学到的内容总结下来供其他开发者参考，我也不想再因为这个问题而困扰。
+isocpp专门挂了这么个页面来强调volatile在不同编程语言中的差异，可见它是一个多么难缠的问题。即便是有这么个页面，要彻底搞清楚volatile，也不是说读完上面列出的几个技术博客就能解决，那也太轻描淡写了，所以我搜索、整理、讨论，希望能将学到的内容总结下来供其他开发者参考，我也不想再因为这个问题而困扰。
 
 结合CC++ volatile qualifier以及abstract machine中对volatile相关sequence points的描述，可以确定volatile的语义：
 
@@ -149,7 +149,7 @@ int main() {
 
 **1）不加volatile ：```gcc -g -O2 -o main main.c```**
 
-![-w581](assets/15218071592735.jpg)
+​	![-w581](assets/15218071592735.jpg)
 
 这里重点看下对变量a的操作，xor %ebx,%ebx将寄存器%ebx设为0，也就是将变量a=0存储到了%ebx，nopl不做任何操作，然后循环体里面每次读取a的值都是直接在%ebx+1，加完之后也没有写回内存。假如有个共享变量是多个线程共享的，并且没有加volatile，多个线程访问这个变量的时候就是用的物理线程跑的处理器核心寄存器中的数据，是无法保证内存可见性的。
 
@@ -187,6 +187,8 @@ write-back（写回法）中非常有名的[cache一致性算法MESI](https://en
 
 我在网站[godbolt.org](https://godbolt.org/)交叉编译测试了一下上面gcc处理的代码，换了几个不同的硬件平台也没发现有生成特定的类似MFENCE或者LOCK相关的致使处理器cache失效后重新从内存加载的指令。
 
+> 备注：在某些处理器架构下，gcc确实有提供一些特殊的编译选项允许绕过CPU cache直接对内存进行读写，可参考gcc man手册“-mcache-volatile”、“-mcache-bypass”选项的描述。
+
 想了解下CC++中volatile的真实设计“意图”，然后，在stack overflow上我又找到了这样一个回答：[https://stackoverflow.com/a/12878500](https://stackoverflow.com/a/12878500)，重点内容已加粗显示。
 
 [[Nicol Bolas](https://stackoverflow.com/users/734069/nicol-bolas)](https://stackoverflow.com/users/734069/nicol-bolas)回答中提到：
@@ -198,14 +200,17 @@ write-back（写回法）中非常有名的[cache一致性算法MESI](https://en
 >**`volatile` guarantees *none of this*. Volatile works with "hardware, mapped memory and stuff" because the hardware that writes that memory makes sure that the cache issue is taken care of.** If CPU cores issued a memory barrier after every write, you can basically kiss any hope of performance goodbye. So C++11 has specific language saying when constructs are required to issue a barrier.
 
 [Dietmar Kühl](http://stackoverflow.com/users/1120273/dietmar-k%c3%bchl)回答中提到:
-The volatile keyword has nothing to do with concurrency in C++ at all! It is used to have the compiler prevented from making use of the previous value, i.e., the compiler will generate code accessing a volatile value every time is accessed in the code. The main purpose are things like memory mapped I/O. **However, use of volatile has no affect on what the CPU does when reading normal memory: If the CPU has no reason to believe that the value changed in memory, e.g., because there is no synchronization directive, it can just use the value from its cache.** To communicate between threads you need some synchronization, e.g., an std::atomic<T>, lock a std::mutex, etc.
 
-最后看了个标准：<http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2016.html>
+> The volatile keyword has nothing to do with concurrency in C++ at all! It is used to have the compiler prevented from making use of the previous value, i.e., the compiler will generate code accessing a volatile value every time is accessed in the code. The main purpose are things like memory mapped I/O. **However, use of volatile has no affect on what the CPU does when reading normal memory: If the CPU has no reason to believe that the value changed in memory, e.g., because there is no synchronization directive, it can just use the value from its cache.** To communicate between threads you need some synchronization, e.g., an std::atomic<T>, lock a std::mutex, etc.
+
+最后看了标准委员会对volatile的讨论：<http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2016.html>
 简而言之，就是CC++中当然也想提供java中volatile一样的线程可见性、阻止指令重排序，但是考虑到现有代码已经那么多了，突然改变volatile的语义，可能会导致现有代码的诸多问题，所以必须要再权衡一下，到底值不值得为volatile增加上述语义，当前C++标准委员会建议不改变volatile语义，而是通过新的std::atmoic等来支持上述语义。
 
 结合自己的实际操作、他人的回答以及CC++相关标准的描述，我认为CC++ volatile确实不能保证线程可见性。但是由于历史的原因、其他语言的影响、开发者自己的误解，这些共同导致开发者赋予了CC++ volatile很多本不属于它的能力，甚至大错特错，就连Linus Torvards也在内核文档中描述volatile时说，建议尽量用memory barrier替换掉volatile，他认为几乎所有可能出现volatile的地方都可能会潜藏着一个bug，并提醒开发者一定小心谨慎。
 
 ## 实践中如何操作
 
-- 开发者应该尽量编写可移植的代码，像x86这种强一致CPU，虽然结合volatile也可以保证线程可见性，但是既然提供了类似memory barrier()、std::atomic等更加靠谱的用法，为什么要编写这种晦涩难懂的代码呢？
-- 开发者应该编写可维护的代码，对于这种容易引起开发者误会的代码、特性，应该尽量少用，这虽然不能说成是语言设计上的缺陷，但是确实也不能算是一个优势，对于Java开发者接收CC++服务这种现实情况，怎么办？
+- 开发者应该尽量编写可移植的代码，像x86这种强一致CPU，虽然结合volatile也可以保证线程可见性，但是既然提供了类似memory barrier()、std::atomic等更加靠谱的用法，为什么要编写这种兼顾volatile、x86特性的代码呢？
+- 开发者应该编写可维护的代码，对于这种容易引起开发者误会的代码、特性，应该尽量少用，这虽然不能说成是语言设计上的缺陷，但是确实也不能算是一个优势。
+
+凡事都没有绝对的，用不用volatile、怎么用volatile需要开发者自己权衡，本文的目的主要是想总结CC++ volatile的“能”与“不能”以及背后的原因。由于个人认识的局限性，难免会出现错误，也请大家指正。
