@@ -6,7 +6,7 @@ volatile字面意思是“**不稳定的、易变的**”，不少编程语言�
 
 几十年的发展，很多开发者因为自己的偏见、误解，或者对某些语言特性（如Java中的volatile语义）的根深蒂固的认识，赋予了CC++ volatile本不属于它的能力，自己却浑然不知自己犯了多大的一个错误。
 
-我曾经以为CC++中volatile可以保证保证线程可见性，因为Java中是这样的，直到后来阅读Linux内核看到Linus Torvards的一篇文档，他强调了volatile可能带来的坏处“任何使用volatile的地方，都可能潜藏了一个bug”，我为他的“危言耸听”感到吃惊，所以我当时搜索了不少资料来求证CC++ volatile的能力，事后我认为CC++ volatile不能保证线程可见性。但是后来部门内一次分享，分享中提到了volatile来保证线程可见性，我当时心存疑虑，事后验证时犯了一个错误导致我错误地认为volatile可以保证线程可见性。直到我最近翻阅以前的笔记，翻到了几年前对volatile的疑虑……我决定深入研究下这个问题，以便能顺利入眠。
+我曾经以为CC++中volatile可以保证线程可见性，因为Java中是这样的，直到后来阅读Linux内核看到Linus Torvards的一篇文档，他强调了volatile可能带来的坏处“任何使用volatile的地方，都可能潜藏了一个bug”，我为他的“危言耸听”感到吃惊，所以我当时搜索了不少资料来求证CC++ volatile的能力，事后我认为CC++ volatile不能保证线程可见性。但是后来部门内一次分享，分享中提到了volatile来保证线程可见性，我当时心存疑虑，事后验证时犯了一个错误导致我错误地认为volatile可以保证线程可见性。直到我最近翻阅以前的笔记，翻到了几年前对volatile的疑虑……我决定深入研究下这个问题，以便能顺利入眠。
 
 ## 2. 从规范认识volatile
 
@@ -168,7 +168,7 @@ Stack Overflow上Dietmar Kühl提到，‘volatile’阻止了对变量的优化
 > - write-invalidate，当某个core（如core 1）的cache被修改为最新数据后，总线观测到更新，将写事件同步到其他core（如core n），将其他core对应相同内存地址的cache entry标记为invalidate，后续core n继续读取相同内存地址数据时，发现已经invalidate，会再次请求内存中最新数据。
 > - write-update，当某个core（如core 1）的cache被修改为最新数据后，将写事件同步到其他core，此时其他core（如core n）立即读取最新数据（如更新为core 1中数据）。
 
-write-back（写回法）中非常有名的[cache一致性算法MESI](https://en.wikipedia.org/wiki/MESI_protocol)，它是典型的强一致CPU，intel就凭借MESI优雅地实现了强一致CPU，现在intel优化了下MESI，得到了[MESIF](https://www.realworldtech.com/common-system-interface/5/)，它有效减少了广播中req/rsp数量，减少了带宽占用，提高了处理器处理的吞吐量。关于MESI，这里有个可视化的MESI交互演示程序可以帮助理解其工作原理，[查看MESI可视化交互程序](https://www.scss.tcd.ie/~jones/vivio/caches/MESI.htm)。
+write-back（写回法）中非常有名的[cache一致性算法MESI](https://en.wikipedia.org/wiki/MESI_protocol)，它是典型的强一致算法，intel就凭借MESI优雅地实现了强一致CPU，现在intel优化了下MESI，得到了[MESIF](https://www.realworldtech.com/common-system-interface/5/)，它有效减少了广播中req/rsp数量，减少了带宽占用，提高了处理器处理的吞吐量。关于MESI，这里有个可视化的MESI交互演示程序可以帮助理解其工作原理，[查看MESI可视化交互程序](https://www.scss.tcd.ie/~jones/vivio/caches/MESI.htm)。
 
 我们就先结合简单的MESI这个强一致性协议来试着理解下x86下为什么就可以保证强一致，结合多线程场景分析：
 
@@ -210,3 +210,4 @@ write-back（写回法）中非常有名的[cache一致性算法MESI](https://en
 - 开发者应该编写可维护的代码，对于这种容易引起开发者误会的代码、特性，应该尽量少用，这虽然不能说成是语言设计上的缺陷，但是确实也不能算是一个优势。
 
 凡事都没有绝对的，用不用volatile、怎么用volatile需要开发者自己权衡，本文的目的主要是想总结CC++ volatile的“能”与“不能”以及背后的原因。由于个人认识的局限性，难免会出现错误，也请大家指正。
+
