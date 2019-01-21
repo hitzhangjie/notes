@@ -14,7 +14,7 @@ import (
 func doHttpReq(httpUrl string, params, headers map[string]string) (map[string]interface{}, error) {
     // params
     form := make(url.Values)
-    for p, v := range params {
+    for k, v := range params {
         form.Add(k, v)
     }
     // build http request
