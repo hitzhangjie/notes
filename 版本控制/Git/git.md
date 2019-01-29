@@ -32,65 +32,61 @@
 
 7. git config --list查看当前的配置信息
 
-8. clone不等于checkout
-  其他版本控制系统，例如svn是通过checkout表示新检出一个repo；
-  在git里面不是，是通过clone来完整地克隆一个库，checkout用来检出某一个分支；
-
-9. git有多种数据传输协议，可以使用https协议或者ssh协议，比较常用。
+8. git有多种数据传输协议，可以使用https协议或者ssh协议，比较常用。
   https协议：git clone https://github.com/username/reponame [dirname]
   ssh协议：git clone git@github.com:username/reponame
   git协议：git clone git://github.com/username/reponame
 
-10. repo中的工作目录中的文件存在2种可能的状态，tracked和untracked！
+9. repo中的工作目录中的文件存在2种可能的状态，tracked和untracked！
   tracked，可能是已经被commit之后的文件，也可能是被stage的文件！
   untracked，是新创建的文件，还没有被commit或stage！
 
-11. git add 与 git stage
-   git add具有多个用途，可以添加untracked的文件到tracked文件列表、将修改后的文件放到staged文件列表、标记文件冲突已解决；
-   git stage，只是将修改后的文件stage到stage文件列表。
+10. git add 与 git stage
+  git add具有多个用途，可以添加untracked的文件到tracked文件列表、将修改后的文件放到staged文件列表、标记文件冲突已解决；
+  git stage，只是将修改后的文件stage到stage文件列表。
 
-12. git status -s进行简要的状态描述，例如M表示修改后的，??表示untracked的文件等等，git status比较详细，像比如一些ide，为了尽可能显示更多的信息，而工程中文件比较多，通常使用的就是git status -s进行输出，例如android studio中！
+11. git status -s进行简要的状态描述，例如M表示修改后的，??表示untracked的文件等等，git status比较详细，像比如一些ide，为了尽可能显示更多的信息，而工程中文件比较多，通常使用的就是git status -s进行输出，例如android studio中！
 
-13. repo/.gitignore文件中忽略某些文件，通过这个配置文件可以删除某些不应该被追踪的文件！
+12. repo/.gitignore文件中忽略某些文件，通过这个配置文件可以删除某些不应该被追踪的文件！
    \*：匹配任意文件
    dir/：忽略整个目录下面的所有文件
    dir/*.txt
    !flalfa：感叹号表示不忽略这个文件，即反转语义！
 
-14. 如果是之前文件被追踪过了，现在想通过.gitignore来取消对其进行跟踪，可以这么做，假定这个文件是filename：
+13. 如果是之前文件被追踪过了，现在想通过.gitignore来取消对其进行跟踪，可以这么做，假定这个文件是filename：
    1）如果希望保留filename这个文件，只是删除跟踪信息：git rm filename --cached
    2）如果希望将跟踪信息和文件一并删除：git rm filename -f，-f表示强制删除
    也可以分成2步来实现，即先删除，rm filename，然后再执行git rm filename，这样文件也删除了，跟踪信息也被删除了，在工程中是很常用的。
 
-15. git diff
+14. git diff
    git diff，未staged的文件与staged文件的比较;
    git diff --staged或者git diff --cached，已经staged的文件与上次commit文件的比较；
    git diff HEAD，当前文件与上次commit文件进行比较；
 
-16. git mv 操作通过git status可以看到这被git当做一个重命名操作，底层实现就是一个符号链接，不同名字的符号链接。
+15. git mv 操作通过git status可以看到这被git当做一个重命名操作，底层实现就是一个符号链接，不同名字的符号链接。
 
-17. 检查提交历史git log，git log -p can see the imported differences between commits
+16. 检查提交历史git log，git log -p can see the imported differences between commits
    git log --stat
    git log --pretty=oneline
    git log --pretty=format:"%h - %an, %ar : %s"
    git log --pretty=format:"%h %s" --graph
    git log --graph
 
-18. limit the output of git log
+17. limit the output of git log
    git log --author=??? --since=??? --before=?? --no-merges --pretty=???
    there're too many useful options, we can try that.
 
-19. git commit --amend, recommit! you can rewrite the commit msg. 注意push之后就不能再指向amend操作了。
+18. git commit --amend, recommit! you can rewrite the commit msg. 注意push之后就不能再指向amend操作了。
 
-20. git reset <file>, undo the stage action
-21. git checkout <file>, re-get the file and overwrite\neglect current modification.
-22. git remote -v显示remote的详细信息，git remote只显示名字，加上参数-v可以将fetch和pull的url全部都显示出来。
-23. git fetch [remote-name]，从指定的remote上面获取最新的信息，fetch只获取不合并，pull既fetch也合并。
-24. git push [remote-name] [branch-name]，将本地的branch-name对应的分支提交到remote-name对应的远程库的对应分支中。
-25. git remote show [remote-name]，会显示remote-name对应的远程库的信息，注意，git remote show命令会查询git服务器，获取相关信息，为什么要检查服务器呢？比如希望看到新添加的分支信息等！
-26. git remote rename,重命名一个remote
-27. git remote rm，删除一个remote
-28. git tag
+19. git reset <file>, undo the stage action
+20. git checkout <file>, re-get the file and overwrite\neglect current modification.
+21. git remote -v显示remote的详细信息，git remote只显示名字，加上参数-v可以将fetch和pull的url全部都显示出来。
+22. git fetch [remote-name]，从指定的remote上面获取最新的信息，fetch只获取不合并，pull既fetch也合并。
+23. git push [remote-name] [branch-name]，将本地的branch-name对应的分支提交到remote-name对应的远程库的对应分支中。
+24. git remote show [remote-name]，会显示remote-name对应的远程库的信息，注意，git remote show命令会查询git服务器，获取相关信息，为什么要检查服务器呢？比如希望看到新添加的分支信息等！
+25. git remote rename,重命名一个remote
+26. git remote rm，删除一个remote
+27. git tag
    git使用2种类型的tag，轻量级的，或者基于注解的。
    轻量级tag，就相当于创建一个不会改变的分支一样，包含的信息较少，所以叫做轻量级的。
    注解式tag，会将repo中的当前的代码进行存储，并包含一些额外的信息，但是包含的信息全面，建议使用这种方式的tag。
@@ -103,10 +99,10 @@
    这里的checksum可以通过git log进行查看，例如git log --pretty=oneline，并且checksum部分可以填写完整，也可以只填写一小部分
    为了查看起来方便，应该定制一个良好的pretty=format，我在format.pretty设置选项里面进行了设置，设置为;
    "%Cgreen%h %Cred%cn %Cblue%cr %Cred[Subject] %s%Creset"，这样显示的信息比较全面，又不失简洁。
-29. git tag创建的tag默认不会被push推送到服务器，如果确实需要推送tag到服务器，需要手动进行操作，执行如下命令：git push <remote-name> <tag-name>
+28. git tag创建的tag默认不会被push推送到服务器，如果确实需要推送tag到服务器，需要手动进行操作，执行如下命令：git push <remote-name> <tag-name>
    如果有很多个tag要提交到服务器的话，上面这种办法比较麻烦，可以在git push后面添加参数--tags来提交所有未提交到服务器的tag。
-30. 不能够从服务器的repo里面直接得到一个tag，但clone下来之后，如果我们希望将工作目录中的内容变成某个tag对应的内容的话，可以通过git checkout [- b <new-branch-name>]  <startpoint>
-31. 通过配置别名减少命令行输入时的繁琐：
+29. 不能够从服务器的repo里面直接得到一个tag，但clone下来之后，如果我们希望将工作目录中的内容变成某个tag对应的内容的话，可以通过git checkout [- b <new-branch-name>]  <startpoint>
+30. 通过配置别名减少命令行输入时的繁琐：
    git config --global alias.co checkout
    [alias]
          co = checkout
