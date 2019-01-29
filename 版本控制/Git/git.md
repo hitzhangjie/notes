@@ -65,28 +65,17 @@
 
 15. git mv 操作通过git status可以看到这被git当做一个重命名操作，底层实现就是一个符号链接，不同名字的符号链接。
 
-16. 检查提交历史git log，git log -p can see the imported differences between commits
-   git log --stat
-   git log --pretty=oneline
-   git log --pretty=format:"%h - %an, %ar : %s"
-   git log --pretty=format:"%h %s" --graph
-   git log --graph
+16. git commit --amend, recommit! you can rewrite the commit msg. 注意push之后就不能再指向amend操作了。
 
-17. limit the output of git log
-   git log --author=??? --since=??? --before=?? --no-merges --pretty=???
-   there're too many useful options, we can try that.
-
-18. git commit --amend, recommit! you can rewrite the commit msg. 注意push之后就不能再指向amend操作了。
-
-19. git reset <file>, undo the stage action
-20. git checkout <file>, re-get the file and overwrite\neglect current modification.
-21. git remote -v显示remote的详细信息，git remote只显示名字，加上参数-v可以将fetch和pull的url全部都显示出来。
-22. git fetch [remote-name]，从指定的remote上面获取最新的信息，fetch只获取不合并，pull既fetch也合并。
-23. git push [remote-name] [branch-name]，将本地的branch-name对应的分支提交到remote-name对应的远程库的对应分支中。
-24. git remote show [remote-name]，会显示remote-name对应的远程库的信息，注意，git remote show命令会查询git服务器，获取相关信息，为什么要检查服务器呢？比如希望看到新添加的分支信息等！
-25. git remote rename,重命名一个remote
-26. git remote rm，删除一个remote
-27. git tag
+17. git reset <file>, undo the stage action
+18. git checkout <file>, re-get the file and overwrite\neglect current modification.
+19. git remote -v显示remote的详细信息，git remote只显示名字，加上参数-v可以将fetch和pull的url全部都显示出来。
+20. git fetch [remote-name]，从指定的remote上面获取最新的信息，fetch只获取不合并，pull既fetch也合并。
+21. git push [remote-name] [branch-name]，将本地的branch-name对应的分支提交到remote-name对应的远程库的对应分支中。
+22. git remote show [remote-name]，会显示remote-name对应的远程库的信息，注意，git remote show命令会查询git服务器，获取相关信息，为什么要检查服务器呢？比如希望看到新添加的分支信息等！
+23. git remote rename,重命名一个remote
+24. git remote rm，删除一个remote
+25. git tag
    git使用2种类型的tag，轻量级的，或者基于注解的。
    轻量级tag，就相当于创建一个不会改变的分支一样，包含的信息较少，所以叫做轻量级的。
    注解式tag，会将repo中的当前的代码进行存储，并包含一些额外的信息，但是包含的信息全面，建议使用这种方式的tag。
@@ -99,10 +88,10 @@
    这里的checksum可以通过git log进行查看，例如git log --pretty=oneline，并且checksum部分可以填写完整，也可以只填写一小部分
    为了查看起来方便，应该定制一个良好的pretty=format，我在format.pretty设置选项里面进行了设置，设置为;
    "%Cgreen%h %Cred%cn %Cblue%cr %Cred[Subject] %s%Creset"，这样显示的信息比较全面，又不失简洁。
-28. git tag创建的tag默认不会被push推送到服务器，如果确实需要推送tag到服务器，需要手动进行操作，执行如下命令：git push <remote-name> <tag-name>
+26. git tag创建的tag默认不会被push推送到服务器，如果确实需要推送tag到服务器，需要手动进行操作，执行如下命令：git push <remote-name> <tag-name>
    如果有很多个tag要提交到服务器的话，上面这种办法比较麻烦，可以在git push后面添加参数--tags来提交所有未提交到服务器的tag。
-29. 不能够从服务器的repo里面直接得到一个tag，但clone下来之后，如果我们希望将工作目录中的内容变成某个tag对应的内容的话，可以通过git checkout [- b <new-branch-name>]  <startpoint>
-30. 通过配置别名减少命令行输入时的繁琐：
+27. 不能够从服务器的repo里面直接得到一个tag，但clone下来之后，如果我们希望将工作目录中的内容变成某个tag对应的内容的话，可以通过git checkout [- b <new-branch-name>]  <startpoint>
+28. 通过配置别名减少命令行输入时的繁琐：
    git config --global alias.co checkout
    [alias]
          co = checkout
