@@ -1,0 +1,1 @@
+git commit --amend, recommit! you can rewrite the commit msg. 注意push之后就不能再指向amend操作了。

@@ -1,0 +1,1 @@
+git reset <file>, undo the stage action

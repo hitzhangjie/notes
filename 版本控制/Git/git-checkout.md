@@ -1,0 +1,1 @@
+git checkout <file>, re-get the file and overwrite\neglect current modification.
