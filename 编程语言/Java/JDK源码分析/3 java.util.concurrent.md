@@ -334,3 +334,27 @@ public class ScheduledThreadPoolExecutor
 
 - scheduledAtFixedRate按固定频率执行，参考的是**task执行点开始的时间**；
 - scheduledWithFixedDelay按固定延时执行，参考的是**task执行点结束的时间**。
+
+## 2.3 ForkJoinPool
+
+Java 7里面引入了fork/join框架，任务处理通过“**分治（Divide and Conquer）**”的方式将其递归地细分为多个不相关的、足够简单的子任务，然后充分利用多处理器、多核来并行处理各个子任务，最后再将计算结果递归地汇总，从而提高并发处理能力。
+
+为了高效地进行并发处理，fork/join框架使用一个线程池**ForkJoinPool**来管理worker线程**ForkJoinWorkerThread**。
+
+### 2.3.1 ForkJoinPool
+
+ForkJoinPool是fork/join框架的核心，它实现了ExecutorService接口，实现了对worker线程的管理，也提供了一些工具给我们方便查询线程池的状态和性能。worker线程一次只能执行一个task，ForkJoinPool不会为每一个subtask都创建一个新的worker线程。
+
+ScheduledThreadPoolExecutor中是所有的worker线程共享一个全局task队列，所有worker线程都从这个队列中抢任务，全局锁就可能会成为性能瓶颈。ForkJoinPool中使用了不同的方式，**每一个worker线程都有自己的一个任务队列**，实现时用双端队列deque实现的。这种架构设计对于worker线程通过“**work-stealing算法**”平衡各自的负载是至关重要的。
+
+> 这一点有点类似于golang中的scheduler实现，golang scheduler GPM模型的设计，也是采用了work-stealing算法，物理线程M优先从绑定的P中获取G执行，如果没有则从其他P中获取G执行，再没有从全局队列中获取G执行。
+
+### 2.3.2 Work-Stealing算法
+
+**Work-Stealing算法，简单地讲就是，worker线程会从负载比较高的worker线程的任务队列中获取任务执行。**
+
+默认地，worker线程会从自己的deque任务队列队首出队task来执行，当这个队列空时，该线程就会从其他worker线程的队尾出队task来执行，或者从全局任务队列中获取。这种方式降低了多个worker线程争抢任务的情况，也减少了线程获取task需要的次数。
+
+### 2.3.3 ForkJoinPool示例
+
+这里有个Java中fork/join的示例，可以参考下：[Java Fork/Join示例](https://www.baeldung.com/java-fork-join)。从使用的API上来看，还是多少有点复杂，golang可以轻轻松松地写一个类似功能的示例出来。
