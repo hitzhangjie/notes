@@ -145,13 +145,13 @@ int main() {
 
 **1）不加volatile ：```gcc -g -O2 -o main main.c```**
 
-​	![-w581](assets/15218071592735.jpg)
+​	![-w581](assets/without-volatile.jpg)
 
 这里重点看下对变量a的操作，xor %ebx,%ebx将寄存器%ebx设为0，也就是将变量a=0存储到了%ebx，nopl不做任何操作，然后循环体里面每次读取a的值都是直接在%ebx+1，加完之后也没有写回内存。假如有个共享变量是多个线程共享的，并且没有加volatile，多个线程访问这个变量的时候就是用的物理线程跑的处理器核心寄存器中的数据，是无法保证内存可见性的。
 
 **2）加volatile：```gcc -g -O2 -o main main.c```**
 
-![-w534](assets/15218076745663.jpg)
+![-w534](assets/with-volatile.jpg)
 
 这里变量a的值首先被设置到了0xc(%rsp)中，nopl空操作，然后a++时是将内存中的值移动到了寄存器%eax中，然后执行%eax+1再写回内存0xc(%rsp)中，while循环中每次循环执行都是先从内存里面取值，更新后再写回内存。但是这样就可以保证线程可见性了吗？No！
 
@@ -169,6 +169,8 @@ Stack Overflow上Dietmar Kühl提到，‘volatile’阻止了对变量的优化
 > - write-update，当某个core（如core 1）的cache被修改为最新数据后，将写事件同步到其他core，此时其他core（如core n）立即读取最新数据（如更新为core 1中数据）。
 
 write-back（写回法）中非常有名的[cache一致性算法MESI](https://en.wikipedia.org/wiki/MESI_protocol)，它是典型的强一致算法，intel就凭借MESI优雅地实现了强一致CPU，现在intel优化了下MESI，得到了[MESIF](https://www.realworldtech.com/common-system-interface/5/)，它有效减少了广播中req/rsp数量，减少了带宽占用，提高了处理器处理的吞吐量。关于MESI，这里有个可视化的MESI交互演示程序可以帮助理解其工作原理，[查看MESI可视化交互程序](https://www.scss.tcd.ie/~jones/vivio/caches/MESI.htm)。
+
+![MESI协议](assets/MESI.png)
 
 我们就先结合简单的MESI这个强一致性协议来试着理解下x86下为什么就可以保证强一致，结合多线程场景分析：
 
