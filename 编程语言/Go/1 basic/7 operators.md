@@ -11,17 +11,17 @@ This tutorial explains arithmetic, relational, logical, bitwise, assignment, and
 
 # Arithmetic Operators
 
-Following table shows all the arithmetic operators supported by Go language. Assume variable A holds 10 and variable B holds 20 then −
+Following table shows all the arithmetic operators supported by Go language. Assume variable A holds 10 and variable B holds 20 then:
 
 | Operator | Description | Example |
-|:----------:|:--------------|:-----------| 
-| + | Adds two operands | A + B gives 30
-| - | Subtracts second operand from the first | A - B gives -10
-| * | Multiplies both operands |	A * B gives 200
-| / | Divides the numerator by the denominator. | B / A gives 2
-| % | Modulus operator; gives the remainder after an integer division. |B % A gives 0
-| ++ | Increment operator. It increases the integer value by one. | A++ gives 11
-| -- | Decrement operator. It decreases the integer value by one. | A-- gives 9
+|:----------:|:--------------|:-----------|
+| + | Adds two operands | A + B gives 30|
+| - | Subtracts second operand from the first | A - B gives -10|
+| * | Multiplies both operands |	A * B gives 200|
+| / | Divides the numerator by the denominator. | B / A gives 2|
+| % | Modulus operator; gives the remainder after an integer division. |B % A gives 0|
+| ++ | Increment operator. It increases the integer value by one. | A++ gives 11|
+| -- | Decrement operator. It decreases the integer value by one. | A-- gives 9|
 
 > Say it more precisely, both ++ and -- are simple statements in golang, they're not ordinary operators as in c, c++ and java. There're no ++num, --num forms.
 

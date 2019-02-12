@@ -122,5 +122,5 @@ func ExampleJsonCfg_testcase2 () {
 ### 看下文档效果
 运行```godoc -http=:6060```，然后浏览器中打开```localhost:6060```，定位到```package kisslulu/conf```即可查看文档效果，如下图所示。
 
-![do](media/doc.png)
+![do](assets/doc.png)
 
