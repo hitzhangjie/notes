@@ -2,5 +2,9 @@
 - [Pure Go Termbox Implementation](https://github.com/nsf/termbox-go)
 - [Reflection (Rich Descriptors) for Go Protocol Buffers](https://github.com/jhump/protoreflect)
 - [A Report Card for Your Go Application](https://github.com/gojp/goreportcard)
+- [How to find out which Go version built your binary](https://dave.cheney.net/2017/06/20/how-to-find-out-which-go-version-built-your-binary)
+- [A tool to list and diagnose Go processes currently running on your system](https://github.com/google/gops)
+- [Visualizing Concurrency in Go](https://divan.github.io/posts/go_concurrency_visualize/)
+- [Experimental visual Go environment](https://github.com/google/shenzhen-go)
+- [Package to build GUI apps with Go, HTML and CSS](https://github.com/murlokswarm/app)
 - 
-
