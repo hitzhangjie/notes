@@ -105,8 +105,6 @@ echo 0,1 > /sys/fs/cgroup/zhangjie/cpuset.cpus，绑定cpu核心运行后续创�
 
  cgexec -g cpuset:zhangjie ${命令}
 
-
-
 - 吞吐量：每单位时间完成的进程数目 * 周转时间：每个进程提出请求到运行完成的时间
 - 响应时间：从提出请求到第一次回应的时间
 
