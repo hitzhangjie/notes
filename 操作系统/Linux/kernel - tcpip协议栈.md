@@ -14,9 +14,11 @@ tcp连接主动打开的一端，假如被kill -9杀掉，那么该方会主动�
 
 **情景三：server端主动关连接后，client发送数据，收到RST包，但是api没有返回错误**
 
-如go中conn.Write()返回的error为nil，没有报Broken Pipe错误，需要等到第二次发送数据的时候才会检测到。Why？
+Q：如go中conn.Write()返回的error为nil，没有报Broken Pipe错误，需要等到第二次发送数据的时候才会检测到。Why？
 
-**情景4：进程不再了之后，但是连接状态还未完全销毁，发包给对方，会返回RST。**
+A：因为从server端视角来看，server端conn.Close()只发了FIN包给client，相当于连接写关闭，但是还可以收，client端认为还可以继续向server发数据，api conn.Write()并不会返回Broken Pipe错误，而是要等到server端返回RST之后才能感知到server端已经关闭了连接。
+
+**情景4：进程不在了之后，但是连接状态还未完全销毁，发包给对方，会返回RST。**
 
 操作系统认为这个连接虽然未完全关闭，但是socket归属的进程都没了，肯定没有上层来处理了，buffer里面有没有数据都不会被处理了，直接RST快速断开连接吧。
 
