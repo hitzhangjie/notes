@@ -1,4 +1,4 @@
-**tcp client: write to a half-closed tcp connection!**
+**`tcp client: write to a half-closed tcp connection!**
 
 这里探讨一下这个问题，Write to a closed tcp connection的问题。在深入讨论这些问题之前，首先要了解tcp state diagram，为此文末特地附上了经典的tcp状态转换图。
 
