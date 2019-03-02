@@ -70,7 +70,7 @@ list funcName
 svg
 ```
 
-这里的可视化方式，除了callgraph（调用图）以外，另一种比较直观的方式是flamegraph（火焰图），`go-torch pprof`内部会调用`go tool pprof`并将采样结果使用flamegraph的形式可视化，其使用方式与后者类似，`go-torch pprof -seconds http://ip:port/debug/pprof/profile`。
+这里的可视化方式，除了callgraph（调用图）以外，另一种比较直观的方式是flamegraph（火焰图），`go-torch pprof`内部会调用`go tool pprof`并将采样结果使用flamegraph的形式可视化，其使用方式与后者类似，`go-torch pprof -seconds=10 http://ip:port/debug/pprof/profile`。
 
 ### 内存占用
 
