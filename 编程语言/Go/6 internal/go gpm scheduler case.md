@@ -124,38 +124,8 @@ func newproc1(fn *funcval, argp *uint8, narg int32, callergp *g, callerpc uintpt
 // If next is false, runqput adds g to the tail of the runnable queue.
 // If next is true, runqput puts g in the _p_.runnext slot.
 // If the run queue is full, runnext puts g on the global queue.
-// Executed only by the owner P.
 func runqput(_p_ *p, gp *g, next bool) {
-	if randomizeScheduler && next && fastrand()%2 == 0 {
-		next = false
-	}
-
-	if next {
-	retryNext:
-		oldnext := _p_.runnext
-		if !_p_.runnext.cas(oldnext, guintptr(unsafe.Pointer(gp))) {
-			goto retryNext
-		}
-		if oldnext == 0 {
-			return
-		}
-		// Kick the old runnext out to the regular run queue.
-		gp = oldnext.ptr()
-	}
-
-retry:
-	h := atomic.LoadAcq(&_p_.runqhead) // load-acquire, synchronize with consumers
-	t := _p_.runqtail
-	if t-h < uint32(len(_p_.runq)) {
-		_p_.runq[t%uint32(len(_p_.runq))].set(gp)
-		atomic.StoreRel(&_p_.runqtail, t+1) // store-release, makes the item available for consumption
-		return
-	}
-	if runqputslow(_p_, gp, h, t) {
-		return
-	}
-	// the queue is not full, now the put above must succeed
-	goto retry
+    ...
 }
 ```
 
