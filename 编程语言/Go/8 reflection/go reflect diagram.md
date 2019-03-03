@@ -61,15 +61,15 @@ rv := reflect.ValueOf(v)
 
 ```go
 type Value struct {
-    rty *rtype
-    ptr unsafe.Pointer
-    flag
+    rty *rtype			// ptr指向变量的type
+    ptr unsafe.Pointer	// ptr指向实际的变量
+    flag				// ptr指向变量的kind
 }
 ```
 
-不管是reflect.Value中是有基本数据类型得来，还是有其他复合类型或者用户自定义类型得来，reflect.Value都是通过指针unsafe.Pointer的形式来引用的。
+不管是reflect.Value中是基本数据类型得来，还是有其他复合类型或者用户自定义类型得来，reflect.Value都是通过指针unsafe.Pointer的形式来引用的。flag描述了是那种kind，rty则描述了具体的类型信息。
 
-如果我们知道存的是是简单数据类型，则可以直接通过reflect.Value.Int()/Bool()/String()…来获取变量值。
+如果我们知道存的是是简单数据类型，则可以直接通过reflect.Value.Int()/Bool()/String()…来解引用获取变量值。
 
 ```go
 v := 100
@@ -79,10 +79,12 @@ fmt.Println(v.Bool())	// 如果知道是bool类型的
 fmt.Println(v.String()) // 如果知道是string类型的
 ```
 
-如果reflect.Value里面存的是比较复杂的类型，没有对应的api直接获取其值，那么可以先通过`reflect.Value.Interface()`来拿到指针，然后再自己根据实际类型解引用拿到变量值。
+如果reflect.Value里面存的是比较复杂的类型，没有对应的api直接获取其值，那么可以先通过`reflect.Value.Interface()`来解引用（也支持基本类型解引用）拿到变量值。
 
 
 ```go
+i := 100
+v := reflect.ValueOf(&i)
 fmt.Println(*v.Interface().(*int))	// 如果知道是*int类型的
 fmt.Println(*v.Interface().(*bool))	// 如果知道*bool类型的
 ...
