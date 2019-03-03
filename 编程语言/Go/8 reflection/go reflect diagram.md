@@ -90,6 +90,54 @@ fmt.Println(*v.Interface().(*bool))	// 如果知道*bool类型的
 ...
 ```
 
+### 2.2.3 reflect.Value -> reflect.Value
+
+- 如果reflect.Value中存的是一个interface，那么reflect.Value.Elem()可以返回接口中包含的值；
+
+- 如果reflect.Value中存的是一个Ptr，那么reflect.Value.Elem()会解引用这个Ptr并返回；
+
+- 其他情况下，调用reflect.Elem()会导致panic。
+
+针对第2种场景，常用来获取一个CanSet=true的Value，对原始变量内容进行修改，看下下面的示例（Settability，to modify a reflection object，the value must be settable）。
+
+```go
+import "fmt"
+import "reflect"
+
+var x int = 100
+
+fmt.Println(x)
+fmt.Println(reflect.TypeOf(x))
+fmt.Println()
+
+// pass a copy of x as function argument, 
+// if we modify rv's underlying value, x will be unaffected
+rv := reflect.ValueOf(x)
+fmt.Println(rv.CanSet())
+fmt.Println()
+
+// pass address of x as function argument,
+// if we modify rv's underlying value, we cannot, why?
+// we cannot change value of &x, we want to change content pointed by &x,
+rv = reflect.ValueOf(&x)
+fmt.Println(rv.CanSet())
+// we can use this pointer to modify it, though.
+// but we want to use rv to change it, keep going on.
+*rv.Interface().(*int) = 12345
+fmt.Println(x)
+fmt.Println()
+
+// pass address of x as function argument,
+// then use reflect.Value.Elem() to dereference the pointer &x to get the original variable,
+// then we can modify the value of variable.
+// this way, it works like former `*rv.Interface().(*int)=12345`.
+rv = reflect.ValueOf(&x)
+e := rv.Elem()
+fmt.Println(e.CanSet())
+e.SetInt(24680)
+fmt.Println(x)
+```
+
 ## 2.3 reflect.Type & reflect.Value
 
 ### 2.3.1 reflect.Type -> reflect.Type
