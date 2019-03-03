@@ -19,14 +19,22 @@ Vim有人吹捧，有人贬低，究其原因无非是“不懂装懂”，说�
 当然有些人说，我只是用Vim做点简单的编辑，比如在服务器上改个配置，那这篇文章其实可以不用往下读了。强调一下，这篇文章只适合那些渴望了解Vim设计风格、认同Vim极简、高效的风格的同学阅读，因为没有这样的共识的话，该文章后续所有的内容可能都是没有意义的！比我认为上下左右按键比hjlk移动方向更加简单，如果你不否认这点，那后面没必要读了！
 
 
-# vim常用
+# 3 vim常用
 
+# 4 vim进阶
 
-# vim进阶
+### 4.1 visualblock编辑模式
 
-# vim开发
+如何进入vim blockvisual编辑模式呢？
 
+- press v进入visual模式选择对应的文本块，
+- 然后ctrl+v创建block（block创建之后也可以通过hjkl来调整），
+- 然后再insert、append、delete就可以了，
+- 按esc，对一行的修改会同步到visualblock中所有行。
 
+`:help v_b_i`，可以查看详细visualblock模式下插入内容的教程，也可以顺便学习append、delete等内容。
+
+# 5 vim开发
 
 
 
