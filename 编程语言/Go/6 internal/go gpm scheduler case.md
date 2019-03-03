@@ -43,6 +43,8 @@ ii: 8
 
 好吧，这是一个促使我们研究下go runtime scheduler的好例子。开始吧！先看看这个ppt中介绍的内容，https://speakerdeck.com/retervision/go-runtime-scheduler，里面大致描述了`go func() {}`调用开始的大致执行过程。
 
+![image-20190303235111260](assets/image-20190303235111260.png)
+
 首先描述下GPM中三者的具体职责。
 
 >Gs, Ps, Ms Responsibility:
