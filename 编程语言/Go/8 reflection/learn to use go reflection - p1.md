@@ -2,7 +2,7 @@
 
 [![Go to the profile of Jon Bodner](assets/1*yHkNHFXnp6oQ_Rb66JdxEQ-20190303150216219.jpeg)](https://medium.com/@jon_43067?source=post_header_lockup)
 
-[Jon Bodner](https://medium.com/@jon_43067)Follow Dec 13, 2017
+[Jon Bodner](https://medium.com/@jon_43067) Dec 13, 2017
 
 ### **What’s Reflection?**
 
