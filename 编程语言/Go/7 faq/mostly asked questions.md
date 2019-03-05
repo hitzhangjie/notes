@@ -104,7 +104,9 @@ fmt.Println(i, j)
 
 ### go defer func
 
-defer入栈的函数f，在函数退出阶段f执行的时候，它的参数才会开始进行计算，比如f(v int)是值传递的，实际入栈f的时候，入的是引用的变量的地址。
+defer入栈的函数f，在函数退出阶段f执行的时候，它的参数才会开始进行计算。这里的参数涉及到传值、传引用，除了参数还有闭包中某些变量的按值捕获、按引用捕获的问题。
+
+比如下面这个示例，`defer func f(v int)`，v是按值传递的，output的时候输出0；变量i则是按引用捕获的，因为后续i++有对其进行修改，最终会输出1。所以最终输出的结果是“`0 1`”。
 
 ```go
 package main
@@ -113,13 +115,13 @@ import "fmt"
 func main() {
     i := 0
     defer func(v int) {
-       fmt.Println(i) 
+        fmt.Println(v, i)
     }(i)
     i++
 }
 ```
 
-Output: `1`
+Output: `0 1`
 
 > We can do better by exploiting the fact that arguments to deferred functions are evaluated when the defer executes. 
 
