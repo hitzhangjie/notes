@@ -127,11 +127,111 @@ for ; it.hasNext(); {
 
 C本身没有提供defer或者类似defer机制，但是借助gcc扩展也可以实现类似能力。利用gcc提供的扩展属性`__cleanup__`来修饰变量，当变量离开作用域时可以自动调用注册的回调函数。
 
-下面是 [gcc扩展属性``的描述](http://echorand.me/site/notes/articles/c_cleanup/cleanup_attribute_c.html)，感兴趣的可以了解下。其实gcc提供的这种扩展属性比go defer控制力度更细，因为它可以控制的粒度可以细到作用域级别，而go defer只能将有效范围细到函数级别。
+下面是 [gcc扩展属性``的描述](http://echorand.me/site/notes/articles/c_cleanup/cleanup_attribute_c.html)，感兴趣的可以了解下。其实gcc提供的这种扩展属性比go defer控制力度更细，因为它可以控制的粒度可以细到“**作用域级别**”，而go defer只能将有效范围细到“**函数级别**”。
+
+##### 示例一
+
+ `cleanup_attribute_demo.c`
 
 ```c
-// fixme
+# include <stdio.h>
 
+/* Demo code showing the usage of the cleanup variable
+   attribute. See:http://gcc.gnu.org/onlinedocs/gcc/Variable-Attributes.html
+*/
+
+/* cleanup function
+   the argument is a int * to accept the address
+   to the final value
+*/
+
+void clean_up(int *final_value)
+{
+  printf("Cleaning up\n");
+  printf("Final value: %d\n",*final_value);
+}
+
+int main(int argc, char **argv)
+{
+  /* declare cleanup attribute along with initiliazation
+     Without the cleanup attribute, this is equivalent 
+     to:
+     int avar = 1;
+  */
+  
+  int avar __attribute__ ((__cleanup__(clean_up))) = 1;
+  avar = 5;
+
+  return 0;
+}
+```
+
+编译运行：
+
+```bash
+$ gcc -Wall cleanup_attribute_demo.c
+$ ./a.out
+Cleaning up
+Final value: 5
+```
+
+##### 示例二
+
+```c
+/* Demo code showing the usage of the cleanup variable
+   attribute. See:http://gcc.gnu.org/onlinedocs/gcc/Variable-Attributes.html
+*/
+
+/* Defines two cleanup functions to close and delete a temporary file
+   and free a buffer
+*/
+
+# include <stdlib.h>
+# include <stdio.h>
+
+# define TMP_FILE "/tmp/tmp.file"
+
+void free_buffer(char **buffer)
+{
+  printf("Freeing buffer\n");
+  free(*buffer);
+}
+
+void cleanup_file(FILE **fp)
+{
+  printf("Closing file\n");
+  fclose(*fp);
+
+  printf("Deleting the file\n");
+  remove(TMP_FILE);
+}
+
+int main(int argc, char **argv)
+{
+  char *buffer __attribute__ ((__cleanup__(free_buffer))) = malloc(20);
+  FILE *fp __attribute__ ((__cleanup__(cleanup_file)));
+
+  fp = fopen(TMP_FILE, "w+");
+  
+  if (fp != NULL)
+    fprintf(fp, "%s", "Alinewithnospaces");
+
+  fflush(fp);
+  fseek(fp, 0L, SEEK_SET);
+  fscanf(fp, "%s", buffer);
+  printf("%s\n", buffer);
+  
+  return 0;
+}
+```
+
+编译运行：
+
+```bash
+Alinewithnospaces
+Closing file
+Deleting the file
+Freeing buffer
 ```
 
 ### 3.3.2 模拟defer in C++
