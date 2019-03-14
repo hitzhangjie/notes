@@ -14,3 +14,4 @@ protobuf 及 protoc-gen-go安装：
      cd golang-protobuf
      make install
      默认安装到$GOPATH/bin下面，记得将该路径加到$PATH
+
