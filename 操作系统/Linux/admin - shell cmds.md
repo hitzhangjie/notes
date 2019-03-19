@@ -136,6 +136,13 @@ grep参数-A表示显示匹配行及其后面多少行，-B表示显示匹配行
 
 `runuser -l username -c command`
 
+### 4.4 计算进程列表的OOM分值
+
+```bash
+printf 'PID\tOOM Score\tOOM Adj\tCommand\n'; while read -r pid comm; 
+do [ -f /proc/$pid/oom_score ] && [ $(cat /proc/$pid/oom_score) != 0 ] && printf '%d\t%d\t\t%d\t%s\n' "$pid" "$(cat /proc/$pid/oom_score)" "$(cat /proc/$pid/oom_score_adj)" "$comm"; done < <(ps -e -o pid= -o comm=) | sort -k 2nr;
+```
+
 ## 5 cpu相关
 ## 6 内存相关
 
