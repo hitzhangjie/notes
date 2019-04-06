@@ -92,7 +92,7 @@ test_nrpc
 
 ### 服务初始化
 
-#### 初始化：配置加载
+#### 初始化：配置说明
 
 GoNeat框架读取的配置文件，包括：
 
@@ -306,13 +306,176 @@ GoNeat框架读取的配置文件，包括：
      appid = ${your_applied_appid}                               #天机阁申请的appid
      ```
 
+#### 初始化：配置加载
+
+在详细介绍了GoNeat依赖的配置文件及各个配置项之后，来介绍下GoNeat的配置解析、加载过程。
+
+GoNeat支持两种格式的配置文件:
+
+- 一种是“*ini格式*”的配置文件，
+- 一种是“json格式”的配置文件。
+
+配置加载，发生在NServer实例化过程中，**default_nserver.NewNServer()**，此时会加载service.ini、monitor.ini、log.ini，并根据配置信息完成NServer实例化。
+
+```mermaid
+sequenceDiagram
+
+default_nserver ->> nserver : NewNServer()
+activate default_nserver
+activate nserver
+nserver ->> nserver : NewNServer()
+nserver ->> config : config.NewIniConfig()
+activate config
+config ->> config : load & parse
+config -->> nserver : return config
+deactivate config
+nserver ->> nserver : init log, monitor, NServer
+deactivate nserver
+nserver -->> default_nserver : return NServer instance
+deactivate default_nserver
+```
+
 #### 初始化：logging
+
+NServer实例化过程中，会创建三个logger对象：
+
+- go_neat_frame，框架处理逻辑日志，对应log.ini中的[go_neat_frame]；
+- go_neat_access，框架请求流水日志，对应log.ini中的[go_neat_access]；
+- default，框架默认日志，对应log.ini中的[default]；
+
+每个logger对象的创建都是按照如下流程去执行的，**nlog.GetLogger(logger)**，会首先检查loggerCache中key=$logger的logger对象是否已经存在，如果存在则直接返回，反之，加载log.ini中的配置[\$logger]，检查logwrite配置项，logwrite指定了日志输出的目的地，如：
+
+- console，输出到控制台；
+- simple，普通日志文件，不支持股东；
+- rolling，支持滚动的日志文件，包括按照日期滚动、文件大小滚动；
+
+logwrite允许逗号分隔多个输出，如`logwrite = console, rolling`，那么此时logger.Info(…)输出的信息将同时输出到控制台和滚动日志文件，详细可参考**nlog.MultiWriterLogWriter**实现。
+
+> **nlog.MultiWriterLogWriter**可以进一步重构，如支持将日志信息上报到elasticsearch、天机阁等其他远程日志系统，现在的实现稍作修改就可以支持第三方日志组件实现，elasticsearch、天机阁等远程日志组件只要实现nlog.NLog接口并完成该实现的注册即可。
+
+```mermaid
+sequenceDiagram
+
+
+
+nserver ->> nlog : NewLogger(logger)
+activate nserver
+activate nlog
+nlog ->> cache : get logger via cache
+cache -->> nlog : return one if cached
+nlog ->> nlog : load conf
+note right of nlog : section [$logger]
+nlog ->> nlog : init logger
+note right of nlog : console logger,<br>simple logger,<br>rolling logger
+nlog ->> nlog : addWriter
+note right of nlog : one logger can<br>have multi output<br> destinations
+nlog -->> nserver : return logger
+deactivate nlog
+deactivate nserver
+
+```
 
 #### 初始化：tracing
 
+分布式调用链对GoNeat框架来说是可插拔的，回想一下trace.ini，我们支持三种调用链backend实现，包括zipkin、jaeger以及公司内部的天机阁，如果希望在服务中使用tracing：
+
+- 使用zipkin，那么在程序中`import _ “git.code.oa.com/go-neat/core/depmod/trace/zipkin`即可；
+- 使用jaeger，那么在程序中`import _ “git.code.oa.com/go-neat/core/depmod/trace/jaeger`即可；
+- 使用天机阁，那么在程序中`import _ “git.code.oa.com/go-neat/core/depmod/trace/tianjige`即可；
+
+当然除了import对应的调用链实现，也要对配置文件做调整：
+
+- 使用zipkin，trace.ini里面设置zipkin.enabled = true；
+- 使用jaeger，trace.ini里面设置jaeger.enabled = true;
+- 使用天机阁，trace.ini里面设置tianjige.enabled = true;
+
+> 如果后续想要扩展tracing backend，只需要提供对应的tracer初始化方法就可以了，类似于zipkin、jaeger、天机阁初始化方式。如果要在项目中使用该tracing实现，通过import对应实现+配置文件激活就可以。import对应的tracing backend初始化，并添加对应的初始化配置，that’s it!
+
 #### 初始化：协议handler
 
+##### 需要我做什么？
+
+GoNeat框架支持在单个进程中同时支持多种业务协议，如：
+
+- 在port 8000提供nrpc服务，
+- 在port 8001提供ilive协议，
+- 在port 8080提供http服务。
+
+以提供nrpc服务为例，只需要做3件事情，包括：
+
+- 配置文件service.ini中增加[nrpc-service]配置项，指明要绑定的端口，如`tcp.port = 8000`；
+- 代码引入协议handler，如`import _ "git.code.oa.com/go-neat/core/proto/nrpc/nprc_svr/default_nrpc_handler"`；
+- 代码注册nrpc命令字，如`default_nserver.AddExec(“BuyApple”, BuyApple)`；
+
+如果要在此基础上继续支持http服务呢，一样的三件事，包括：
+
+- 配置文件service.ini中增加[http-service]配置项，指明要绑定的端口及url前缀，如：
+
+  ```ini
+  [http-service]
+  http.port = 8080
+  http.prefix = /cgi-bin/web
+  ```
+
+- 代码引入协议handler，如`import _ “git.code.oa.com/go-neat/core/proto/http/dft_httpsvr”`；
+
+- 代码注册http uri，如`default_nserver.AddExec(“/BuyApple”, BuyApple)`；
+
+That’s all！GoNeat要支持常用的业务协议，只需要做上述修改即可，是不是看上去还挺简单方便！
+
+> 还记得写一个spp服务同时支持多种协议，需要在spp_handle_input里面区分端口来源，然后再调用对应的解包函数，判断请求命令字，转给对应的函数处理，每次有这种需要都需要写一堆这样的代码，好啰嗦！
+
+##### 框架做了什么？
+
+不知道读者是否注意到，nrpc命令字`BuyApple`，http请求`$host:8080/cgi-bin/web/BuyApple`，这两种不同的请求最终是被路由到了相同的方法`BuyApple`进行处理，意味着开发人员无需针对不同的协议做任何其他处理，GoNeat框架帮你搞定这一切，业务代码零侵入。
+
+真的业务代码零侵入吗？http请求参数Get、POST方式呢？nrpc协议是protbuf格式呢？同一份业务代码如何兼容？
+
+GoNeat对不同的业务协议抽象为如下几层：
+
+- 协议定义，如nrpc、ilive、simplesso、http包格式；
+- 协议handler，完成协议的编码、解码操作（接口由NHandler定义）；
+- 会话session，维持客户端请求、响应的会话信息（接口由NSession定义）；
+
+当希望扩展GoNeat的协议时，需要提供协议的包结构定义、协议的编解码实现、协议会话实现，nrpc协议对应的会话实现为NRPCSession、http协议对应的会话实现时HttpSession。
+
+好，现在介绍下一份代码`func BuyApple(ctx context.Context, session nsession.NSession) (interface{}, error)`为什么可以支持多种协议。从下面的代码中不难看出，秘密在于不同协议会话对`NSession.ParseRequestBody(…)`的实现：
+
+- 如果是pb协议，session里面会直接通过`proto.Unmarshal(data []byte, v interface{})`来实现请求解析；
+- 如果是http协议，session里面会多做些工作：
+  - 如果是`POST`方法，且`Content-Type=“application/json”`，则读取请求体然后`json.Unmarshal(...)`接口；
+  - 其他情况下，读取GET/POST请求参数转成map[param]=value，编码为json再反序列化为目标结构体；
+
+    ```go
+    func BuyApple(ctx context.Context, session nsession.NSession) (interface{}, error) {
+      req := &test_nrpc.BuyAppleReq{}
+      err := session.ParseRequestBody(req)
+      ...
+
+      rsp := &test_nrpc.BuyAppleRsp{}
+      err = BuyAppleImpl(ctx, session, req, rsp)
+      ...
+      return rsp, nil
+    }
+
+    func BuyAppleImpl(ctx context.Context, session nsession.NSession, req *test_nrpc.BuyAppleReq, rsp *test_nrpc.BuyAppleRsp) error {
+      // business logic
+      return nil
+    }
+
+    ```
+
+Google Protocol Buffer是一种具有自描述性的消息格式，凭借良好的编码、解码速度以及数据压缩效果，越来越多的开发团队选择使用pb来作为服务间通信的消息格式，GoNeat框架也推荐使用pb作为首选的消息格式。
+
+由于其自描述性，pb文件被用来描述一个后台服务是再合适不过了，基于此也衍生出一些周边工具，如自动化代码生成工具gogen用来快速生成服务模板、client测试程序等等。
+
 ### 服务启动
+
+前面零零散散地介绍了不少东西，配置文件、配置加载、logging初始化、tracing集成、协议handler注册，了解了这些之后，现在我们从整体上来认识下GoNeat服务的启动过程。
+
+说是从整体上来认识启动流程，并不意味着这里没有新的细节要引入。中间还是会涉及到一些比较细节的问题，如tcp、udp监听如何处理的，为什么要支持端口重用，为支持平滑退出需要做哪些准备等等。也许这里章节划分的不是特别科学，希望我按照一个GoNeat服务的生命周期来叙述，能尽可能多地覆盖到那些必要的设计和细节。
+
+
 
 ### 服务怠速
 
