@@ -206,5 +206,3 @@ GoNeat经过了一年多的开发，目前已经趋于稳定，在PCG信息流�
 
 欢迎大家体验GoNeat，也欢迎大家反馈意见和建议，Try programming your next server in GoNeat！
 
-
-
