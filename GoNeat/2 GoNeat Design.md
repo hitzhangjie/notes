@@ -4,11 +4,11 @@ GoNeat，追求“小而美”的设计，是基于golang开发的面向后台�
 
 本文从整体上介绍GoNeat的设计，希望能让大家从全局上认识GoNeat是如何运行的，运行期间涉及到哪些处理流程，处理读者对某部分感兴趣，可以自行阅读对应部分的源码，或者与我们开发者交流，都是可以的。
 
-## GoNeat整体架构
+## GoNeat 整体架构
 
 下图展示了GoNeat的整体架构设计，为了能简单直观地介绍GoNeat的整体工作流程，在下图中省略了部分细节。省略掉的部分细节也是比较重要的，我会提到它们，篇幅原因不会过多描述。
 
-![go-neat](assets/go-neat.png)
+![GoNeat](assets/GoNeat-Arch.png)
 
 GoNeat整体架构设计中，包括如下核心组成部分:
 
@@ -21,7 +21,7 @@ GoNeat整体架构设计中，包括如下核心组成部分:
 
 介绍完框架的核心组件及作用之后，下面结合一个示例服务的执行流程，介绍下服务启动、处理请求、服务退出的详细流程及设计细节。
 
-## GoNeat服务示例
+## GoNeat 服务示例
 
 我们仍然使用“*test_nrpc.proto*”作为示例服务pb：
 
@@ -88,9 +88,11 @@ test_nrpc
 
 ```
 
-## GoNeat设计细节
+## GoNeat 内部设计
 
-### 服务初始化
+一直没想清楚，该以什么样的方式来描述GoNeat的设计细节，我
+
+## GoNeat - 初始化
 
 #### 初始化：配置说明
 
@@ -209,7 +211,7 @@ GoNeat框架读取的配置文件，包括：
    ```ini
    [test_nrpc]
    
-   #服务接口-BuyApple
+   //服务接口-BuyApple
    monitor.BuyApple.timecost10=0                #接口BuyApple延时10ms
    monitor.BuyApple.timecost20=0                #接口BuyApple延时20ms
    monitor.BuyApple.timecost50=0                #接口BuyApple延时50ms
@@ -218,8 +220,7 @@ GoNeat框架读取的配置文件，包括：
    monitor.BuyApple.timecost3000=0              #接口BuyApple延时3000ms
    monitor.BuyApple.timecostover3000=0          #接口BuyApple延时>3000ms
    
-   
-   #服务接口-SellApple
+   //	服务接口-SellApple
    monitor.SellApple.timecost10=0                #接口SellApple延时10ms
    monitor.SellApple.timecost20=0                #接口SellApple延时20ms
    monitor.SellApple.timecost50=0                #接口SellApple延时50ms
@@ -469,21 +470,19 @@ Google Protocol Buffer是一种具有自描述性的消息格式，凭借良好�
 
 由于其自描述性，pb文件被用来描述一个后台服务是再合适不过了，基于此也衍生出一些周边工具，如自动化代码生成工具gogen用来快速生成服务模板、client测试程序等等。
 
-### 服务启动
+## GoNeat - 服务启动
 
 前面零零散散地介绍了不少东西，配置文件、配置加载、logging初始化、tracing集成、协议handler注册，了解了这些之后，现在我们从整体上来认识下GoNeat服务的启动过程。
 
 说是从整体上来认识启动流程，并不意味着这里没有新的细节要引入。中间还是会涉及到一些比较细节的问题，如tcp、udp监听如何处理的，为什么要支持端口重用，为支持平滑退出需要做哪些准备等等。也许这里章节划分的不是特别科学，希望我按照一个GoNeat服务的生命周期来叙述，能尽可能多地覆盖到那些必要的设计和细节。
 
+## GoNeat - 服务怠速
 
+## GoNeat - 请求处理
 
-### 服务怠速
+## GoNeat - 监控上报
 
-### 请求处理
+## GoNeat - 平滑退出
 
-### 监控上报
-
-### 平滑退出
-
-## 其他
+## GoNeat - More
 

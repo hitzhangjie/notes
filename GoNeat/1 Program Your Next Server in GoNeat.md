@@ -4,6 +4,8 @@
 
 GoNeat，是一个基于golang开发的面向后台开发人员的RPC框架，目前正在向更完善的微服务框架演进。
 
+<img src="assets/GoNeat-Logo.jpg" style="height:360px">
+
 ## 设计理念
 
 GoNeat，追求“小而美”的设计，是基于golang开发的面向后台开发的微服务框架，旨在提升后台开发效率，让大家摆脱各种琐碎的细节，转而更加专注于服务质量本身。Simple but Powerful，除了高性能的处理能力，也支持服务注册发现、rpc调用、立体化监控、集成常用公司组件，还支持一键快速配置开发环境，支持一键生成服务代码、测试代码让开发、测试变得更简单高效。目前仍然在持续演进中，欢迎体验、加入到我们中来……Try programming your next server in GoNeat！
