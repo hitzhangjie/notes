@@ -25,6 +25,8 @@ GoNeat整体架构设计中，包括如下核心组成部分:
 
 我们仍然使用“*test_nrpc.proto*”作为示例服务pb：
 
+***file: test_nrpc.proto***
+
 ```protobuf
 	syntax = "proto2";
 	package test_nrpc;
@@ -117,7 +119,7 @@ GoNeat框架是按照如下方式进行组织的，相关子工程托管在[git.
 
 GoNeat框架读取的配置文件，包括：
 
-1. service.ini，包括框架核心配置项，以及rpc相关配置项，也添加自定义配置项：
+1. ***test_nrpc/conf/service.ini***，包括框架核心配置项，以及rpc相关配置项，也添加自定义配置项：
 
    **[service]** 框架核心配置项：
 
@@ -223,7 +225,7 @@ GoNeat框架读取的配置文件，包括：
        ...
        ```
 
-2. monitor.ini，用于监控服务接口本身的总请求量、处理成功、处理失败量，以及处理耗时分布情况：
+2. ***test_nrpc/conf/monitor.ini***，用于监控服务接口本身的总请求量、处理成功、处理失败量，以及处理耗时分布情况：
 
    **[test_nrpc]** 服务接口本身监控打点monitor id：
 
@@ -249,7 +251,7 @@ GoNeat框架读取的配置文件，包括：
    monitor.SellApple.timecostover3000=0          #接口SellApple延时>3000ms
    ```
 
-3. log.ini，代替service.ini中logging相关配置，用来支持工厂模式获取logger：
+3. ***test_nrpc/conf/log.ini***，代替service.ini中logging相关配置，用来支持工厂模式获取logger：
 
    这里默认配置了三个logger：
 
@@ -288,7 +290,7 @@ GoNeat框架读取的配置文件，包括：
    rolling.lognum = 5
    ```
 
-4. trace.ini，用于分布式跟踪相关的配置：
+4. ***test_nrpc/conf/trace*.ini**，用于分布式跟踪相关的配置：
 
    GoNeat框架通过opentracing api支持分布式跟踪，支持三种backend实现，zipkin、jaeger、天机阁：
 
@@ -464,25 +466,31 @@ GoNeat对不同的业务协议抽象为如下几层：
 - 如果是pb协议，session里面会直接通过`proto.Unmarshal(data []byte, v interface{})`来实现请求解析；
 - 如果是http协议，session里面会多做些工作：
   - 如果是`POST`方法，且`Content-Type=“application/json”`，则读取请求体然后`json.Unmarshal(...)`接口；
+
   - 其他情况下，读取GET/POST请求参数转成map[param]=value，编码为json再反序列化为目标结构体；
+
+    ***file: test_nrpc/src/exec/test_nrpc.go：***
 
     ```go
     func BuyApple(ctx context.Context, session nsession.NSession) (interface{}, error) {
       req := &test_nrpc.BuyAppleReq{}
       err := session.ParseRequestBody(req)
       ...
-
+    
       rsp := &test_nrpc.BuyAppleRsp{}
       err = BuyAppleImpl(ctx, session, req, rsp)
       ...
       return rsp, nil
     }
+    ```
+    ***file: test_nrpc/src/exec/test_nrpc_impl.go：***
 
+    ```go
     func BuyAppleImpl(ctx context.Context, session nsession.NSession, req *test_nrpc.BuyAppleReq, rsp *test_nrpc.BuyAppleRsp) error {
       // business logic
       return nil
     }
-
+    
     ```
 
 Google Protocol Buffer是一种具有自描述性的消息格式，凭借良好的编码、解码速度以及数据压缩效果，越来越多的开发团队选择使用pb来作为服务间通信的消息格式，GoNeat框架也推荐使用pb作为首选的消息格式。
@@ -497,7 +505,121 @@ Google Protocol Buffer是一种具有自描述性的消息格式，凭借良好�
 
 ### 启动：实例化NServer
 
-### 启动：实例化
+一个GoNeat服务对应着NServer实例，为了方便快速裸写一个GoNeat服务，go-neat/core内部提供了一个package `default_nserver`，代码中只需要添加如下两行代码就可以快速启动一个GoNeat服务：
+
+```go
+package main
+import (
+  “git.code.oa.com/go-neat/core/nserver/default_nserver”
+)
+
+func main() {
+  default_nserver.Serve()
+}
+```
+
+其实，该NServer实例会直接退出，因为它不知道要处理什么协议，这里应该import要支持的协议handler。当我们创建一个pb文件，并通过命令`gogen -protofile=*.proto -protocol=nrpc`创建工程时，gogen自动在生成代码中包含了nrpc协议对应的协议handler，这里的协议handler做了什么呢？或者说import这个协议handler时，发生了什么呢？
+
+```go
+import (
+  _ "git.code.oa.com/go-neat/core/proto/nrpc/nrpc_svr/default_nrpc_handler"
+)
+```
+
+> NServer实例化过程中，会涉及到配置加载、logger实例化相关的操作，这里在***GoNeat - 初始化***一节中已有提及，这里相关内容不再赘述。
+
+### 启动：加入协议handler
+
+以nrpc协议handler为例：
+
+***file: go-neat/core/proto/nrpc/nrpc_svr/default_nrpc_handler/nrpc_svr_init.go***
+
+```go
+package default_nrpc_handler
+
+import (
+	"git.code.oa.com/go-neat/core/nserver/default_nserver"
+	"git.code.oa.com/go-neat/core/proto/nrpc/nrpc_svr"
+)
+
+func init() {
+	default_nserver.RegisterHandler(nrpc_svr.NewNRPCHandler())
+}
+```
+
+当import default_nrpc_handler时，`func init()`会自动执行，它会向上述NServer实例中注册一个新的协议handler，注册过程中发生了什么呢？可参考如下简化版的代码，它主要做这些事情：
+
+- 读取service.ini中的配置`[nrpc-service]`section下的tcp.port，如果大于0创建一个StreamServer；
+- 读取service.ini中的配置`[nrpc-service]`section下的udp.port，如果大于0创建一个PacketServer；
+- 将上述新创建的StreamServer和PacketServer添加到NServer示例的ServerModule集合中；
+
+***file: go-neat/core/nserver/neat_svr.go***
+
+```go
+func (svr *NServer) RegisterHandler(handler NHandler) {
+	...
+  moduleNode := handler.GetProto() + "-service"
+	
+	if svr.config.ReadInt32(moduleNode, "tcp.port", 0) > 0 {
+    nserverModule := &StreamServer{protoHandler: handler}
+		svr.serverModule = append(svr.serverModule, nserverModule)
+	}
+  
+	if svr.config.ReadInt32(moduleNode, "udp.port", 0) > 0 {
+    nserverModule := &PacketServer{protoHandler: handler}
+		svr.serverModule = append(svr.serverModule, nserverModule)
+	}
+  ...
+}
+```
+
+***file: test_nrpc/conf/service.ini***
+
+```ini
+[nrpc-service]
+tcp.port = 8000                      #tcp监听端口
+udp.port = 8000                      #udp监听端口
+```
+
+### 启动：NServer启动
+
+`default_nserver.Serve()`发起了NServer实例的启动，NServer实例会遍历其上注册的所有ServerModule，然后逐一启动各个ServerModule，如tcp服务模块StreamServer、udp服务模块PacketServer。
+
+***file: test_nrpc/src/test_nrpc.go***
+
+```go
+package main
+
+import (
+	"git.code.oa.com/go-neat/core/nserver/default_nserver"
+	_ "git.code.oa.com/go-neat/core/proto/nrpc/nrpc_svr/default_nrpc_handler"
+	_ "git.code.oa.com/go-neat/core/proto/http/dft_httpsvr"
+	_ "exec"
+)
+
+func main() {
+	default_nserver.Serve()
+}
+```
+
+***file: go-neat/core/nserver/neat_svr.go***
+
+```go
+func (svr *NServer) Serve() {
+	...
+	for _, serverModule := range svr.serverModule {
+
+		if e := serverModule.Serve(); e != nil {
+      ...
+    }
+	}
+  ...
+}
+```
+
+#### Module：StreamServer
+
+#### Module：PacketServer
 
 ## GoNeat - 服务怠速
 
