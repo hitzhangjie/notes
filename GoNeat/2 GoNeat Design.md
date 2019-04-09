@@ -119,7 +119,7 @@ GoNeat框架是按照如下方式进行组织的，相关子工程托管在[git.
 
 GoNeat框架读取的配置文件，包括：
 
-1. ***test_nrpc/conf/service.ini***，包括框架核心配置项，以及rpc相关配置项，也添加自定义配置项：
+1. ***test_nrpc/conf/service.ini***，包括框架核心配置项，以及habo、业务协议、rpc相关配置项：
 
    **[service]** 框架核心配置项：
 
@@ -616,6 +616,15 @@ func (svr *NServer) Serve() {
   ...
 }
 ```
+
+以下是NServer启动过程的一个图解说明：
+
+- package default_nserver实例化了一个NServer实例，只需要import这个包即可完成实例化；
+- import对应的协议handler，协议handler将向默认NServer实例注册handler；
+- 每个协议handler又有协议之分，如支持tcp、udp、http，要为不同的协议创建ServerModule并注册到NServer；
+- NServer实例调用Serve()开始启动，该方法逐一启动已注册的所有ServerModule；
+
+![go-neat-startup](assets/go-neat-startup.png)
 
 #### Module：StreamServer
 
