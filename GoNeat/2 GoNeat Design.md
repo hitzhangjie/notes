@@ -626,9 +626,42 @@ func (svr *NServer) Serve() {
 
 ![go-neat-startup](assets/go-neat-startup.png)
 
+下面介绍下框架中实现的几个ServerModule，了解下它们的设计细节。
+
+### 启动：NServerModule
+
+NServer允许插入多个NServerModule实现，来扩展NServer的能力，如同时支持多种协议：tcp（StreamServer）、udp（PacketServer）、http（HttpServer）。
+
+**file: go-neat/core/nserver/neat_svr.go**
+
+```go
+type NServer struct {
+   serverName     string
+   serverModule   []NServerModule
+   ...
+}
+```
+**file: go-neat/core/nserver/neat_comm.go**
+
+```go
+type NServerModule interface {
+	Init(nserver *NServer, module string, cfg *config.Ini, log *nlog.NLog) error
+	SetHandler(requestHandler RequestHandler)
+	GetProto() string
+	Serve() error
+	Close()
+}
+```
+
 #### Module：StreamServer
 
 #### Module：PacketServer
+
+#### Module：HttpServer
+
+#### Module：ScheduleServer
+
+#### Module：HippoServer
 
 ## GoNeat - 服务怠速
 
