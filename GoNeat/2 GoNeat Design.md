@@ -1,22 +1,29 @@
 # GoNeat Design
 
-GoNeat，追求“小而美”的设计，是基于golang开发的面向后台开发的微服务框架，旨在提升后台开发效率，让大家摆脱各种琐碎的细节，转而更加专注于服务质量本身。Simple but Powerful，是GoNeat的不懈追求，也是我们始终追求的设计理念。
+GoNeat，追求“小而美”的设计，是基于golang开发的面向后台开发的微服务框架，旨在提升后台开发效率，让大家摆脱各种琐碎的细节，转而更加专注于服务质量本身。Simple & Powerful，是我们始终追求的设计理念。
 
-本文从整体上介绍GoNeat的设计，希望能让大家从全局上认识GoNeat是如何运行的，运行期间涉及到哪些处理流程，处理读者对某部分感兴趣，可以自行阅读对应部分的源码，或者与我们开发者交流，都是可以的。
+本文从整体上介绍GoNeat的设计，GoNeat包括哪些核心部件，它们又是是如何协作的，服务运行期间涉及到哪些处理流程，等等。如果读者想更深入地了解，可以在本文基础上再阅读相关源码，或与我们开发者交流。
 
 ## GoNeat 整体架构
 
-下图展示了GoNeat的整体架构设计，为了能简单直观地介绍GoNeat的整体工作流程，在下图中省略了部分细节。省略掉的部分细节也是比较重要的，我会提到它们，篇幅原因不会过多描述。
+下图展示了GoNeat的整体架构设计，包括其核心组成部分，以及不同组成部分之间的交互：
 
 ![GoNeat](assets/GoNeat-Arch.png)
 
-GoNeat整体架构设计中，包括如下核心组成部分:
+GoNeat包括如下核心组成部分：
 
-- NServer，代表一个GoNeat服务，一个NServer可以插入多个NServerModule；
+- NServer，代表一个服务实例，一个NServer可以插入多个NServerModule；
+
 - NServerModule，代表一个服务模块，其实现包括StreamServer、PacketServer、HttpServer、HippoServer；
-- Codec Handler，代表一个协议Handler，其实现包括nrpc、ilive、simplesso、sso、http等编码的协议Handler；
-- 不同port上可以分别提供不同协议的服务，如8000端口提供tcp/udp的nrpc服务，而8080提供http服务；
-- 不同port上到达的请求，经协议Handler解析出请求报文，并根据请求报文中的命令字，找到注册的CmdHandler；
+
+- NHandler，即Codec Handler，代表一个协议Handler，实现包括nrpc、ilive、sso、http等协议Handler；
+
+  - 不同port上可以分别提供不同协议的服务，如8000端口提供tcp/udp的nrpc服务，而8080提供http服务；
+
+  - 不同port上到达的请求，经协议Handler解析出请求，并根据请求中的命令字，找到注册的CmdHandler；
+
+- Exec，
+
 - NServer将请求以函数参数的形式递交给注册的CmdHandler处理，处理完毕返回结果给调用方；
 
 介绍完框架的核心组件及作用之后，下面结合一个示例服务的执行流程，介绍下服务启动、处理请求、服务退出的详细流程及设计细节。
@@ -630,7 +637,7 @@ func (svr *NServer) Serve() {
 
 ### 启动：NServerModule
 
-NServer允许插入多个NServerModule实现，来扩展NServer的能力，如同时支持多种协议：tcp（StreamServer）、udp（PacketServer）、http（HttpServer）。
+NServer允许插入多个NServerModule实现，来扩展NServer的能力，如支持不同协议的NServerModule实现：tcp（StreamServer）、udp（PacketServer）、http（HttpServer）。
 
 **file: go-neat/core/nserver/neat_svr.go**
 
