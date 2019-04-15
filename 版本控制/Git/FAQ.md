@@ -13,7 +13,7 @@ git是趋势，当全世界的开发人员都在使用github，当来自全世�
 
 ##### 1 如何解决git中乱码问题？
 
-- ~/.gitconfig中增加如下配置
+- ~/.gitconfig中增加如下配置：
 
 ```sh
 git config core.quotepath false
@@ -21,9 +21,12 @@ git config --global gui.encoding utf-8
 git config --global i18n.commitEncoding utf-8
 git config --global i18n.logOutputEncoding utf-8
 ```
-- ~/.bashrc中增加如下配置
+- ~/.bashrc中增加如下配置：`export LESSCHARSET=utf-8`；
 
-```export LESSCHARSET=utf-8```
+- 如果是windows系统，先确认下`git —no-pager log`输出编码是否正常，正常的话说明也是less的问题：
+  - 如果是临时查看，可以像这样临时禁用git的分页查看特性；
+  - 如果是临时查看，也可以`set LESSCHARSET=utf-8`，启用分屏并临时使less使用utf-8编码；
+  - 如果想一劳永逸，还是设置环境变量，windows下在环境变量设置对话框中进行设置；``
 
 ##### 2 如何修改代码提交时的注释？
 
