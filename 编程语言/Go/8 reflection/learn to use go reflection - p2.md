@@ -1,6 +1,6 @@
 # Learning to Use Go Reflection — Part 2
 
-[![Go to the profile of Jon Bodner](assets/1*yHkNHFXnp6oQ_Rb66JdxEQ-20190303152837577.jpeg)](https://medium.com/@jon_43067?source=post_header_lockup)
+[![Go to the profile of Jon Bodner](assets/go-reflect-author.jpeg)](https://medium.com/@jon_43067?source=post_header_lockup)
 
 [Jon Bodner Jan 4, 2018
 
