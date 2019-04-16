@@ -1,6 +1,6 @@
 # 1 Go Memory Allocator from scratch
 
-[![Go to the profile of Ankur Anand](assets/1*SjqcimSIGJNwUE3V_OXPpg.jpeg)](https://blog.learngoprogramming.com/@ankur_anand?source=post_header_lockup)
+[![Go to the profile of Ankur Anand](assets/go-mm-0.jpeg)](https://blog.learngoprogramming.com/@ankur_anand?source=post_header_lockup)
 
 [Ankur Anand](https://blog.learngoprogramming.com/@ankur_anand)
 
@@ -20,7 +20,7 @@ In this blog post, we will exactly do that. Do you want to learn everything abou
 
 Every Memory Allocator needs to work with the Virtual Memory Space that is managed by the underlying Operating System. Let’s see how it works.
 
-![A simple illustration of a Physical Memory Cell (Not an exact representation)](assets/1*FS11mGLFn7uyeSlJq15K6g.png)
+![A simple illustration of a Physical Memory Cell](assets/go-mm-1.png)
 
 **A greatly simplified overview of a single memory cell:**
 
@@ -29,13 +29,13 @@ Every Memory Allocator needs to work with the Virtual Memory Space that is manag
 3. When the Address line has no current flowing (shown as green), the data line may not write to the capacitor, so the capacitor is uncharged, and the logical value stored is “0”.
 4. When the CPU needs to “READ” a value from RAM, an electric current is sent along the “ADDRESS LINE” (closing the switch). If the capacitor is holding a charge, the current flows down the “DATA LINE” (value of 1); otherwise no current flows down the DATA LINE, so the capacitor stays uncharged (value of 0).
 
-![Simple Illustration of how a Physical Memory Cell interacts with CPU](assets/1*4Zygvzn9hwFc3NCg8uWUYQ.png)
+![Simple Illustration of how a Physical Memory Cell interacts with CPU](assets/go-mm-2.png)
 
 **Data Bus:** Transports data between CPU and Physical Memory.
 
 Let’s also talk a little bit about **Address line** and **Addressable bytes.**
 
-![Illustrative Representation of an Address Line between CPU and Physical Memory](assets/1*ry7d7jMPW5_GzyPPmHubgA.png)
+![Illustrative Representation of an Address Line between CPU and Physical Memory](assets/go-mm-3.png)
 
 1. Each “BYTE” in DRAM is assigned a unique numeric identifier (address).
     **“Physical bytes present != Number of address line”.** (*e.g. 16bit intel 8088, PAE*)
@@ -56,11 +56,11 @@ As the size of physical RAM is limited, so Each Process runs in its own memory s
 
 How does this virtual address look like?
 
-![Virtual Address Space Representation](assets/1*ImbY2Tb3wZaeuKblwarFTg.jpeg)
+![Virtual Address Space Representation](assets/go-mm-4.jpeg)
 
 So when the CPU executes an instruction that refers to a memory address. The first step is translating that logic address in the VMA into a **linear address.** This translation is done by **MMU**.
 
-![Virtual Memory + RAM + Disk Swap](assets/1*xek5BQhJhWqsOPAaA5uROw.png)
+![Virtual Memory + RAM + Disk Swap](assets/go-mm-5.png)
 
 This is **not** a physical diagram, only a depiction. address translation process not included for simplicity.
 
@@ -68,11 +68,11 @@ Since this logical address is too large to be practically (depends upon various 
 
 Individual Process only sees this VMA as their Address. **So what happens when our program request for more “heap memory”.**
 
-![simple assembly code asking for more heap memory](assets/1*Un3ffseQYt_y3vzObgMqfg.png)
+![simple assembly code asking for more heap memory](assets/go-mm-6.png)
 
 This is a simple assembly code asking for more heap memory.
 
-![heap memory increment](assets/1*mvi6PRy9wu0KmBcP9YT5Cw.png)
+![heap memory increment](assets/go-mm-7.png)
 
 Program asks for more memory. via the `brk` ( `sbrk`/`mmap` etc) system call.
 The kernel updates merely the heap VMA and calls it good.
@@ -89,7 +89,7 @@ With the basic overview of “Virtual Address Space”, and what it means to inc
 
 However, memory allocator has more responsibility than merely updating the `brk address`. One of the major being how to **reduce** both `internal`and fragmentation`external` and how **fast** it can allocate this block**.** Consider the request of a contiguous memory block from our program using a function `malloc(size)` and releasing that memory back using a function `free(pointer)` in a sequential way from p1 to p4.
 
-![An external fragmentation demonstration](assets/1*xeMzyUdfZe9HBQABl2t9Og.png)
+![An external fragmentation demonstration](assets/go-mm-8.png)
 
 At p4 step even though we have enough memory block we cannot fulfill the request for 6 contiguous blocks of memory resulting in memory fragmentation.
 
@@ -107,13 +107,13 @@ The core idea of [TCMalloc (thread cache malloc)](http://goog-perftools.sourcefo
 
 Each memory page divided into — Free List of multiple fixed allocatable size-classes, which helps in reducing **fragmentation**. So each thread will have a cache for small objects without locks, which makes it very efficient to allocate small objects (<=32k) under parallel programs.
 
-![Thread Cache (Each Thread gets this Thread Local Thread Cache)](assets/1*L6MpddL2RZY-kmguKL29jw.png)
+![Thread Cache](assets/go-mm-9.png)
 
 #### 1.2.1.2 page heap
 
 The heap managed by TCMalloc consists of a collection of pages, **where a set of consecutive pages can be represented by span**. When allocated Object is larger than 32K, Pages Heap is used for allocation.
 
-![Page Heap (for span management)](assets/1*WBLW_v9sLqFMwNdn_DZ9AA.png)
+![Page Heap](assets/go-mm-10.png)
 
 When there is not enough memory to allocate small objects, go to page heap for memory. If there is not enough, page heap will ask more memory from the Operating System.
 
@@ -129,11 +129,11 @@ We Know Go Runtime schedules **Goroutines** (**G**) onto **Logical Processors**(
 
 > If you’re not familiar with the Go scheduler you can get an overview ([Go scheduler: Ms, Ps & Gs](https://povilasv.me/go-scheduler/)), till then I will wait for you over here.
 
-![Page Heap (for span management)](assets/1*dWZLGb3sJWncTdEFVuhxzw.png)
+![Page Heap](assets/go-mm-11.png)
 
 As Go manages pages at the granularity of **8192B** if this page is divided into a block size of **1kB** we get a total of 8 such blocks within that page for example.
 
-![Go Pages maintained at the granularity of 8KB](assets/1*wF9KuVSk8o-16N64kB11UA.png)
+![Go Pages maintained at the granularity of 8KB](assets/go-mm-12.png)
 
 8 KB page divided into a size class of 1KB (In Go pages are maintained at the granularity of 8KB)
 
@@ -143,7 +143,7 @@ These run’s of pages in Go is also managed through a structure known as **mspa
 
 Simply put, it ’s a double linked list object that contains the start address of the page, span class of the page that it has, and the number of pages it contains.
 
-![Illustrative Representation of a mspan in Go memory allocator](assets/1*sEWsoabfndVlMDhzhdE-Mw.png)
+![Illustrative Representation of a mspan in Go memory allocator](assets/go-mm-13.png)
 
 #### 1.2.2.2 mcache
 
@@ -151,7 +151,7 @@ Like TCMalloc Go provides each **Logical Processors**(**P**) a Local Thread Cach
 
 **mcache** contains a **mspan** of all class size as a cache.
 
-![Illustrative Representation of a Relationship between P, mcache, and mspan in Go](assets/1*ypcI6WgmhQ2OyYbiucWSqA.png)
+![Illustrative Representation of a Relationship between P, mcache, and mspan in Go](assets/go-mm-14.png)
 
 > As there is mcache Per-P, so no need to hold locks when allocating from the mcache.
 
@@ -177,7 +177,7 @@ mcentral Object collects all spans of a given size class and each mcentral is tw
 1. **empty** mspanList — List of mspans with no free objects or mspans that has is cached in an mcache.
 2. **nonempty** mspanList — List of spans with a free object.
 
-![Illustrative Representation of a mcentral](assets/1*HgVYn7Fd7UGnGSzbx-L0fA.png)
+![Illustrative Representation of a mcentral](assets/go-mm-15.png)
 
 Each mcentral structure is maintained inside the **mheap** structure.
 
@@ -185,7 +185,7 @@ Each mcentral structure is maintained inside the **mheap** structure.
 
 > mheap is the Object that manages the heap in Go, only one global. It own the virtual addresses space.
 
-![Illustrative Representation of a mheap](assets/1*rTsieglF6GO1NW78KN8vkQ.png)
+![Illustrative Representation of a mheap](assets/go-mm-16.png)
 
 As we can see from the above illustration **mheap has an array of mcentral**. This **array contains mcentral of each span class**.
 
@@ -235,11 +235,11 @@ func main() {
 }
 ```
 
-![process stats for a program](assets/1*4bePvN9LhkTkPWlRIWGgew.png)
+![process stats for a program](assets/go-mm-17.png)
 
 So even for a simple go program virtual Space is around `~100 MB` while RSS is just `696kB` . Lets us try to figure out this difference first.
 
-![map and smap stats](assets/1*JBeUo5u5l45-3qzEQrpJ3A.png)
+![map and smap stats](assets/go-mm-18.png)
 
 So there are regions of memory which are sized around ~`2MB, 64MB and 32MB`. What are these?
 
@@ -247,7 +247,7 @@ So there are regions of memory which are sized around ~`2MB, 64MB and 32MB`. Wha
 
 It turns out the virtual memory layout in go consists of a **set** of **arenas.** The initial heap mapping is one arena i.e `64MB`(based on go 1.11.5).
 
-![current incremental arena size on a different system](assets/1*yX9Q92T4B1aHEoQWTQI36g.png)
+![current incremental arena size on a different system](assets/go-mm-19.png)
 
 So currently memory is mapped in small increments as our program needs it, and it starts with one arena (~64MB).
 
@@ -255,7 +255,7 @@ So currently memory is mapped in small increments as our program needs it, and i
 
 **This set of arenas is what we call heap.** In Go, each arena is managed at a granularity of `8192 B `of pages.
 
-![Single arena (64 MB)](assets/1*5pyhqsz3aVLyY_kRFc7Lig.png)
+![Single arena (64 MB)](assets/go-mm-20.png)
 
 Go also has two more blocks which **span** and **bitmap**. **Both of them are allocated off-heap and contains metadata of each arena.** It’s mostly used during Garbage Collection (so we will leave it for now).
 
@@ -267,7 +267,7 @@ However, the general idea of the Go memory management is to allocate memory usin
 
 I am leaving you with this Visual Overview of Go Memory Allocator for now.
 
-![Visual Overview of Runtime Memory Allocator](assets/1*T9WO7O3EWTWJjCrxaOz4cg.png)
+![Visual Overview of Runtime Memory Allocator](assets/go-mm-21.png)
 
 Alright, that’s all for now. Thank you for reading so far.
 
