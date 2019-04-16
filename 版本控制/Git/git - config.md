@@ -60,4 +60,18 @@
    git config --global core.filemode false
    ```
 
-   
+9. 解决常见的编码问题
+
+   ```sh
+   git config core.quotepath false                     #
+   git config --global gui.encoding utf-8              #在git-gui或者gitk中展示文件内容时，使用utf8编码
+   git config --global i18n.commitEncoding utf-8       #执行commit操作存储提交的注释信息，使用utf8编码
+   git config --global i18n.logOutputEncoding utf-8    #执行git log展示提交的注释信息时，使用utf8编码
+   ```
+
+   - ~/.bashrc中增加如下配置：`export LESSCHARSET=utf-8`；
+   - 如果是windows系统，先确认下`git —no-pager log`输出编码是否正常，正常的话说明也是less的问题：
+     - 如果是临时查看，可以像这样临时禁用git的分页查看特性；
+     - 如果是临时查看，也可以`set LESSCHARSET=utf-8`，启用分屏并临时使less使用utf-8编码；
+     - 如果想一劳永逸，还是设置环境变量，windows下在环境变量设置对话框中进行设置；
+
