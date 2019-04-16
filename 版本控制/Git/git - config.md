@@ -46,5 +46,18 @@
          bb = branch
    ```
 
+7. 不同os系统换行符问题
 
+   ```bash
+   git config --global core.autocrlf input #input：提交时使用LR，检出时不转换
+                                           #true：提交时转换为LF，检出时转换为CRLF
+                                           #false：提交时、检出时均不转换
+   ```
 
+8. 忽略文件模式改变（chmod）
+
+   ```bash
+   git config --global core.filemode false
+   ```
+
+   
