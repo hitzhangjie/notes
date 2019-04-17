@@ -351,7 +351,7 @@ nginx配置文件通过一些配置命令(directives)来控制nginx模块(module
 - block directive，它是一系列simple directives的组合，用“{...}”包括起来；
 - context，它指的是内部嵌套着block directive的block directive，如events、http、server、location；  
 
-不在任何context内的directive隶属于main context，如events何http就属于main context，而server属于http context，location属于server context。
+不在任何context内的directive隶属于main context，如events和http就属于main context，而server属于http context，location属于server context。
 
 #### 3.5.2.1 Serving Static Content
 
@@ -415,6 +415,84 @@ http {
 ```
 
 修改后让nginx重新加载配置文件 `sudo nginx -s reload`，然后可以借助浏览器进行验证。
+
+### 3.5.3 配置实例
+
+这里举个例子，假定在路径/root/wiki下是一个gitbook工程，在该目录下运行`gitbook serve`将启动web阅读器，可以在浏览器中通过地址`http://ip:4000`阅读book，对于一些开源项目这是非常好的一种文档提供方式。
+
+但是遇到个问题：
+
+- 已经分配了一个域名goneat.oa.com；
+- 希望用户可以通过goneat.oa.com/wiki进行访问，而不再是goneat.oa.com:4000或者goneat.oa.com；
+- 不大可能直接将gitbook serve监听端口80，因为同机器上希望通过nginx代理多个web服务；
+- 希望借助nginx反向代理能力，将goneat.oa.com/wiki指向gitbook地址，goneat.oa.com/xxx指向其他web服务；
+
+ngin中可用的方式：
+
+- rewrite url，将goneat.oa.com/wiki，指向goneat.oa.com:4000，这种方式需要暴露4000端口给外部，而且这种访问方式比较诡异，本来是80端口突然变为8080了，不专业，也不安全；
+- 多种方式结合：
+  - rewrite，将/wiki来的url重写，删除/wiki，然后proxy_pass转给gitbook serve；
+  - gitbook生成的html、依赖的gitbook插件js、css在html中是相对路径引用的，需要sub_filter（ngx_http_sub_module）来修改返回给浏览器的html页面，进行字符串替换，这里就是修改相对路径为绝对路径。
+  - 修改html、js、css的存储位置root，指向gitbook serve生成的临时目录/root/wiki/\_book_！
+
+修改完后/etc/nginx/nginx.conf配置如下，nginx -t检查下配置是否ok：
+
+```
+   http {    
+       server {
+           listen       80 default_server;
+           #listen       [::]:80 default_server;
+           server_name  _;
+           root         /usr/share/nginx/html;
+
+           # Load configuration files for the default server block.
+           include /etc/nginx/default.d/*.conf;
+
+           location / {
+               root   html;
+               index  index.html index.htm;
+           }
+
+           ################### rewrite url的方式 ##################
+           #location ~ /wiki {
+           #    rewrite ^(.*) http://goneat.oa.com:4000 break;
+           #}
+
+           ################### 
+           location /wiki {
+               rewrite ^/wiki(.*)$ /$1 break;
+               proxy_pass http://goneat.oa.com:4000;
+               root /root/wiki/_book;
+
+               sub_filter 'href="'         'href="http://goneat.oa.com/wiki/';
+               sub_filter 'src="gitbook/'  'src="http://goneat.oa.com/wiki/gitbook/';
+               sub_filter_once off;
+           }
+
+           error_page 404 /404.html;
+               location = /40x.html {
+           }
+
+           error_page 500 502 503 504 /50x.html;
+               location = /50x.html {
+           }
+       }
+   }
+```
+
+如果报错提示有多个sub_filter指令，说明nginx版本过旧，至少要升级到1.9.4，而且这里的sub_filter指令要求启用module ngx_http_sub_module，这个是编译时构建的（构建时指定选项--with_http_sub_module），默认是没构建的。
+
+如果nginx已安装，想查看当前nginx版本是否启用该module，可以执行nginx -V | grep --with-http_sub_module来查看，如果有则表明编译时已经启用了该模块，如果没有则需要手动编译安装。
+
+下载nginx源码，解压，进入目录然后执行：
+
+```bash
+./configure --prefix=/usr --sbin-path=/usr/sbin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --pid-path=/var/run/nginx/nginx.pid --with-http_ssl_module --with-http_flv_module --with-http_stub_status_module--with-http_gzip_static_module --http-log-path=/var/log/nginx/access.log --http-client-body-temp-path=/var/tmp/nginx/client --http-proxy-temp-path=/var/tmp/nginx/proxy --http-fastcgi-temp-path=/var/tmp/nginx/fcgi --with-http_stub_status_module --with-http_sub_module
+
+make && make install
+```
+
+此时再执行nginx -t检查配置，一切ok后，执行nginx -c /etc/nginx/nginx.conf启动，打开浏览器测试一下。
 
 ### 3.3.5 总结
 
