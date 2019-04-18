@@ -662,13 +662,23 @@ type NServerModule interface {
 
 #### Module：StreamServer
 
+StreamServer是GoNeat封装的面向字节流（SOCK_STREAM）的服务模块，支持tcp和unix服务。
+
 #### Module：PacketServer
+
+PacketServer是GoNeat分装的面向数据报（SOCK_PACKET）的服务模块，支持udp服务。
 
 #### Module：HttpServer
 
+HttpServer是GoNeat在golang标准库基础上封装的http服务模块，支持与StreamServer、PacketServer一样的接口注册、接口路由、接口处理逻辑。
+
 #### Module：ScheduleServer
 
+ScheduleServer是GoNeat为定时任务封装的一个服务模块，简化定时任务实现逻辑。
+
 #### Module：HippoServer
+
+HippoServer，	
 
 ## GoNeat - 服务怠速
 
