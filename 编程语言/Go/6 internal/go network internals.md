@@ -4,6 +4,7 @@ golang里面针对一个closed tcpconn执行写操作，可能会有不同的表
 
 - 假如server认为连接空闲，执行conn.Close()，此时client端写一次，再写一次，此时会报broken pipe；
 - 假如server认为连接空闲，执行conn.Close()，此时server端写一次或多次，此时会报use closed network connection；
+- 还有一个问题，SIGPIPE：broken pipe，进程为什么没挂掉；
 
 第一种场景之前我们分析过了，client写第一次，server会FIN或RST，client刚刚感知到连接销毁，但是上层应用还没有调用conn.Close()对conn对应的fd进行销毁（详见下文How go handle conn.Closed()部分的mutexClosed标记位），第二次写会直接走到syscall.Write(...)返回EPIPE，上层表现就是err.Error()返回errors[EPIPE] = “broken pipe”；
 
