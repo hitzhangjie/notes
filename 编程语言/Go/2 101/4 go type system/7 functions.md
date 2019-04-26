@@ -121,4 +121,4 @@
   >
   > 
   >
-  > 这部分的代码详见：cmd/compile/gc/closure.go中的方法transformclosure(...)。闭包就是函数体+环境，环境就是像这样绑定的。"
+  > 这部分的代码详见：cmd/compile/gc/closure.go中的方法transformclosure(...)。闭包就是函数体+环境，环境就是像这样绑定的。
