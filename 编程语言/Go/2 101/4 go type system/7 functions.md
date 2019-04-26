@@ -79,11 +79,11 @@
 
   > 上面的闭包将被转换为简单函数调用的形式：
 
-  ```
-  func(byval int, &amp;byref *int, a int) {
+  ```go
+  func(byval int, &byref *int, a int) {
   		println(byval)
-  		(*&amp;byref)++
-  }(byval, &amp;byref, 42)
+  		(*&byref)++
+  }(byval, &byref, 42)
   ```
 
   > 注意看函数原型的变化，原来闭包里面捕获的变量都被转换成了通过函数参数来供值：
@@ -91,8 +91,34 @@
   > - 因为println操作不涉及对byval变量的修改操作，所以是按值捕获；
   > - 而byref++涉及到对捕获变量的修改，所以是按引用捕获，对于按引用捕获的变量会进行特殊处理，golang编译器会在编译时将按引用捕获的变量名byref转换成“&amp;byref”，同时将其类型转换成pointer类型，捕获变量对应的写操作也会转换为通过pointer来操作。
   >
-  > 2） 假如闭包定以后并不是立即调用，而是后续调用，可能调用多次，这种情况下就需要创建闭包对象，这种情况下如何实现呢？
+  > 2） 假如闭包定义后并不是立即调用，而是后续调用，可能调用多次，这种情况下就需要创建闭包对象，这种情况下如何实现呢？
+  >
+  > ```go
+  > if v.Name.Byval() && v.Type.Width <= int64(2*Widthptr) {
+  >     // If it is a small variable captured by value, downgrade it to PAUTO.
+  >     v.SetClass(PAUTO)
+  >     xfunc.Func.Dcl = append(xfunc.Func.Dcl, v)
+  >     body = append(body, nod(OAS, v, cv))
+  > } else {
+  >     // Declare variable holding addresses taken from closure
+  >     // and initialize in entry prologue.
+  >     addr := newname(lookup("&" + v.Sym.Name))
+  >     addr.Type = types.NewPtr(v.Type)
+  >     addr.SetClass(PAUTO)
+  >     addr.Name.SetUsed(true)
+  >     addr.Name.Curfn = xfunc
+  >     xfunc.Func.Dcl = append(xfunc.Func.Dcl, addr)
+  >     v.Name.Param.Heapaddr = addr
+  >     if v.Name.Byval() {
+  >         cv = nod(OADDR, cv, nil)
+  >     }
+  >     body = append(body, nod(OAS, addr, cv))
+  > }
+  > ```
   >
   > - 如果变量是按值捕获，并且该变量占用存储空间小于2*sizeof(int)，那么就通过在函数体内创建局部变量的形式来shadow捕获的变量，相比于通过引用捕获，这么做的好处应该是考虑到减少引用数量、减少逃逸分析相关的计算。
   > - 如果变量是按引用捕获，或者按值捕获但是捕获的变量占用存储空间较大（拷贝到本地做局部变量代价太大），这种情况下就将捕获的变量var转换成pointer类型的“&amp;var”，并在函数prologue阶段将其初始化为捕获变量的值。
-  >   这部分的代码详见：cmd/compile/gc/closure.go中的方法transformclosure(...)。闭包就是函数体+环境，环境就是像这样绑定的。"
+  >
+  > 
+  >
+  > 这部分的代码详见：cmd/compile/gc/closure.go中的方法transformclosure(...)。闭包就是函数体+环境，环境就是像这样绑定的。"
