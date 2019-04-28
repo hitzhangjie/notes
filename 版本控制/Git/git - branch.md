@@ -8,3 +8,4 @@
 分支信息同步：`git fetch --prune`
 
 有时remote已经删除了一个分支，如origin/dev_abc，本地git branch -r还是可以看到origin/dev_abc
+
