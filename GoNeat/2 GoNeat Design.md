@@ -14,7 +14,7 @@ GoNeat包括如下核心组成部分：
 
 - NServer，代表一个服务实例，一个NServer可以插入多个NServerModule；
 
-- NServerModule，代表一个服务模块，其实现包括StreamServer、PacketServer、HttpServer、HippoServer；
+- NServerModule，代表一个服务模块，实现包括StreamServer、PacketServer、HttpServer、HippoServer；
 
 - NHandler，即Codec Handler，代表一个协议Handler，实现包括nrpc、ilive、sso、http等协议Handler；
 
@@ -22,15 +22,13 @@ GoNeat包括如下核心组成部分：
 
   - 不同port上到达的请求，经协议Handler解析出请求，并根据请求中的命令字，找到注册的CmdHandler；
 
-- Exec，
-
 - NServer将请求以函数参数的形式递交给注册的CmdHandler处理，处理完毕返回结果给调用方；
 
-介绍完框架的核心组件及作用之后，下面结合一个示例服务的执行流程，介绍下服务启动、处理请求、服务退出的详细流程及设计细节。
+介绍完框架的核心组件之后，下面结合一个服务示例，介绍下服务启动、请求处理、服务退出的详细流程及设计细节。
 
 ## GoNeat 服务示例
 
-我们仍然使用“*test_nrpc.proto*”作为示例服务pb：
+我们仍然使用“*test_nrpc.proto*”作为示例服务pb（您可以在 [go-neat/demo/quickstart](https://git.code.oa.com/go-neat/demo/tree/master/quickstart) 中找到该示例）：
 
 ***file: test_nrpc.proto***
 
@@ -65,13 +63,13 @@ GoNeat包括如下核心组成部分：
 	}
 ```
 
-使用gogen来创建一个新的go-neat服务：
+使用goneat命令行工具来创建一个新的go-neat服务：
 
 ```bash
-gogen create -protocol=nrpc -protofile=test_nrpc.proto -httpon
+goneat create -protocol=nrpc -protofile=test_nrpc.proto -httpon
 ```
 
-与“*Program Your Next Server in GoNeat*”一问不同的是，这里多加了一个参数“*-httpon*”，目的是介绍多协议的处理细节。运行上述命令后，应生成如下目录结构的服务模板。
+与“*Program Your Next Server in GoNeat*”章节不同的是，这里额外加了一个参数“*-httpon*”，目的是介绍支持多协议的相关处理。运行上述命令后，应生成如下目录结构的服务模板。
 
 ```bash
 test_nrpc
@@ -109,7 +107,7 @@ test_nrpc
 
   这种方式比较容易让读者明白什么场景下用到了什么组件，对组件的介绍也可以适可而止，但是同一个组件可能在多个不同的流程中被提到，需要读者适当地对思路进行下梳理。不过GoNeat框架内组件实现一般都比较简单。
 
-综合考虑以后，决定用第二种方式进行描述，既方便读者理解，介绍过程也不会枯燥。
+综合考虑以后，决定用第二种方式进行叙述，既方便读者理解，介绍过程本身也不至于过于枯燥。
 
 GoNeat框架是按照如下方式进行组织的，相关子工程托管在[git.code.oa.com/groups/go-neat]()：
 
@@ -118,7 +116,18 @@ GoNeat框架是按照如下方式进行组织的，相关子工程托管在[git.
 - common，提供了框架中一些常用的工具类实现，如共享内存操作等等；
 - tool，提供了GoNeat开发所需要的一些外围工具，如代码生成工具、monitor监控打点工具等；
 
-> 为了方便大家在公司内网体验GoNeat，减少解决外部依赖所需要的时间（如访问github可能要申请外网访问权限等），我们也搭建了一个repo go-neat/deps来维护框架的依赖项。
+为大家方便使用第三方组件，也创建了components方便大家在goneat服务开发中使用：
+
+- components，提供了第三方的一些支持，如etcd、zookeeper等等；
+
+此外，为了方便大家理解GoNeat框架的设计，以及快速上手开发，也提供了wiki和demo：
+
+- wiki，也就是您正在看的这份文档，所有的文档都在这里维护，如果对文档有疑问或建议，也可在此提issue；
+- demo，提供了一些示例代码，助力大家快速上手goneat开发；
+
+> 为方便大家在公司内网体验GoNeat，减少解决外部依赖所需要的时间（如访问github可能要申请外网访问权限等），我们也维护了go-neat/deps来维护框架的依赖（库+版本），install.sh搭建的时候会自动拉取这里的依赖。
+>
+> 我们建议您使用go module对依赖进行管理，goneat相关依赖已经补充在go.mod，请知悉。
 
 ## GoNeat - 初始化
 
