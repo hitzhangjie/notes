@@ -133,7 +133,17 @@ GoNeat框架是按照如下方式进行组织的，相关子工程托管在[git.
 
 ### 初始化：配置说明
 
-GoNeat框架读取的配置文件，包括：
+GoNeat框架读取的配置文件，主要包括：
+
+- test_nrpc/conf/service.ini，包含服务的核心配置；
+
+- test_nrpc/conf/monitor.ini，包含服务不同接口的耗时分布的monitorid；
+- test_nrpc/conf/log.ini，包含日志文件滚动方式、日志级别的相关定义；
+- test_nrpc/conf/trace.ini，包含分布式跟踪相关backend的定义；
+
+如果您已经对GoNeat配置项很熟悉，可以选择跳过该小节，当然我们还是建议通读一下以尽可能全面地了解不同的配置项，当后续您有需求要对框架做出约束或者改变的时候，有助于判断现有框架能力能否满足您的需要。
+
+下面对各个日志文件中的配置项进行介绍：
 
 1. ***test_nrpc/conf/service.ini***，包括框架核心配置项，以及habo、业务协议、rpc相关配置项：
 
@@ -209,7 +219,7 @@ GoNeat框架读取的配置文件，包括：
 
    **[rpc-test_nrpc]** rpc配置项：
 
-    -  rpc调用地址，支持ip://ip:port、l5://mid:cid、cmlb://appid（服务发现能力正在开发验证中）
+    -  rpc调用地址，支持ip://ip:port、l5://mid:cid、cmlb://appid（“***服务发现***”正在开发验证中）
 
     -  传输模式，支持UDP、UDP全双工、TCP短连接、TCP长连接、TCP全双工，TCP/UDP SendOnly
 
@@ -234,13 +244,12 @@ GoNeat框架读取的配置文件，包括：
        monitor.BuyApple.timecost10 		= 10001 		#耗时<10ms
        monitor.BuyApple.timecost20 		= 10002			#耗时<20ms
        monitor.BuyApple.timecost50 		= 10003			#耗时<50ms
-       monitor.BuyApple.timecost100 		= 10004			#耗时<100ms
        ...
        monitor.BuyApple.timecost2000 		= 10005		#耗时<2000ms
        monitor.BuyApple.timecostover2000 = 10006		#耗时>=2000ms
        ...
        ```
-
+   
 2. ***test_nrpc/conf/monitor.ini***，用于监控服务接口本身的总请求量、处理成功、处理失败量，以及处理耗时分布情况：
 
    **[test_nrpc]** 服务接口本身监控打点monitor id：
@@ -253,7 +262,6 @@ GoNeat框架读取的配置文件，包括：
    monitor.BuyApple.timecost20=0                #接口BuyApple延时20ms
    monitor.BuyApple.timecost50=0                #接口BuyApple延时50ms
    ...
-   monitor.BuyApple.timecost2000=0              #接口BuyApple延时2000ms
    monitor.BuyApple.timecost3000=0              #接口BuyApple延时3000ms
    monitor.BuyApple.timecostover3000=0          #接口BuyApple延时>3000ms
    
@@ -262,11 +270,10 @@ GoNeat框架读取的配置文件，包括：
    monitor.SellApple.timecost20=0                #接口SellApple延时20ms
    monitor.SellApple.timecost50=0                #接口SellApple延时50ms
    ...
-   monitor.SellApple.timecost2000=0              #接口SellApple延时2000ms
    monitor.SellApple.timecost3000=0              #接口SellApple延时3000ms
    monitor.SellApple.timecostover3000=0          #接口SellApple延时>3000ms
    ```
-
+   
 3. ***test_nrpc/conf/log.ini***，代替service.ini中logging相关配置，用来支持工厂模式获取logger：
 
    这里默认配置了三个logger：
@@ -346,7 +353,7 @@ GoNeat框架读取的配置文件，包括：
 
 ### 初始化：配置加载
 
-在详细介绍了GoNeat依赖的配置文件及各个配置项之后，来介绍下GoNeat的配置解析、加载过程。
+在介绍了GoNeat依赖的配置文件及各个配置项之后，继续介绍下GoNeat的配置解析、加载过程。
 
 GoNeat支持两种格式的配置文件:
 
@@ -384,7 +391,7 @@ NServer实例化过程中，会创建三个logger对象：
 每个logger对象的创建都是按照如下流程去执行的，**nlog.GetLogger(logger)**，会首先检查loggerCache中key=$logger的logger对象是否已经存在，如果存在则直接返回，反之，加载log.ini中的配置[\$logger]，检查logwrite配置项，logwrite指定了日志输出的目的地，如：
 
 - console，输出到控制台；
-- simple，普通日志文件，不支持股东；
+- simple，普通日志文件，不支持滚动；
 - rolling，支持滚动的日志文件，包括按照日期滚动、文件大小滚动；
 
 logwrite允许逗号分隔多个输出，如`logwrite = console, rolling`，那么此时logger.Info(…)输出的信息将同时输出到控制台和滚动日志文件，详细可参考**nlog.MultiWriterLogWriter**实现。
@@ -431,19 +438,25 @@ deactivate nserver
 
 ### 初始化：协议handler
 
-#### 需要我做什么？
+不同的业务协议，其字段定义、编解码方式可能不同，协议handler就是对业务协议的编解码进行处理。目前，GoNeat框架支持公司内大多数业务协议，如nrpc、sso、simplesso、ilive、qconn、taf等等。
+
+#### 协议处理方面的亮点？
 
 GoNeat框架支持在单个进程中同时支持多种业务协议，如：
 
-- 在port 8000提供nrpc服务，
-- 在port 8001提供ilive协议，
-- 在port 8080提供http服务。
+- 在port 8000提供nrpc服务；
+- 在port 8001提供ilive协议；
+- 在port 8080提供http服务；
+
+同一份业务处理代码，可以通过不同的业务协议对外提供服务，在涉及到多端、多业务方交互的时候会很方便。
+
+#### 服务中如何支持nrpc协议？
 
 以提供nrpc服务为例，只需要做3件事情，包括：
 
-- 配置文件service.ini中增加[nrpc-service]配置项，指明要绑定的端口，如`tcp.port = 8000`；
-- 代码引入协议handler，如`import _ "git.code.oa.com/go-neat/core/proto/nrpc/nprc_svr/default_nrpc_handler"`；
-- 代码注册nrpc命令字，如`default_nserver.AddExec(“BuyApple”, BuyApple)`；
+- 配置文件service.ini中增加[nrpc-service]配置项，指明业务协议nrpc绑定的端口，如`tcp.port = 8000`；
+- 代码中引入对应协议handler，如`import _ "git.code.oa.com/go-neat/core/proto/nrpc/nprc_svr/default_nrpc_handler"`；
+- 代码注册nrpc命令字及处理方法，如`default_nserver.AddExec(“BuyApple”, BuyApple)`；
 
 如果要在此基础上继续支持http服务呢，一样的三件事，包括：
 
@@ -465,7 +478,7 @@ That’s all！GoNeat要支持常用的业务协议，只需要做上述修改�
 
 #### 框架做了什么？
 
-不知道读者是否注意到，nrpc命令字`BuyApple`，http请求`$host:8080/cgi-bin/web/BuyApple`，这两种不同的请求最终是被路由到了相同的方法`BuyApple`进行处理，意味着开发人员无需针对不同的协议做任何其他处理，GoNeat框架帮你搞定这一切，业务代码零侵入。
+读者是否注意到前文中`AddExec(cmd,BuyApple)`，nrpc命令字`BuyApple`，http请求`$host:8080/cgi-bin/web/BuyApple`，这两种不同的请求最终是被路由到了相同的方法`BuyApple`进行处理，意味着开发人员无需针对不同的协议做任何其他处理，GoNeat框架帮你搞定这一切，业务代码零侵入。
 
 真的业务代码零侵入吗？http请求参数Get、POST方式呢？nrpc协议是protbuf格式呢？同一份业务代码如何兼容？
 
@@ -473,45 +486,48 @@ GoNeat对不同的业务协议抽象为如下几层：
 
 - 协议定义，如nrpc、ilive、simplesso、http包格式；
 - 协议handler，完成协议的编码、解码操作（接口由NHandler定义）；
-- 会话session，维持客户端请求、响应的会话信息（接口由NSession定义）；
+- 会话session，维持客户端请求、会话信息（接口由NSession定义）；
 
 当希望扩展GoNeat的协议时，需要提供协议的包结构定义、协议的编解码实现、协议会话实现，nrpc协议对应的会话实现为NRPCSession、http协议对应的会话实现时HttpSession。
 
-好，现在介绍下一份代码`func BuyApple(ctx context.Context, session nsession.NSession) (interface{}, error)`为什么可以支持多种协议。从下面的代码中不难看出，秘密在于不同协议会话对`NSession.ParseRequestBody(…)`的实现：
+好，现在介绍下GoNeat中同一份代码`func BuyApple(ctx context.Context, session nsession.NSession) (interface{}, error)`如何支持多种业务协议。
+
+***file: test_nrpc/src/exec/test_nrpc.go：***
+
+```go
+func BuyApple(ctx context.Context, session nsession.NSession) (interface{}, error) {
+  req := &test_nrpc.BuyAppleReq{}
+  err := session.ParseRequestBody(req)
+  ...
+
+  rsp := &test_nrpc.BuyAppleRsp{}
+  err = BuyAppleImpl(ctx, session, req, rsp)
+  ...
+  return rsp, nil
+}
+```
+
+***file: test_nrpc/src/exec/test_nrpc_impl.go：***
+
+```go
+func BuyAppleImpl(ctx context.Context, session nsession.NSession, req *test_nrpc.BuyAppleReq, rsp *test_nrpc.BuyAppleRsp) error {
+  // business logic
+  return nil
+}
+
+```
+
+从上面的代码中 ***test_nrpc.go*** 不难看出，秘密在于不同协议会话对`NSession.ParseRequestBody(…)`的实现：
 
 - 如果是pb协议，session里面会直接通过`proto.Unmarshal(data []byte, v interface{})`来实现请求解析；
 - 如果是http协议，session里面会多做些工作：
   - 如果是`POST`方法，且`Content-Type=“application/json”`，则读取请求体然后`json.Unmarshal(...)`接口；
-
-  - 其他情况下，读取GET/POST请求参数转成map[param]=value，编码为json再反序列化为目标结构体；
-
-    ***file: test_nrpc/src/exec/test_nrpc.go：***
-
-    ```go
-    func BuyApple(ctx context.Context, session nsession.NSession) (interface{}, error) {
-      req := &test_nrpc.BuyAppleReq{}
-      err := session.ParseRequestBody(req)
-      ...
-    
-      rsp := &test_nrpc.BuyAppleRsp{}
-      err = BuyAppleImpl(ctx, session, req, rsp)
-      ...
-      return rsp, nil
-    }
-    ```
-    ***file: test_nrpc/src/exec/test_nrpc_impl.go：***
-
-    ```go
-    func BuyAppleImpl(ctx context.Context, session nsession.NSession, req *test_nrpc.BuyAppleReq, rsp *test_nrpc.BuyAppleRsp) error {
-      // business logic
-      return nil
-    }
-    
-    ```
+- 其他情况下，读取GET/POST请求参数转成map[param]=value，编码为json再反序列化为目标结构体；
+  
 
 Google Protocol Buffer是一种具有自描述性的消息格式，凭借良好的编码、解码速度以及数据压缩效果，越来越多的开发团队选择使用pb来作为服务间通信的消息格式，GoNeat框架也推荐使用pb作为首选的消息格式。
 
-由于其自描述性，pb文件被用来描述一个后台服务是再合适不过了，基于此也衍生出一些周边工具，如自动化代码生成工具gogen用来快速生成服务模板、client测试程序等等。
+由于其自描述性，pb文件被用来描述一个后台服务是再合适不过了，基于此也衍生出一些周边工具，如自动化代码生成工具goneat（由gogen重命名而来）用来快速生成服务模板、client测试程序等等。
 
 ## GoNeat - 服务启动
 
@@ -521,7 +537,7 @@ Google Protocol Buffer是一种具有自描述性的消息格式，凭借良好�
 
 ### 启动：实例化NServer
 
-一个GoNeat服务对应着NServer实例，为了方便快速裸写一个GoNeat服务，go-neat/core内部提供了一个package `default_nserver`，代码中只需要添加如下两行代码就可以快速启动一个GoNeat服务：
+一个GoNeat服务对应着一个NServer实例，为了方便快速裸写一个GoNeat服务，go-neat/core内部提供了一个package `default_nserver`，代码中只需要添加如下两行代码就可以快速启动一个GoNeat服务：
 
 ```go
 package main
@@ -534,7 +550,7 @@ func main() {
 }
 ```
 
-其实，该NServer实例会直接退出，因为它不知道要处理什么协议，这里应该import要支持的协议handler。当我们创建一个pb文件，并通过命令`gogen -protofile=*.proto -protocol=nrpc`创建工程时，gogen自动在生成代码中包含了nrpc协议对应的协议handler，这里的协议handler做了什么呢？或者说import这个协议handler时，发生了什么呢？
+当然，该NServer实例会直接退出，因为该实例没有注册要处理的业务协议，需要注册协议handler服务才能工作。当我们创建一个pb文件，并通过命令`goneat -protofile=*.proto -protocol=nrpc`创建工程时，`goneat`自动在生成代码中包含了nrpc协议对应的协议handler，这里的协议handler做了什么呢？或者说import这个协议handler时，发生了什么呢？
 
 ```go
 import (
@@ -563,11 +579,11 @@ func init() {
 }
 ```
 
-当import default_nrpc_handler时，`func init()`会自动执行，它会向上述NServer实例中注册一个新的协议handler，注册过程中发生了什么呢？可参考如下简化版的代码，它主要做这些事情：
+当import default_nrpc_handler时，`func init()`会自动执行，它会向上述NServer实例中注册协议handler，注册过程中发生了什么呢？可参考如下简化版的代码，它主要做这些事情：
 
 - 读取service.ini中的配置`[nrpc-service]`section下的tcp.port，如果大于0创建一个StreamServer；
 - 读取service.ini中的配置`[nrpc-service]`section下的udp.port，如果大于0创建一个PacketServer；
-- 将上述新创建的StreamServer和PacketServer添加到NServer示例的ServerModule集合中；
+- 将上述新创建的StreamServer和PacketServer添加到NServer实例的ServerModule集合中；
 
 ***file: go-neat/core/nserver/neat_svr.go***
 
@@ -633,10 +649,10 @@ func (svr *NServer) Serve() {
 }
 ```
 
-以下是NServer启动过程的一个图解说明：
+以下是NServer实例启动过程图解：
 
-- package default_nserver实例化了一个NServer实例，只需要import这个包即可完成实例化；
-- import对应的协议handler，协议handler将向默认NServer实例注册handler；
+- package default_nserver实例化了一个NServer实例，package main只需要import这个包即可完成实例化；
+- package main中import对应的协议handler，协议handler将向默认NServer实例注册handler；
 - 每个协议handler又有协议之分，如支持tcp、udp、http，要为不同的协议创建ServerModule并注册到NServer；
 - NServer实例调用Serve()开始启动，该方法逐一启动已注册的所有ServerModule；
 
@@ -673,9 +689,48 @@ type NServerModule interface {
 
 StreamServer是GoNeat封装的面向字节流（SOCK_STREAM）的服务模块，支持tcp和unix服务。
 
+StreamServer的创建时刻，我们在前面描述“***服务启动***”的部分已有提及，这里描述其启动的过程。
+
+```go
+func (svr *StreamServer) Serve() error {
+	tcpListener, err := net.Listen(svr.Network, svr.Addr)
+	if nil != err {
+		panic(fmt.Errorf("listen tcp error %s", err.Error()))
+	}
+  
+	svr.ctx, svr.cancel = context.WithCancel(context.Background())
+	if nil != tcpListener {
+		go svr.tcpAccept(svr.protoHandler, tcpListener)
+	}
+
+	return nil
+}
+```
+
+StreamServer启动的逻辑简单明了，它监听svr.Addr（传输层协议svr.Network）创建一个监听套接字，然后为该svr.ctx创建一个CancelContext，然后启动一个协程负责执行svr.tcpAccept(…)，处理tcp入连接请求。
+
+这里提一下svr.ctx, svr.cancel，服务有自己的生命周期，有启动也有停止，服务停止的时候，存在某些未完结的任务需要清理，如HippoServer中可能拉取了一批消息但是还未处理完成，服务重启会造成消息丢失。**类似这样的场景的存在，要求框架必须有能力对服务停止事件进行广播，广播给服务内的所有组件，各个组件根据需要自行执行清理动作**，如HippoServer可能会选择停止继续收消息、处理完收取消息后退出。
+
+这里的svr.ctx, svr.cancel就是负责对服务停止事件进行广播的，当NServer实例停止时，会遍历其上注册的所有ServerModule并调用其Close()方法，以StreamServer为例：
+
+```go
+// Close shutdown StreamServer
+func (svr *StreamServer) Close() {
+	if svr.cancel != nil {
+		svr.cancel()
+	}
+}
+```
+
+StreamServer.Close()调用了svr.cancel()来取消svr.ctx的所有child context，因为svr.ctx是整个tcp服务处理的root context，所有后续的请求处理的context都是派生自svr.ctx，当执行svr.cancel()的时候，所有派生出来的请求处理，都可以通过各个child context的Done()方法来检测StreamServer是否已经准备停止，从而采取必要的清理动作。
+
+这里的设计，也为GoNeat服务能够优雅地“***实现平滑退出***”打下了基石。
+
+
+
 #### Module：PacketServer
 
-PacketServer是GoNeat分装的面向数据报（SOCK_PACKET）的服务模块，支持udp服务。
+PacketServer是GoNeat封装的面向数据报（SOCK_PACKET）的服务模块，支持udp服务。
 
 #### Module：HttpServer
 
@@ -687,7 +742,7 @@ ScheduleServer是GoNeat为定时任务封装的一个服务模块，简化定时
 
 #### Module：HippoServer
 
-HippoServer，	
+HippoServer是针对消息驱动的业务场景封装的一个消费者服务，简化消息消费的任务处理。
 
 ## GoNeat - 服务怠速
 

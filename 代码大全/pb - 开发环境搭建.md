@@ -7,11 +7,14 @@ protobuf 及 protoc-gen-go安装：
 1、https://github.com/protocolbuffers/protobuf
      v3.6.0+以上版本支持map解析，syntax=2、3消息序列化后是二进制兼容的
      git checkout v3.6.1.3
-     ./configure
-     make -j8
-     make install
+
+​	 ./autogen.sh
+
+​     ./configure
+​     make -j8
+​     make install
 2、git clone https://github.com/golang/protobuf golang-protobuf
-     cd golang-protobuf
-     make install
-     默认安装到$GOPATH/bin下面，记得将该路径加到$PATH
+​     cd golang-protobuf
+​     make install
+​     默认安装到$GOPATH/bin下面，记得将该路径加到$PATH
 
