@@ -691,6 +691,8 @@ StreamServer是GoNeat封装的面向字节流（SOCK_STREAM）的服务模块，
 
 StreamServer的创建时刻，我们在前面描述“***服务启动***”的部分已有提及，这里描述其启动的过程。
 
+##### 启动监听，处理入连接请求
+
 ```go
 func (svr *StreamServer) Serve() error {
 	tcpListener, err := net.Listen(svr.Network, svr.Addr)
@@ -709,6 +711,8 @@ func (svr *StreamServer) Serve() error {
 
 StreamServer启动的逻辑简单明了，它监听svr.Addr（传输层协议svr.Network）创建一个监听套接字，然后为该svr.ctx创建一个CancelContext，然后启动一个协程负责执行svr.tcpAccept(…)，处理tcp入连接请求。
 
+##### 广播事件，支持平滑退出
+
 这里提一下svr.ctx, svr.cancel，服务有自己的生命周期，有启动也有停止，服务停止的时候，存在某些未完结的任务需要清理，如HippoServer中可能拉取了一批消息但是还未处理完成，服务重启会造成消息丢失。**类似这样的场景的存在，要求框架必须有能力对服务停止事件进行广播，广播给服务内的所有组件，各个组件根据需要自行执行清理动作**，如HippoServer可能会选择停止继续收消息、处理完收取消息后退出。
 
 这里的svr.ctx, svr.cancel就是负责对服务停止事件进行广播的，当NServer实例停止时，会遍历其上注册的所有ServerModule并调用其Close()方法，以StreamServer为例：
@@ -726,11 +730,126 @@ StreamServer.Close()调用了svr.cancel()来取消svr.ctx的所有child context�
 
 这里的设计，也为GoNeat服务能够优雅地“***实现平滑退出***”打下了基石。
 
+##### 建立连接，全双工处理
 
+```go
+func (svr *StreamServer) tcpAccept(handler NHandler, listener net.Listener) {
+	defer listener.Close()
+  
+	ctx := svr.ctx
+	for {
+		select {
+		case <-ctx.Done():	//服务停止，不再接受入连接请求
+			return
+		default:						//建立新连接，并处理
+			conn, ex := listener.Accept()
+			if ex != nil {
+				log.Error("accept error:%s", ex)
+			} else {
+				if svr.connLimiter.TakeTicket() { //自我防护，对入连接数量进行限制
+
+					if tcpConn, ok := conn.(*net.TCPConn); ok {
+						tcpConn.SetKeepAlive(true)
+						tcpConn.SetKeepAlivePeriod(10 * time.Second)
+					}
+					endpoint := newEndPoint(svr, conn)
+          
+					go endpoint.tcpReader()				//全双工模式处理，收包、处理、回包以并发的方式进行
+					go endpoint.tcpWriter()				//充分发挥tcp全双工的特点和优势
+
+				} else {
+					conn.Close()									//入连接数量超过上限，关闭连接
+				}
+			}
+		}
+	}
+}
+```
+
+对于创建好的tcp连接，StreamServer充分发挥了tcp全双工的特点和优势：
+
+- 启动一个goroutine专门负责收包
+- 启动一个goroutine专门负责回包
+- 针对连接上到达的请求包，则通过协程池进行处理
+- 同一个连接上的收包、处理、回包是并发的
+
+回想下我们写C++服务端的经历，通过epoll监听每个连接套接字上的读写就绪事件，read-ready的时候要及时从连接中取出数据放到请求队列中，write-ready的时候如果请求处理完就回包。单进程多线程模型，往往有专门的io线程来进行数据包的收发，逻辑处理线程从请求队列中取走请求赶紧处理并准备好回包数据，io线程取走回包执行响应动作；如果是单进程单线程模型，io事件未就绪的情况下就要赶紧执行逻辑处理；多进程模型，则可能会采用类似spp的架构，proxy负责io，请求放入共享内存，worker进程从共享内存获取请求并写入响应，proxy再负责回包。
+
+使用go进行开发呢？go对阻塞型系统调用进行了完整的解剖，所有的网络io、请求处理，都显得那么简单、自然，以至于都已经淡忘了C++服务端开发中存在的不同网络模型。当然，网络模型的思想在，但已经无需关注多进程单进程、多线程单线程了，**只需要铭记 “tcp是全双工模式”，借助golang这一强大的基础设施来最优化tcp服务性能即可**。
+
+关于 `go endpoint.tcpReader()` 和 `go endpoint.tcpWriter()` 的细节，我们在后面**服务怠速、请求处理**中介绍。
+
+##### 过载保护，限制入连接数
+
+StreamServer循环执行Accept()方法来建立连接，当然由于计算资源有限，服务能处理的连接数、请求数是有限的，服务需要进行一定的防护避免过载、雪崩。当`svr.connLimiter.TakeTicket()`成功时表示连接数未超限，可以继续处理，反之表示超出入连接数上限，关闭连接。
+
+循环Accept()过程中，如果检测到StreamServer停止`ctx.Done()`，关闭监听套接字不再接受入连接请求。
+
+##### 过载保护，限制入请求数
+
+除了对入tcp连接数进行限制，StreamServer也对入请求数进行限制，这部分在后续“请求处理”中介绍。
 
 #### Module：PacketServer
 
 PacketServer是GoNeat封装的面向数据报（SOCK_PACKET）的服务模块，支持udp服务。
+
+与介绍StreamServer的方式类似，PacketServer实例化的部分前文已介绍过，这里只介绍其启动的过程。
+
+##### 启动监听，处理入udp请求
+
+PacketServer.Server()中调用 `reuseport.ListenPacket(...)` 或者 `net.ListenPacket(...)` 监听svr.Addr（传输层协议类型svr.Network）创建监听套接字，并从中接收udp请求、处理请求、响应，详见`svr.udpRead(…)`，我们会在后续“请求处理”小节中进行介绍。
+
+```go
+// Serve start the PacketServer
+func (svr *PacketServer) Serve() error {
+	svr.ctx, svr.cancel = context.WithCancel(context.Background())
+
+	if svr.shouldReusePort() {							//如果支持重用端口，linux+darwin
+		reuseNum := runtime.NumCPU()
+
+		for i := 0; i < reuseNum; i++ {
+			udpConn, err := reuseport.ListenPacket(svr.Network, svr.Addr)
+			if nil != err {
+				panic(fmt.Errorf("listen udp error %s", err.Error()))
+			}
+			if nil != udpConn {
+				go svr.udpRead(svr.protoHandler, udpConn)
+			}
+		}
+	} else {																//如果不支持端口重用，windows
+		udpConn, err := net.ListenPacket(svr.Network, svr.Addr)
+		if nil != err {
+			panic(fmt.Errorf("listen udp error %s", err.Error()))
+		}
+		if nil != udpConn {
+			go svr.udpRead(svr.protoHandler, udpConn)
+		}
+	}
+
+	return nil
+}
+```
+
+##### 端口重用，加速udp收包
+
+阅读上述代码，您一定关注到了这么一点， `reuseport.ListenPacket(...)` 和 `net.ListenPacket(...)` 。在继续描述之前，需要对比下tcp收包和udp收包的区别。
+
+- tcp是面向连接的，往往为每一个连接创建一个专门的goroutine进行收包；
+- udp是无连接的，要分配多少个协程进行收包呢？1个或者N个？对同一个fd进行操作，开多个goroutine是没有价值的，那么1个的话呢，收包效率和tcp对比又有点低效。这就是PacketServer重用端口reuseport的由来了，借此提高udp收包的效率。
+
+**重用端口（REUSEPORT）**和**重用地址（REUSEADDR）**，二者诞生的初衷和作用是不同的：
+
+- TCP/UDP连接（UDP无连接但可以connect），由五元组表示：<协议类型，源ip，源端口，目的ip，目的端口>；
+- **REUSEADDR解决的是监听本地任意地址*0.0.0.0:port*与另一个监听本地特定地址相同端口*a.b.c.d:port*的问题；**
+- **REUSEPORT解决多个sockets（可能归属于相同或者不同的进程）是否允许bind到相同端口的问题，**
+
+Linux下为了避免port hijack，只允许euid相同的进程bind到相同的port（bind设置socket源port，connect设置socket目的端口），同时**对于tcp listen socket、udp socket还会进行“均匀的”流量分发，也是一个轻量的负载均衡方案**。
+
+golang标准库中暂没有提供reuseport的能力，这里是引入了第三方实现，目前支持Linux+Darwin平台下的udp reuseport，Windows暂不支持。
+
+##### 过载保护，限制入请求数
+
+与StreamServer类似，PacketServer也有过载保护机制，就是限制入udp请求数，我们在后续“请求处理”小节中介绍。
 
 #### Module：HttpServer
 
