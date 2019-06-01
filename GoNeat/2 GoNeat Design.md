@@ -855,13 +855,102 @@ golang标准库中暂没有提供reuseport的能力，这里是引入了第三�
 
 HttpServer是GoNeat在golang标准库基础上封装的http服务模块，支持与StreamServer、PacketServer一样的接口注册、接口路由、接口处理逻辑。
 
+##### 标准库http基础上实现
+
+从下面代码不难看出，HttpServer，该ServerModule的实现时基于标准库http package实现的，对大家来说应该都比较熟悉，但是这里也有个适配GoNeat的地方，也就是请求路由这里。
+
+```go
+// Serve start HttpServer
+func (svr *HttpServer) Serve() error {
+	svr.serve()
+	return nil
+}
+
+// serve start HttpServer
+func (svr *HttpServer) serve() {
+	var h http.Handler = http.HandlerFunc(svr.doService)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", svr.port))
+	if err != nil {
+		panic(err)
+	}
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", svr.port),
+		Handler: http.StripPrefix(svr.prefix, h),
+	}
+
+	go func() {
+		err := server.Serve(listener)
+		if err != nil {
+			svr.log.Error("http svr start failed, err: %v", err)
+		}
+	}()
+}
+```
+
+##### httpserver请求路由转发
+
+借助标准库实例化 `http.Server{}` 时，指定了将请求URI Prefix为svr.prefix的请求，交由handler h处理。而h是svr.doService(…)强制类型转换成的http.HandlerFunc。
+
+看doService的定义，可知它确实是一个http.HandlerFunc（满足HandlerFunc的定义），这样请求就递交给了doService进行处理，doService中调用`svr.requestHandler(req.Context(), httpSession)`对请求进行处理，注意这里为请求专门创建了一个HttpSession，而这里的svr.requestHandler(…)是在哪里设置呢？
+
+svr.requestHandler字段的设置，要追溯到HttpServer这个ServerModule实例化的时候，default_nserver示例会调用`serverModule.SetHandler(nserver.process)`方法将HttpServer.requestHandler设置为`nserver.process(…)`，即：`func process(svr *NServer, ctx Context, NSession) error`才是请求处理的核心逻辑之一，涉及到鉴权、命令字路由、请求处理、tracing、耗时监控等，稍后在“请求处理”部分进行介绍。
+
+```go
+// HttpServer defines the http NServerModule implementation
+type HttpServer struct {
+	nserver        *NServer
+	port           int32
+	log            *nlog.NLog
+	prefix         string
+	requestHandler RequestHandler
+	enableGzip     bool
+	svr            *http.Server
+}
+...
+// doService process http request `req`
+func (svr *HttpServer) doService(w http.ResponseWriter, req *http.Request) {
+	requestLimiter := svr.nserver.reqLimiter
+	if requestLimiter.TakeTicket() {
+		addr := svr.getClientAddr(req)
+		defer func() {
+			requestLimiter.ReleaseTicket()
+		}()
+
+		httpSession := NewHttpSession(addr, svr.log, req, w)
+		ex := svr.requestHandler(req.Context(), httpSession)
+		if ex != nil {
+			w.WriteHeader(505)
+			return
+		}
+		if httpSession.retcode == errCodeCmdNotFound {
+			w.WriteHeader(404)
+		} else {
+			if len(httpSession.rspData) > 0 {
+				w.Write(httpSession.rspData)
+			}
+		}
+	} else {
+		svr.log.Error("http svr req overload")
+	}
+}
+```
+
+##### 过载保护，限制入http请求数
+
+HttpServer也对入请求数进行了限制，实现对自身的过载保护，采用的方式与之前tcp、udp的处理方式类似。
+
 #### Module：ScheduleServer
 
 ScheduleServer是GoNeat为定时任务封装的一个服务模块，简化定时任务实现逻辑。
 
+由于这里的实现逻辑比较简单、清晰，这里读者可以自己阅读代码进行了解。
+
 #### Module：HippoServer
 
 HippoServer是针对消息驱动的业务场景封装的一个消费者服务，简化消息消费的任务处理。
+
+由于这里的实现逻辑比较简单、清晰，这里读者可以自己阅读代码进行了解。
 
 ## GoNeat - 服务怠速
 
