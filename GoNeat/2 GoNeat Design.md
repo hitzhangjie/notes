@@ -964,11 +964,17 @@ HippoServer是针对消息驱动的业务场景封装的一个消费者服务，
 
 ### Module：StreamServer
 
+Stream
+
 ### Module：PacketServer
+
+
 
 ### Module：HttpServer
 
 HttpServer中有没有使用worker池（协程池）进行处理呢？该ServerModule是建立在标准库http实现之上的，GoNeat只是将请求处理的Handler传给了标准库http实现，并没有对标准库具体如何处理该请求做什么干预，比如是否采用worker池（协程池）。关于这一点，答案是否，可以查看下go标准库源码。
+
+#### 为每个连接创建一个协程进行处理
 
 标准库实现中，建立监听套接字之后，调用 `svr.Serve(listener)` 开始接受入连接请求，该方法循环 `Accept()` 取出建立好的tcp连接并进行处理。**标准库实现针对每一个连接都启动了一个goroutine进行处理，这与我们StreamServer的实现方式是类似的，所不同的是处理连接上并发请求的方式**。
 
@@ -987,6 +993,8 @@ func (srv *Server) Serve(l net.Listener) error {
 	}
 }
 ```
+
+#### 同一连接，串行收包、处理、回包
 
 注意 `c.Serve(ctx context.Context)` 的注释部分，其中有提到HTTP/1.x pipelining的处理局限性，一个连接上可能会有多个http请求，标准库当前实现逻辑是读取一个请求、处理一个请求、发送一个响应，然后才能继续读取下一个请求并执行处理、响应，所以多个http请求的处理是串行的。
 
@@ -1049,7 +1057,9 @@ func (svr *HttpServer) doService(w http.ResponseWriter, req *http.Request) {
 }
 ```
 
-总结一下，HttpServer只是在标准库http实现基础上自定义了请求Handler，所有Request URI匹配http.prefix的请求将递交给doService(…)方法处理，在doService方法内再调用nserver.process()方法转入GoNeat框架内置的命令字路由逻辑，与StreamServer、PacketServer不同的是，这里的命令字不再是rpc方法名、命令字拼接字符串，而是Request URI。
+#### 接管标准库Request URI路由转发
+
+HttpServer只是在标准库http实现基础上自定义了请求Handler，所有Request URI匹配http.prefix的请求将递交给doService(…)方法处理，在doService方法内再调用nserver.process()方法转入GoNeat框架内置的命令字路由逻辑，与StreamServer、PacketServer不同的是，这里的命令字不再是rpc方法名、命令字拼接字符串，而是Request URI。
 
 process()方法内通过URI路由到对应的处理函数Exec，并完成Exec的调用，拿到处理结果，process()方法返回处理结果，doService方法负责将响应结果写入连接中，c.Serve()中w.finishRequest()负责将响应数据flush。
 
