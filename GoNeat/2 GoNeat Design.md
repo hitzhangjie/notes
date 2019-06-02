@@ -685,13 +685,13 @@ type NServerModule interface {
 }
 ```
 
-#### Module：StreamServer
+### Module：StreamServer
 
 StreamServer是GoNeat封装的面向字节流（SOCK_STREAM）的服务模块，支持tcp和unix服务。
 
 StreamServer的创建时刻，我们在前面描述“***服务启动***”的部分已有提及，这里描述其启动的过程。
 
-##### 启动监听，处理入连接请求
+#### 启动监听，处理入连接请求
 
 ```go
 func (svr *StreamServer) Serve() error {
@@ -711,7 +711,7 @@ func (svr *StreamServer) Serve() error {
 
 StreamServer启动的逻辑简单明了，它监听svr.Addr（传输层协议svr.Network）创建一个监听套接字，然后为该svr.ctx创建一个CancelContext，然后启动一个协程负责执行svr.tcpAccept(…)，处理tcp入连接请求。
 
-##### 广播事件，支持平滑退出
+#### 广播事件，支持平滑退出
 
 这里提一下svr.ctx, svr.cancel，服务有自己的生命周期，有启动也有停止，服务停止的时候，存在某些未完结的任务需要清理，如HippoServer中可能拉取了一批消息但是还未处理完成，服务重启会造成消息丢失。**类似这样的场景的存在，要求框架必须有能力对服务停止事件进行广播，广播给服务内的所有组件，各个组件根据需要自行执行清理动作**，如HippoServer可能会选择停止继续收消息、处理完收取消息后退出。
 
@@ -730,7 +730,7 @@ StreamServer.Close()调用了svr.cancel()来取消svr.ctx的所有child context�
 
 这里的设计，也为GoNeat服务能够优雅地“***实现平滑退出***”打下了基石。
 
-##### 建立连接，全双工处理
+#### 建立连接，全双工处理
 
 ```go
 func (svr *StreamServer) tcpAccept(handler NHandler, listener net.Listener) {
@@ -779,23 +779,23 @@ func (svr *StreamServer) tcpAccept(handler NHandler, listener net.Listener) {
 
 关于 `go endpoint.tcpReader()` 和 `go endpoint.tcpWriter()` 的细节，我们在后面**服务怠速、请求处理**中介绍。
 
-##### 过载保护，限制入连接数
+#### 过载保护，限制入连接数
 
 StreamServer循环执行Accept()方法来建立连接，当然由于计算资源有限，服务能处理的连接数、请求数是有限的，服务需要进行一定的防护避免过载、雪崩。当`svr.connLimiter.TakeTicket()`成功时表示连接数未超限，可以继续处理，反之表示超出入连接数上限，关闭连接。
 
 循环Accept()过程中，如果检测到StreamServer停止`ctx.Done()`，关闭监听套接字不再接受入连接请求。
 
-##### 过载保护，限制入请求数
+#### 过载保护，限制入请求数
 
 除了对入tcp连接数进行限制，StreamServer也对入请求数进行限制，这部分在后续“请求处理”中介绍。
 
-#### Module：PacketServer
+### Module：PacketServer
 
 PacketServer是GoNeat封装的面向数据报（SOCK_PACKET）的服务模块，支持udp服务。
 
 与介绍StreamServer的方式类似，PacketServer实例化的部分前文已介绍过，这里只介绍其启动的过程。
 
-##### 启动监听，处理入udp请求
+#### 启动监听，处理入udp请求
 
 PacketServer.Server()中调用 `reuseport.ListenPacket(...)` 或者 `net.ListenPacket(...)` 监听svr.Addr（传输层协议类型svr.Network）创建监听套接字，并从中接收udp请求、处理请求、响应，详见`svr.udpRead(…)`，我们会在后续“请求处理”小节中进行介绍。
 
@@ -830,7 +830,7 @@ func (svr *PacketServer) Serve() error {
 }
 ```
 
-##### 端口重用，加速udp收包
+#### 端口重用，加速udp收包
 
 阅读上述代码，您一定关注到了这么一点， `reuseport.ListenPacket(...)` 和 `net.ListenPacket(...)` 。在继续描述之前，需要对比下tcp收包和udp收包的区别。
 
@@ -847,15 +847,15 @@ Linux下为了避免port hijack，只允许euid相同的进程bind到相同的po
 
 golang标准库中暂没有提供reuseport的能力，这里是引入了第三方实现，目前支持Linux+Darwin平台下的udp reuseport，Windows暂不支持。
 
-##### 过载保护，限制入请求数
+#### 过载保护，限制入请求数
 
 与StreamServer类似，PacketServer也有过载保护机制，就是限制入udp请求数，我们在后续“请求处理”小节中介绍。
 
-#### Module：HttpServer
+### Module：HttpServer
 
 HttpServer是GoNeat在golang标准库基础上封装的http服务模块，支持与StreamServer、PacketServer一样的接口注册、接口路由、接口处理逻辑。
 
-##### 标准库http基础上实现
+#### 标准库http基础上实现
 
 从下面代码不难看出，HttpServer，该ServerModule的实现时基于标准库http package实现的，对大家来说应该都比较熟悉，但是这里也有个适配GoNeat的地方，也就是请求路由这里。
 
@@ -888,7 +888,7 @@ func (svr *HttpServer) serve() {
 }
 ```
 
-##### httpserver请求路由转发
+#### httpserver请求路由转发
 
 借助标准库实例化 `http.Server{}` 时，指定了将请求URI Prefix为svr.prefix的请求，交由handler h处理。而h是svr.doService(…)强制类型转换成的http.HandlerFunc。
 
@@ -936,25 +936,134 @@ func (svr *HttpServer) doService(w http.ResponseWriter, req *http.Request) {
 }
 ```
 
-##### 过载保护，限制入http请求数
+#### 过载保护，限制入http请求数
 
 HttpServer也对入请求数进行了限制，实现对自身的过载保护，采用的方式与之前tcp、udp的处理方式类似。
 
-#### Module：ScheduleServer
+### Module：ScheduleServer
 
 ScheduleServer是GoNeat为定时任务封装的一个服务模块，简化定时任务实现逻辑。
 
 由于这里的实现逻辑比较简单、清晰，这里读者可以自己阅读代码进行了解。
 
-#### Module：HippoServer
+### Module：HippoServer
 
 HippoServer是针对消息驱动的业务场景封装的一个消费者服务，简化消息消费的任务处理。
 
 由于这里的实现逻辑比较简单、清晰，这里读者可以自己阅读代码进行了解。
 
+## GoNeat - 请求处理
+
+前文描述了Server实例及各个ServerModule启动的过程，至此服务已经完全启动，可以进行请求处理了。
+
+这里选择StreamServer、PacketServer、HttpServer作为重点描述对象，这几个ServerModule是日常业务开发中使用最频繁的，应该也是读者最希望了解的。~~在逐一描述之前，先介绍下用到的重要“基础设施”。~~
+
+### 基础设施：协程池
+
+### 基础设施：内存池
+
+### Module：StreamServer
+
+### Module：PacketServer
+
+### Module：HttpServer
+
+HttpServer中有没有使用worker池（协程池）进行处理呢？该ServerModule是建立在标准库http实现之上的，GoNeat只是将请求处理的Handler传给了标准库http实现，并没有对标准库具体如何处理该请求做什么干预，比如是否采用worker池（协程池）。关于这一点，答案是否，可以查看下go标准库源码。
+
+标准库实现中，建立监听套接字之后，调用 `svr.Serve(listener)` 开始接受入连接请求，该方法循环 `Accept()` 取出建立好的tcp连接并进行处理。**标准库实现针对每一个连接都启动了一个goroutine进行处理，这与我们StreamServer的实现方式是类似的，所不同的是处理连接上并发请求的方式**。
+
+***net/http/server.go:***
+
+```go
+// After Shutdown or Close, the returned error is ErrServerClosed.
+func (srv *Server) Serve(l net.Listener) error {
+	...
+  for {
+		rw, e := l.Accept()
+		...
+		c := srv.newConn(rw)
+		...
+		go c.serve(ctx)
+	}
+}
+```
+
+注意 `c.Serve(ctx context.Context)` 的注释部分，其中有提到HTTP/1.x pipelining的处理局限性，一个连接上可能会有多个http请求，标准库当前实现逻辑是读取一个请求、处理一个请求、发送一个响应，然后才能继续读取下一个请求并执行处理、响应，所以多个http请求的处理是串行的。
+
+注释中也有提到，可以收取多个请求，并发处理，然后按照pipeling请求顺序按序返回结果（http协议头并没有类似我们业务协议seqno的字段），但是当前没有这么做。
+
+连接上请求的读取、处理、回包都是在同一个连接中完成处理的，并没有像我们StreamServer、PacketServer那样将请求递交给worker池（协程池）进行处理。
+
+***net/http/server.go:***
+
+```go
+// Serve a new connection.
+func (c *conn) serve(ctx context.Context) {
+  ...
+
+  // HTTP/1.x from here on.
+	c.r = &connReader{conn: c}
+
+	for {
+    // 读取连接上的请求
+		w, err := c.readRequest(ctx)
+
+    // 读取一个请求，串行处理一个请求
+    
+		// HTTP cannot have multiple simultaneous active requests.[*]
+		// Until the server replies to this request, it can't read another,
+		// so we might as well run the handler in this goroutine.
+		// [*] Not strictly true: HTTP pipelining. We could let them all process
+		// in parallel even if their responses need to be serialized.
+		// But we're not going to implement HTTP pipelining because it
+		// was never deployed in the wild and the answer is HTTP/2.
+		serverHandler{c.server}.ServeHTTP(w, w.req)
+		
+   	// 请求处理结束，finishRequest flush响应数据
+    w.cancelCtx()
+		w.finishRequest()
+    ...
+	}
+}
+
+func (sh serverHandler) ServeHTTP(rw ResponseWriter, req *Request) {
+	handler := sh.srv.Handler
+	if handler == nil {
+		handler = DefaultServeMux
+	}
+	if req.RequestURI == "*" && req.Method == "OPTIONS" {
+		handler = globalOptionsHandler{}
+	}
+	handler.ServeHTTP(rw, req)
+}
+```
+
+sh.svr.Handler其实就是nserver.HttpServer.doService()方法。
+
+***nserver/neat_http.go:***
+
+```go
+// doService process http request `req`
+func (svr *HttpServer) doService(w http.ResponseWriter, req *http.Request) {
+  ...
+}
+```
+
+总结一下，HttpServer只是在标准库http实现基础上自定义了请求Handler，所有Request URI匹配http.prefix的请求将递交给doService(…)方法处理，在doService方法内再调用nserver.process()方法转入GoNeat框架内置的命令字路由逻辑，与StreamServer、PacketServer不同的是，这里的命令字不再是rpc方法名、命令字拼接字符串，而是Request URI。
+
+process()方法内通过URI路由到对应的处理函数Exec，并完成Exec的调用，拿到处理结果，process()方法返回处理结果，doService方法负责将响应结果写入连接中，c.Serve()中w.finishRequest()负责将响应数据flush。
+
+至此，一次http请求、处理、响应就结束了。
+
+而关于HTTP/2中pipelining的处理情况，与之类似，读者可以自行查阅、跟进标准库实现了解相关细节，这里不再赘述。
+
 ## GoNeat - 服务怠速
 
-## GoNeat - 请求处理
+前文描述了Server实例及各个ServerModule启动、请求处理的过程，当服务空闲的时候会发生什么呢？为这个阶段起了一个好听的名字”怠速”，“怠速”意味着并不是停止服务，服务依旧在空跑，那空跑阶段会发生什么呢？
+
+GoNeat框架还是会做些事情的，比如清理、释放一些不必要的资源占用，为后续请求处理再次做好准备。
+
+
 
 ## GoNeat - 监控上报
 
