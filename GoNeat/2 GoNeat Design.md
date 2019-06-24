@@ -990,17 +990,136 @@ go自带内存管理，内存分配、逃逸分析、垃圾回收，内存分配
 
 内存分配次数增加引入额外开销不难理解，使用sync.Pool可以在两次gc cycle间隙返回已分配的内存来复用以减轻内存分配的次数，自然也会减轻gc扫描、标记、回收的压力。
 
-每次 `gcStart(){...}` 开始新一轮gc时，会首先清理sync.Pools，清理逻辑也比较简单暴力，sync.Pools中的空闲内存块都会被清空，进入后续垃圾回收，所以内存池不适合用与连接池等有状态的对象池。
+每次 `gcStart(){...}` 开始新一轮gc时，会首先清理sync.Pools，清理逻辑也比较简单暴力，sync.Pools中的空闲内存块都会被清空，进入后续垃圾回收，所以内存池不适合用作连接池等有状态的对象池。
 
-框架中我们将其用于收发包buffer内存池，用完即释放，不存在状态的问题。
+在GoNeat框架中我们将其用作收发包buffer池，用完即释放，不存在上述有状态对象被清理的问题。
 
 ### Module：StreamServer
 
+StreamServer，提供tcp网络服务，前文已经介绍了StreamServer整个生命周期的一个大致情况，包括启动监听、建立连接、接收请求、过载保护、退出等，现在我们把视角锁定在“请求处理”这个环节，进一步了解其工作过程。
 
+再简单回顾一下，服务端StreamServer已经启动，现在正调用listener.Accept()等待客户端连接。
+
+```go
+func (svr *StreamServer) tcpAccept(handler NHandler, listener net.Listener) {
+	...
+	for {    
+   	...
+		conn, ex := listener.Accept()
+		endpoint := newEndPoint(svr, conn)
+		go endpoint.tcpReader()
+		go endpoint.tcpWriter()
+	}
+}
+```
+
+客户端发起建立连接请求，listener.Accept()将返回建立的连接，并为连接创建两个协程，一个负责收包，一个负责回包。下面我们就看下收包、解包、请求处理、组包、回包的完整过程。
+
+#### 收包解包
+
+`go endpoint.tcpReader()` 创建了一个协程从连接上读取请求数据。由于tcp是面向字节流的无边界协议，客户端可能会同时发送多个请求包过来，这些包与包之间没有明显的数据边界，即所谓的网络粘包。tcp服务必须根据业务协议编解码规则处理粘包问题，否则会导致请求解码失败，更无法正常处理请求。
+
+下面看下框架是如何进行收包解包的，网络交互过程涉及到大量的错误处理（先不展开），这里只截取了收包、解包的部分代码，方便大家理解。
+
+```go
+func (endpoint *EndPoint) tcpReader() {
+  ...
+  // 回忆下，不同的协议都有注册对应的协议handler，如nrpc协议对应NRPCHandler
+	handler := svr.protoHandler
+
+  // resizable buffer是网络收包过程非常倚重的一种存储结构，其大小可伸缩
+  // 同时为了减少内存分配、回收压力，采用了内存池的方式，预先分配特定大小的buffer用于收包，
+  // 如果收包数据当前buffer不够用的情况下，buffer就会动态增长以满足对存储空间的要求
+	buf := bufPool.Get()
+	defer bufPool.Put(buf)
+	
+OUT:
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+      // 读取连接上到达的数据，这里设置一个读超时时间
+      // 如果连续一段时间(默认5min)连接上没有数据到达，则认为连接空闲，服务端为节省资源可以主动断开连接
+			ex := conn.SetReadDeadline(time.Now().Add(time.Millisecond * time.Duration(timeout)))
+      
+      // 读取连接上的请求数据，一次读取可能遇到如下情形：
+      // - 完全没有读取到数据，这种会出现读取超时，for循环continue OUT，继续执行下次读取
+      // - 读取到了不足一个包的数据，这种会返回io.ErrUnexpectedEOF，for循环continue OUT继续收取包的剩余数据
+      // - 刚好读取到了一个完整包的数据，这种handler.Input(...)会返回一个请求session处理，
+      // - 读取到了不止一个请求包的数据，这种会返回最前面请求对应的session，剩余数据参考上述情形之一继续处理
+			_, ex = buf.ReadFromOnce(conn)
+
+			// 可能一次读取了多个请求包，需要循环处理
+			for {
+				buf.MarkReadIndex()
+        // 这里使用协议handler对buf中接收的数据进行解码操作，如果能成功解出一个请求体，则返回对应的session
+				nSession, ex := handler.Input(remoteAddr, buf)
+				// 包不完整不全直接忽略，继续收包
+				if io.ErrUnexpectedEOF == ex {
+					buf.ResetReadIndex()
+					continue OUT
+				}
+				// 如果包不合法，如校验发现严重错误（非收包补全）如幻数、长度校验失败，关闭连接
+				if ex != nil {
+					return
+				}
+			}
+    }
+  ...
+}
+```
+
+#### 请求处理
+
+假定从连接上读取的数据，经协议handler校验并解码出了一个完整的请求包，此时协议handler会创建一个匹配的session（如nrpc协议对应NRPCSession），创建的session用于跟踪一个请求的完整生命周期，如session记录了客户端请求、服务端响应、服务处理过程中的错误事件、分布式跟踪、日志信息等等。
+
+```go
+func (endpoint *EndPoint) tcpReader() {
+	...
+OUT:
+	for {
+		select {
+			...
+			//可能一次收到多个请求包，需要循环处理
+			for {
+				buf.MarkReadIndex()
+				nSession, ex := handler.Input(remoteAddr, buf)
+        
+        ...
+				if requestLimiter.TakeTicket() {
+          
+					svr.nserver.workpool.Submit(func() { //process
+						defer func() {
+							requestLimiter.ReleaseTicket()
+						}()
+						ex := svr.requestHandler(ctx, nSession)
+						if ex != nil {
+							svr.log.Error("[tcp-%s] handler Process error:%s", handler.GetProto(), ex.Error())
+							return
+						}
+						endpoint.sendChan <- nSession.GetResponseData()
+						cost := time.Since(nSession.ProcessStartTime()).Nanoseconds() / 1000000
+						svr.nserver.monitorCost(nSession.GetCmdString(), cost)
+					})
+				} else {
+					//过载了直接关闭连接
+					log.Error("[tcp-%s] [!!close conn!!] nserver reqs overload", handler.GetProto())
+					return
+				}
+			}
+		}
+	}
+}
+```
+
+
+
+#### 组包回包
 
 ### Module：PacketServer
 
-
+PacketServer，提供udp网络服务，前文已经介绍了PacketServer整个生命周期的一个大致情况，包括启动监听、端口重用、过载保护、退出等，现在我们把视角锁定在“请求处理”这个环节，进一步了解其工作过程。
 
 ### Module：HttpServer
 
