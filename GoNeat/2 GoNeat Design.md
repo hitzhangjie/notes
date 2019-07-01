@@ -1072,7 +1072,7 @@ OUT:
 
 #### 请求处理
 
-假定从连接上读取的数据，经协议handler校验并解码出了一个完整的请求包，此时协议handler会创建一个匹配的session（如nrpc协议对应NRPCSession），创建的session用于跟踪一个请求的完整生命周期，如session记录了客户端请求、服务端响应、服务处理过程中的错误事件、分布式跟踪、日志信息等等。
+假定从连接上读取的数据，经协议handler校验并解码出了一个完整的请求包，此时协议handler会创建一个匹配的session（如nrpc协议对应NRPCSession），见 `nSession,ex := handler.Input(remoteAddr, buf` 。创建的session用于跟踪一个请求的完整生命周期，session记录了客户端请求、服务端响应、服务处理过程中的错误事件、分布式跟踪、日志信息等等。
 
 ```go
 func (endpoint *EndPoint) tcpReader() {
@@ -1113,7 +1113,26 @@ OUT:
 }
 ```
 
+在请求没有触发服务过载保护的前提下，即 `requestLimiter.TakeTicket() == true` 时，此时会将请求递交给协程池处理，`svr.nserver.workerpool.Submit(func(){…})`。协程池的大致实现逻辑前面已有提及，它负责执行我们提交的任务，也就是这里workerpool.Submit(f func(){…})的参数f。注意到参数f中包含了这样一段代码：
 
+```go
+func f() {
+  defer func() {
+    requestLimiter.ReleaseTicket()
+  }()
+  ex := svr.requestHandler(ctx, nSession)
+  if ex != nil {
+    return
+  }
+  endpoint.sendChan <- nSession.GetResponseData()
+  cost := time.Since(nSession.ProcessStartTime()).Nanoseconds/1000000
+  svr.nserver.monitorCost(nSession.GetCmdString(), cost)
+}
+```
+
+收包处理流程结束之后，需要释放ticket，见defer函数。关于请求的正常处理流程的入口则是 `svr.requestHandler(ctx, nSession)` ，这里的svr.requestHandler其实就是 `cmd_handler.go:process(…)` 方法，在 `neat_svr.go:NewNServer()` 方法体中 `svr.requestHandler = NewRequestHandler()`，而NewRequestHandler的返回值则是`cmd_handler.go:process(…)` 方法。
+
+请求处理的核心逻辑，包括请求命令字与处理方法的路由控制策略、调用用户自定义处理函数、回响应包。
 
 #### 组包回包
 
