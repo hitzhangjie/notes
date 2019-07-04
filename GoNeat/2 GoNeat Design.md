@@ -1132,7 +1132,7 @@ func f() {
 
 收包处理流程结束之后，需要释放ticket，见defer函数。关于请求的正常处理流程的入口则是 `svr.requestHandler(ctx, nSession)` ，这里的svr.requestHandler其实就是 `cmd_handler.go:process(…)` 方法，在 `neat_svr.go:NewNServer()` 方法体中 `svr.requestHandler = NewRequestHandler()`，而NewRequestHandler的返回值则是`cmd_handler.go:process(…)` 方法。
 
-请求处理的核心逻辑，包括请求命令字与处理方法的路由控制策略、调用用户自定义处理函数、回响应包。
+`cmd_handler.go:process(ctx context.Context, session nserver.NSession)`请求处理的核心逻辑，包括请求命令字与处理方法的路由控制策略、调用用户自定义处理函数、回响应包。
 
 #### 组包回包
 
