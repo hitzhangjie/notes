@@ -103,7 +103,7 @@ env GODEBUG=gctrace=1 godoc -http=:8080
 
 ![image-20190706122124109](assets/image-20190706122124109.png)
 
-If the application is running and constantly outputting garbage collecting lines, it’s a fair chance you’re in bad allocation. If it goes slow it is likely that allocations is under control.  
+If the application is running and constantly outputting garbage collecting lines, it’s a fair chance you’re bound allocation. If it goes slow it is likely that allocations is under control.  
 
 # How does a profiler work?
 
