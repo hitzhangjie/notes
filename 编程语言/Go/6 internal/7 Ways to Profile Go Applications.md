@@ -1,4 +1,4 @@
-Golang UK Conference 2016 - Dave Cheney - Seven ways to Profile Go Applications
+[Golang UK Conference 2016 - Dave Cheney - Seven ways to Profile Go Applications](https://www.youtube.com/watch?v=2h_NFBFrciI)
 
 此文源于Dave之前的分享，看完这些方法确实学习到了很多东西，包括profile的工作原理、实践经验。分享中提及的工具有点旧了，有些已经不再维护、更新，如uber官方也已经将go-torch标记为deprecated。
 
@@ -15,6 +15,8 @@ go get -u -v github.com/google/pprof
 也可以下载trace文件（上述页面中点击下载，或者`wget http://ip:port/debug/pprof/trace`）使用`go tool trace ./trace`来进一步分析程序中的执行情况，如goroutine、网络阻塞、同步阻塞、系统调用阻塞、调度器延时等的执行情况。
 
 ![image-20190706155345681](assets/image-20190706155345681.png)
+
+需要注意的是，CPU profile便于观察throughput方面的问题，但是latency方面的问题，还是要看trace！可以参考：[Golang UK Conference 2017 | Filippo Valsorda - Fighting latency: the CPU profiler is not your ally](https://www.youtube.com/watch?v=Lxt8Vqn4JiQ).
 
 # No.1 time
 
@@ -103,7 +105,7 @@ env GODEBUG=gctrace=1 godoc -http=:8080
 
 ![image-20190706122124109](assets/image-20190706122124109.png)
 
-If the application is running and constantly outputting garbage collecting lines, it’s a fair chance you’re bound allocation. If it goes slow it is likely that allocations is under control.  
+If the application is running and constantly outputting garbage collecting lines, it’s a fair chance you’re bound allocation. If it goes slow it is likely that allocations is under control.
 
 # How does a profiler work?
 
