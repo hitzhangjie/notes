@@ -1,5 +1,21 @@
 Golang UK Conference 2016 - Dave Cheney - Seven ways to Profile Go Applications
 
+此文源于Dave之前的分享，看完这些方法确实学习到了很多东西，包括profile的工作原理、实践经验。分享中提及的工具有点旧了，有些已经不再维护、更新，如uber官方也已经将go-torch标记为deprecated。
+
+建议后续profile的时候使用google官方提供的工具`pprof`，它除了cpu、memory、block等基础的profile能力外，也提供了flamegraph等能力，也提供了方便易用的web界面，非常好用，使用方式pprof和`go tool pprof`也是一致的。
+
+```bash
+go get -u -v github.com/google/pprof
+```
+
+当然如果条件允许直接打开浏览器访问`http://ip:port/debug/pprof`更加方便，可以灵活切换不同的采样统计维度。也可以下载trace文件使用`go tool trace ./trace`来进一步分析程序中的执行情况，如goroutine、网络阻塞、同步阻塞、系统调用阻塞、调度器延时等的执行情况。
+
+![image-20190706154548233](assets/image-20190706154548233.png)
+
+也可以下载trace文件（上述页面中点击下载，或者`wget http://ip:port/debug/pprof/trace`）使用`go tool trace ./trace`来进一步分析程序中的执行情况，如goroutine、网络阻塞、同步阻塞、系统调用阻塞、调度器延时等的执行情况。
+
+![image-20190706155345681](assets/image-20190706155345681.png)
+
 # No.1 time
 
 The first method of profiling any program is `time`.
