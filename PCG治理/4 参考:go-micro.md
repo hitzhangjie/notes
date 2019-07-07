@@ -156,11 +156,9 @@ service test_svr {
   }
   type Client interface{
   }
-  
-  
   ```
 
-  
+  client stub和server stub要分别生成！
 
   
 
