@@ -122,4 +122,12 @@ service test_svr {
 
   这对`func (s *TestSvrImpl) DoSomething(ctx, req) (rsp, error)`提出了要求，如果我要获取包头相关信息，该怎么获取呢？可以为不同的业务协议定制化一个协议Session或者协议Context，建议用session的概念，context只会用来进行全局超时控制、不传值。如果这样的话，问题就可以迎刃而解，相关的实现可以参考goneat。
 
+  - 这里的`service.Register(&TestSvr{})`需要借助反射，将rpc以及对应的方法名全部注册上去！
+
+  - 如果这里的业务协议是ilive、simplesso，这种靠命令字来的，代码生成工具还要自己添加Forward！
+
+  如果是像goneat那样的话，其实也挺直观的，只是似乎感觉有点割裂了服务这个整体，这里的Forward、以及工具上的特殊逻辑又显得有点累赘，看看怎么权衡、选择。
+
+  
+
 # 定义Service
