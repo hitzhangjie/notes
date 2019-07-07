@@ -21,7 +21,6 @@ microservices in go using go-micro: https://www.youtube.com/watch?v=OcjMi9cXItY
 go这个小组的初步设计，设计很大程度上参考了这个框架。
 
 
-
 # grpc
 
 grpc guides: https://grpc.io/docs/guides/
@@ -56,7 +55,7 @@ message HelloResponse {
 }
 
 service HelloService {
-	  rpc SayHello1(HelloRequest) returns(HelloResponse){}
+    rpc SayHello1(HelloRequest) returns(HelloResponse){}
     rpc SayHello2(HelloRequest) returns(stream HelloResponse){}
     rpc SayHello3(stream HelloRequest) returns(HelloResponse){}
     rpc SayHello4(stream HelloRequest) returns(stream HelloResponse){}
@@ -68,6 +67,5 @@ service HelloService {
 ## Authentication
 
 grpc提供了内置的基于SSL/TLS的认证，也提供了基于google token的认证，当然开发者也可以自定义认证机制使用。
-
 
 
