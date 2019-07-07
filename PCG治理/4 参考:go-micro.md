@@ -80,6 +80,8 @@ service test_svr {
 >
 > 而且，stream这种场景目前来看，我们大多数业务后台应该还不是那么需要，不过某些业务场景可能比较需要，这里呢，我们优先提供非stream的rpc实现，先满足大多数业务开发需要。
 
+## 定义Service
+
 以GoNeat框架为例，我们利用了proto文件的消息序列化、反序列化能力，也利用了它的自描述特性，提取FileDescriptor信息然后指导后续服务模板的创建，对于每个rpc我们是以AddExec(Cmdstring, Exec)的方式来注册的。这种方式没有像grpc一样生成Service接口，Exec是个普通的方法，并不是Service接口的具体实现的成员方法。
 
 评估下GoNeat这种方式好，还是类似grpc那种方式好？
@@ -128,6 +130,38 @@ service test_svr {
 
   如果是像goneat那样的话，其实也挺直观的，只是似乎感觉有点割裂了服务这个整体，这里的Forward、以及工具上的特殊逻辑又显得有点累赘，看看怎么权衡、选择。
 
+  ## 定义Client
+
+  rpc本身的含义就是像调用本地方法一样调用远程服务接口。从一个开发者角度来说，如果要调用其他的服务，协议肯定要先知道，假如我知道了它这里的proto文件、业务协议，那么就可以很方便地借助`trpc`工具生成对一个的client stub，以上面提到的`test_svr`为例：
+
+  ```go
+  rsp, err := TestSvr.DoSomething(context.TODO(), &req{})
+  ```
+
+  这样就应该可以完成rpc调用，但是这里有个点需要注意，就是这里的rpc在服务注册时是注册的什么呢？比如是/trpc/app/test_svr.doSomething，还是trpc.App.TestSvr.DoSomething，这个要保持一致，只能是服务注册时先通过统一的系统申请服务名，然后再进行注册，调用方也应该确认自己调用的服务名到底是什么，对吧？
+
+  所以这里的client stub需要调整下：
+
+  ```go
+  TestSvr.NewClient("/trpc/app/TestSvr")
+  rsp, err := TestSvr.DoSomething(context.TODO, $req{})
+  ```
+
+  如果要想支持l5、cmlb、iplist怎么办呢？这里要全局考虑下如何进行抽象：
+
+  ```go
+  type Registry interface{
+  }
+  type Selector interface{
+  }
+  type Client interface{
+  }
+  
+  
+  ```
+
   
 
-# 定义Service
+  
+
+# 总结
