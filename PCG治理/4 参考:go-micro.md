@@ -36,9 +36,16 @@ A way to specify the behavior of an object. If something can do this, then it ca
 
 ![image-20190707140957093](assets/image-20190707140957093.png)
 
+![image-20190707162211278](assets/image-20190707162211278.png)
 
+> go-micro使用**path based resolution**将http请求转换成rpc请求。
 
+不同的是，go-micro是单独提供了一个API Gateway，它将http请求转换成rpc请求！我在想这种方式，会不会比我们目前goneat的方式要好一点呢？从不同的角度出发来说，看待一下这个问题：
 
+- goneat在现有接口上暴露出http接口，http对外的接口一般可能会涉及到鉴权相关的一些能力，goneat虽然也支持，但是要稍微调整下代码、配置文件，虽然比较简单，但是毕竟还是要修改原有服务的代码的。如果go-micro开发的话，可能只需要额外单独部署一个api网关就可以了，原有的老的服务代码不需要做调整。从服务代码维护的角度来说，我感觉抽一个可配置的api网关出来部署可能比修改原有服务代码要好一点。
+- 全新的http服务，goneat也是支持作为web服务的，这种情况下goneat可以直接作为http服务对外提供服务，go-micro可能就要部署至少两个服务，一个api网关对外提供http接口，一个后台服务，api网关将请求转换成后台rpc请求。这个角度来看，我感觉goneat又占据了一定的优势。
+
+总结：如果能够灵活地支持鉴权等相关操作，我觉得在goneat中集成http能力是非常棒的尝试，也避免了中间不必要的转换、api和后台服务之间的rpc交互，goneat中现在也支持鉴权相关的能力。我觉得可以在goneat中集成这部分能力，但是独立的api网关也要提供，让开发者自行决定如何来部署。
 
 # 开发人员pb使用习惯
 
