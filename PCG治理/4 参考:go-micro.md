@@ -143,7 +143,7 @@ service test_svr {
   所以这里的client stub需要调整下：
 
   ```go
-  TestSvr.NewClient("/trpc/app/TestSvr")
+  TestSvr.NewClient("/trpc/app/TestSvr") 
   rsp, err := TestSvr.DoSomething(context.TODO, $req{})
   ```
 
