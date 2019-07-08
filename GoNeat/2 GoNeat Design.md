@@ -1134,9 +1134,28 @@ func f() {
 
 收包处理流程结束之后，需要释放ticket，见defer函数。关于请求的正常处理流程的入口则是 `svr.requestHandler(ctx, nSession)` ，这里的svr.requestHandler其实就是 `cmd_handler.go:process(…)` 方法，在 `neat_svr.go:NewNServer()` 方法体中 `svr.requestHandler = NewRequestHandler()`，而NewRequestHandler的返回值则是`cmd_handler.go:process(…)` 方法。
 
-`cmd_handler.go:process(ctx context.Context, session nserver.NSession)`请求处理的核心逻辑，包括请求命令字与处理方法的路由控制策略、调用用户自定义处理函数、回响应包。
+`cmd_handler.go:process(ctx context.Context, session nserver.NSession)`请求处理的核心逻辑，包括请求命令字与处理方法的路由控制策略、调用用户自定义处理函数，方法执行完成后nSession中将包含该请求对应的响应结果。
 
 #### 组包回包
+
+回包协程，执行下面的逻辑，循环从endpoint.sendChan中取出响应包，并发送给请求方。
+
+```go
+func (endpoint *EndPoint) tcpWriter() {
+	...
+  for {
+		select {
+		case <-ctx.Done():
+			return
+		case dataRsp := <-endpoint.sendChan:
+			conn.SetWriteDeadline(time.Now().Add(time.Millisecond * time.Duration(timeout)))
+			dataLen, ex := conn.Write(dataRsp)
+		}
+	}
+}
+```
+
+StreamServer的大致执行逻辑就介绍到此，更多细节信息，可以阅读下相关代码。
 
 ### Module：PacketServer
 
@@ -1165,7 +1184,6 @@ func (svr *PacketServer) udpRead(handler NHandler, udpConn net.PacketConn) {
 	defer udpConn.Close()
 	ctx, cancel := context.WithCancel(svr.ctx)
 	...
-  
 	requestLimiter := svr.nserver.reqLimiter
 	for {
 		select {
@@ -1193,11 +1211,77 @@ func (svr *PacketServer) udpRead(handler NHandler, udpConn net.PacketConn) {
 
 #### 请求处理
 
+与TCP的处理方式类似，当正确收取了一个UDP请求，并为之构建好协议匹配的session之后，就会将其一个任务处理的闭包函数作为一个task递交给workerpool进行处理，`svr.nserver.workpool.Submit(func() {…})`，该闭包函数执行完毕后也要注意释放requestLimiter，闭包函数中的 `svr.requestHandler(ctx, nSession)` 就是 `cmd_handler.go:process(ctx, session)` 方法，与TCP的处理逻辑是一致的。之所以在svr.requestHandler和cmd_handler.go:process(…)中间再加一层抽象，是考虑到业务开发者可能希望定制化requestHandler的能力，cmd_handler.go:process(...)方法只是提供了一个还不错的默认实现。
 
+`svr.requestHandler(ctx, nSession)`执行完成后，nSession中将包含请求体的响应结果，响应结果将写入sendChan中，由负责回包的协程 `go svr.udpWrite(...)` 执行回包操作。
+
+```go
+func (svr *PacketServer) udpRead(handler NHandler, udpConn net.PacketConn) {
+	...
+	sendChan := make(chan *packet, 1000)
+	go svr.udpWrite(ctx, cancel, udpConn, sendChan)
+  ...
+
+  for {
+		select {
+		case <-ctx.Done():
+			...
+		default:
+			if requestLimiter.TakeTicket() {
+
+				nSession, ex := handler.Input(remoteAddr, r)
+
+				svr.nserver.workpool.Submit(func() {
+
+					defer func() {
+						requestLimiter.ReleaseTicket()
+					}()
+
+					ex = svr.requestHandler(ctx, nSession)
+					dataRsp := nSession.GetResponseData()
+					...
+          
+					sendChan <- &packet{dataRsp, remoteAddr}
+				})
+			} else {
+        ...
+			}
+		}
+	}
+}
+```
 
 #### 组包回包
 
+回包协程执行下面的逻辑，它循环从sendChan中收取UDP请求对应的响应，并检查响应数据是否超过64KB，超过则丢弃，反之则将响应返回给请求方。
 
+```go
+func (svr *PacketServer) udpWrite(ctx context.Context, 
+                                  cancel context.CancelFunc, 
+                                  conn net.PacketConn, 
+                                  sendChan chan *packet) {
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case p := <-sendChan:
+
+			if len(p.data) > 65536 {
+				udpRspExceed64k.Inc(1) //udp回包超过64k
+				continue
+			}
+
+			conn.SetWriteDeadline(time.Now().Add(time.Millisecond * time.Duration(timeout)))
+			datalen, ex := conn.WriteTo(p.data, p.addr)
+      ...
+		}
+	}
+}
+```
+
+PacketServer的大致执行逻辑就介绍到此，更多细节信息，可以阅读下相关代码。
 
 ### Module：HttpServer
 
@@ -1295,6 +1379,8 @@ process()方法内通过URI路由到对应的处理函数Exec，并完成Exec的
 至此，一次http请求、处理、响应就结束了。
 
 而关于HTTP/2中pipelining的处理情况，与之类似，读者可以自行查阅、跟进标准库实现了解相关细节，这里不再赘述。
+
+HttpServer的大致执行逻辑就介绍到此，更多细节信息，可以阅读下相关代码。
 
 ## GoNeat - 服务怠速
 
