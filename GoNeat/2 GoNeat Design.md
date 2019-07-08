@@ -1388,11 +1388,144 @@ HttpServer的大致执行逻辑就介绍到此，更多细节信息，可以阅�
 
 GoNeat框架还是会做些事情的，比如清理、释放一些不必要的资源占用，为后续请求处理再次做好准备。
 
+### sync.Pool
 
+前文提到，在两次gc cycle间隔期，sync.Pool可以有效提升内存分配效率，sync.Pool.Get()申请新内存或者复用已分配的内存，sync.Pool.Put(buf)重新将sync.Pool.Get()返回的buf放回池子以备复用，如果gc来临，sync.Pool中遗留的未使用的内存区将被释放掉。
+
+```go
+func poolCleanup() {
+	// This function is called with the world stopped, at the beginning of a garbage collection.
+	// It must not allocate and probably should not call any runtime functions.
+	// Defensively zero out everything, 2 reasons:
+	// 1. To prevent false retention of whole Pools.
+	// 2. If GC happens while a goroutine works with l.shared in Put/Get,
+	//    it will retain whole Pool. So next cycle memory consumption would be doubled.
+	for i, p := range allPools {
+		allPools[i] = nil
+		for i := 0; i < int(p.localSize); i++ {
+			l := indexLocal(p.local, i)
+			l.private = nil
+			for j := range l.shared {
+				l.shared[j] = nil
+			}
+			l.shared = nil
+		}
+		p.local = nil
+		p.localSize = 0
+	}
+	allPools = []*Pool{}
+}
+```
+
+虽然这部分不是框架本身所施加的，这里列出来也是为了强调下，希望开发者对计算资源保持足够的敏感度，即便是在使用自带gc机制的编程语言条件下，也应该保持这种敏感度。gc不是万能的，可以找出一种case将gc阈值推高进而将内存撑爆。
+
+### workerpool
+
+一个workerpool的内部构造大致如下，每个worker其实就是一个goroutine，每个goroutine都绑定了一个独占的任务队列。当请求量上涨的时候，在workers都处于busy状态的情况下，workerpool会检查workers数量是否已经超过指定的上限，如果没有就继续创建worker，如此worker数量会越来越多……
+
+```go
+workerpool
+   |--worker1 ---- tasks|t1|t2|t3|..|
+   |--worker2 ---- tasks|t4|t5|..|
+   |--worker3 ---- tasks||
+   |--worker? ---- tasks||
+   |--workerN ---- tasks|tx|ty|tz|
+```
+
+当请求量降低，甚至是空闲的时候呢？这些worker（goroutine）难道还会存在？似乎没有必要。workerpool也会定时检查workers空闲时间，每次workerpool.Submit(task)的时候，会更新实际接收该task的worker的最近使用时间lastUsedTime，如果`currentTime.Since(lastUsedTime) > maxIdleDuration`，则认为worker空闲，终止worker执行就可以了。
+
+### 空闲连接
+
+连接保活，是一个容易引起争论的话题，当前TCP协议本身支持连接保活，每隔一定时间发送一个TCP探针，但是也有人认为这加重了网络拥塞，保活应该在应用层自己实现，如通过心跳机制。
+
+尽管存在这些争议，TCP保活机制仍然是首选的保活机制之一，因为它不需要引入额外的开发、保活策略。连接保活可以在客户端做，也可以在服务端做，其作用只是为了探测连接是否还健康地保持着。框架中在服务端进行保活，对于短连接的情况，继续保活显得有点多余，那为什么框架实现时选择了在服务端进行保活呢？
+
+因为框架中对TCP完全是以双工的方式进行处理的，如在一个连接上循环收包、处理、回包，并没有做客户端是TCP短连接的假设，客户端不管是TCP短连接、长连接，StreamServer都是一样的处理逻辑，也可以理解成StreamServer鼓励客户端使用TCP长连接，所以在服务端发起保活机制也是很自然的选择。
+
+一个进程允许打开的文件描述符（fd数量）是有限的，Linux下可以通过`ulimit -s`进行设置。允许打开的fd数量有限代表什么呢？在Linux下，一切皆文件，几乎所有的资源都被抽象成了文件，而每个文件”句柄“基本上都对应着一个fd。fd数量有限，意味着允许创建的socket数量也是有限的。
+
+而`ulimit -s`可能给到了一个很高的值，但是如果我们不小心，也极容易泄露fd。笔者就曾经见过Web服务中client实例化没有使用单例、并且client销毁时没有close(fd)而导致fd泄露，进而迅速拖垮了现网几十台Web服务器的案例。
+
+考虑到这种种因素，框架还是需要做些事情，将这些服务端空闲的TCP连接及时销毁，并且为了适应不同的业务场景，允许自定义连接空闲时间（记为T）。当连接上连续时间T没有请求到达，服务端认为连接空闲，并关闭连接释放系统资源。
+
+server端关闭空闲连接，对client端来说，client收到TCP FIN包，client认为server端只是关闭了连接的写端、读端并未关闭，所以下次client继续向server发送数据时，网络io也已经设置为非阻塞，此时conn.Write(…)返回成功，但其实稍后请求到达server端，server端请求的端口早就已经没有进程使用了，因此会返回TCP RST，此时client端意识到对端已经关闭连接了，但是这个错误client如何能感知到？只能通过额外的conn.Read(…)来感知！
+
+这里会影响到客户端TCP连接池的实现，要想实现一个可靠的TCP连接池，必须意识到这个问题的存在，我们会在后续client相关实现中继续描述。
+
+### 其他问题
+
+其他的一些不可或缺，但是可能没那么重要的点，这里先暂时不列出。
 
 ## GoNeat - 监控上报
 
+- Metric
+
+  框架支持metric，将框架属性监控能力与公司组件进行了解耦，metric当前支持4个维度：counter、gauge、timer、histogram，也提供了适配monitor的metric reporter。框架上报了自身的一些关键指标，方便业务开发人员及时根据框架监控，感知业务中潜伏的问题。
+
+- Tracing
+
+  框架支持分布式跟踪，对rpc调用自动植入trace数据，业务开发无感知，只需部署或者接入相关的tracing backend（如zipkin、jaeger或者天机阁即可），可以很方便地对全链路进行跟踪、错误回溯。
+
+- Monitor
+
+  作为公司常用监控组件，go-neat/tencent/attr提供了monitor相关的封装，业务开发人员可以方便地拿来使用，并提供了批量申请monitor的工具，简轻业务开发人员监控打点的负担。
+
+- Habo
+
+  哈勃作为公司级下一代监控平台，框架层也进行了尝试，目前对模调信息进行了上报，可以很方便地对服务成功率、耗时分布进行统计，可以作为服务运营质量的一个参考指标。
+
 ## GoNeat - 平滑退出
 
+- 监听信号，平滑退出
+
+  框架支持监听指定信号执行平滑退出逻辑，目前来看框架退出时，会完成log刷盘、等待指定时长后再退出，等待退出期间server端可以尽力处理入队请求，但是不保证100%处理完。
+
+- context.Context超时
+
+  框架设计时对context.Context的使用场景非常明确，将其用于全局超时控制，而不用来传值。给到一个context，想了解它里面携带了什么数据，除了明确知道key没有什么更加直观的方法，而key可能分散在多个文件、同一个文件的不同地方，这非常不直观、不友好。我们不希望业务开发者来猜测，我们会在context里面塞入什么特殊的东西，我们什么都不塞，仅仅是全局超时控制。
+
+  nserver.ctx是root context，框架中ServerModule、Endpoint、收发包实现、业务逻辑处理中等等出现的context，默认都是派生自nserver.ctx，这意味着当框架收到信号执行退出逻辑时，取消nserver.ctx将取消所有的child context，我们在ServerModule、Endpoint、收发包实现、业务逻辑处理代码中等等，都植入了检测context.Done()的判断逻辑，以让系统中各个零部件及时作出步调一致的动作，如logger组件快速刷盘后退出、StreamServer关闭监听套接字尽最大努力处理已入队请求等。
+
+- 还没有那么平滑？
+
+  可能看到这里，不少开发者认为，似乎还没有那么平滑，关于平滑退出的设计可以在go-neat/core issues中进行更详细地讨论。
+
 ## GoNeat - More
+
+其实还有很多地方没有介绍，如ClientAdapter实现、高并发写操作Map实现、Json Map WeakDecode、限频措施、客户端连接池更可靠地连接活性检测、可靠的应用层协议设计等，这里感兴趣的朋友可以先查阅下相关代码，稍后我们会继续补充。
+
+写在最后，GoNeat框架一直处于比较活跃的开发状态，框架代码一直在小幅度、不间断地优化中，文档和框架比较起来，可能会略显滞后，如果您发现文档有问题，也请反馈给我们。
+
+感谢如下同学为框架开发作出的贡献：
+
+zhenheng：在整体架构设计上提出了很多小而美的设计思想
+diggerliu：提供了框架的第一版雏形
+elvinsyang：在框架稳定性、bug发现修复方面做了不少优化
+joeeyuan/alvinzhu/docxsyang/scottqyhe/haitaoyan等：在公司组件适配、框架稳定性方面做了很多贡献
+lorneli/vickliu：在框架服务注册发现、框架能力抽象与公司组件解耦方面做出了贡献
+mariohe/yangxli：在框架文档完善、优化方面做出了一定贡献
+pelehuang/zoevvzhang：在框架trace方面做出了一定贡献
+
+<div align="center">
+<img src="assets/rtx/zhenheng.png" style="height:48px;width:48px;" title="zhenheng"/>
+<img src="assets/rtx/zhijiezhang.png" style="height:48px;width:48px;" title="zhijiezhang"/>
+<img src="assets/rtx/elvinsyang.png" style="height:48px;width:48px;" title="elvinsyang"/>
+<img src="assets/rtx/diggerliu.png" style="height:48px;width:48px;" title="diggerliu"/>
+<img src="assets/rtx/joeeyuan.png" style="height:48px;width:48px;" title="joeeyuan"/>
+<img src="assets/rtx/haitaoyan.png" style="height:48px;width:48px;" title="haitaoyan"/>
+<img src="assets/rtx/scottqyhe.png" style="height:48px;width:48px;" title="scottqyhe"/>
+<img src="assets/rtx/alvinzhu.png" style="height:48px;width:48px;" title="alvinzhu"/>
+<img src="assets/rtx/zoezhang.png" style="height:48px;width:48px;" title="zoezhang"/>
+<img src="assets/rtx/zoevvzhang.png" style="height:48px;width:48px;" title="zoezhang"/>
+<div align="center">
+<img src="assets/rtx/vickliu.png" style="height:48px;width:48px;" title="vickliu"/>
+<img src="assets/rtx/lorneli.png" style="height:48px;width:48px;" title="lorneli"/>
+<img src="assets/rtx/docxsyang.png" style="height:48px;width:48px;" title="docxsyang"/>
+<img src="assets/rtx/menghaozhao.png" style="height:48px;width:48px;" title="menghaozhao"/>
+<img src="assets/rtx/mariohe.png" style="height:48px;width:48px;" title="mariohe"/>
+<img src="assets/rtx/derektyu.png" style="height:48px;width:48px;" title="derektyu"/>
+<img src="assets/rtx/yangxli.png" style="height:48px;width:48px;" title="yangxli"/>
+<img src="assets/rtx/pelehuang.png" style="height:48px;width:48px;" title="pelehuang"/>
+<img src="assets/rtx/jiayanluo.png" style="height:48px;width:48px;" title="jiayanluo"/>
+</div>
 
