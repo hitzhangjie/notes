@@ -1142,6 +1142,18 @@ func f() {
 
 PacketServer，提供udp网络服务，前文已经介绍了PacketServer整个生命周期的一个大致情况，包括启动监听、端口重用、过载保护、退出等，现在我们把视角锁定在“请求处理”这个环节，进一步了解其工作过程。
 
+#### reuseport
+
+UDP是无连接协议，不存在TCP数据传输过程中的粘包问题，在收包、解包方面的处理逻辑会简单一点。与TCP不同的是，tcpClient和tcpServer建立连接的时候，tcpServer端会创建连接套接字， 我们每个连接套接字创建了一个专门的协程进行收包、解包。相比之下，UDP本身没有连接的概念，udpServer收包就是通过监听套接字，如果我们只创建一个协程来进行数据包的收包、解包操作，和tcpServer相比，在性能上就会有点逊色。
+
+为此，udpServer的收包，这里利用了reuseport相关的能力。socket选项SO_REUSEPORT允许多线程或者多进程bind到相同的端口，网络数据包到达的时候，内核会在这些线程或进程之间进行分发，具备一定的负载均衡的能力。目前框架是基于当前CPU核数N来决定reuseport的次数，每`reuseport.ListenPacket(…)`一次，都会创建一个udpsocket，此时再创建一个协程用于udpsocket的收包、解包操作。这种方式和单纯从一个监听套接字上收包、解包相比，提高了收包、解包的效率。
+
+#### 收包解包
+
+#### 请求处理
+
+#### 组包回包
+
 ### Module：HttpServer
 
 HttpServer中有没有使用worker池（协程池）进行处理呢？该ServerModule是建立在标准库http实现之上的，GoNeat只是将请求处理的Handler传给了标准库http实现，并没有对标准库具体如何处理该请求做什么干预，比如是否采用worker池（协程池）。关于这一点，答案是否，可以查看下go标准库源码。
