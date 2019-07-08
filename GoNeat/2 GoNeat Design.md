@@ -1142,17 +1142,62 @@ func f() {
 
 PacketServer，提供udp网络服务，前文已经介绍了PacketServer整个生命周期的一个大致情况，包括启动监听、端口重用、过载保护、退出等，现在我们把视角锁定在“请求处理”这个环节，进一步了解其工作过程。
 
-#### reuseport
+#### REUSEPORT
 
 UDP是无连接协议，不存在TCP数据传输过程中的粘包问题，在收包、解包方面的处理逻辑会简单一点。与TCP不同的是，tcpClient和tcpServer建立连接的时候，tcpServer端会创建连接套接字， 我们每个连接套接字创建了一个专门的协程进行收包、解包。相比之下，UDP本身没有连接的概念，udpServer收包就是通过监听套接字，如果我们只创建一个协程来进行数据包的收包、解包操作，和tcpServer相比，在性能上就会有点逊色。
 
 为此，udpServer的收包，这里利用了reuseport相关的能力。socket选项SO_REUSEPORT允许多线程或者多进程bind到相同的端口，网络数据包到达的时候，内核会在这些线程或进程之间进行分发，具备一定的负载均衡的能力。目前框架是基于当前CPU核数N来决定reuseport的次数，每`reuseport.ListenPacket(…)`一次，都会创建一个udpsocket，此时再创建一个协程用于udpsocket的收包、解包操作。这种方式和单纯从一个监听套接字上收包、解包相比，提高了收包、解包的效率。
 
+其实TCP、UDP都可以基于reuseport进一步提升性能，框架目前将其应用在UDP上。
+
 #### 收包解包
+
+相比较TCP收包而言，UDP收包的逻辑就简单了很多。
+
+在监听套接字上循环收包，一旦检测到`ctx.Done`上游超时、cancel事件，则执行退出逻辑，关闭udp监听套接字。反之，则读取请求体，注意，这里有个允许同时处理请求数限制，因此会先检查 `requestLimiter.TakeTicket()` 是否成功，如果成功则执行实际的收包、处理逻辑，反之框架认为当前请求量过载，执行丢弃逻辑，调用方会感知到超时。
+
+未过载的情况下，框架会从内存池里面分配或者复用一个以前分配的buffer，用来接收UDP请求体，并构建一个协议匹配的session，此时buffer已经完成了当前次的使命，将其放回内存池备用。
+
+详细的UDP收包处理逻辑如下所示：
+
+```go
+func (svr *PacketServer) udpRead(handler NHandler, udpConn net.PacketConn) {
+	defer udpConn.Close()
+	ctx, cancel := context.WithCancel(svr.ctx)
+	...
+  
+	requestLimiter := svr.nserver.reqLimiter
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			if requestLimiter.TakeTicket() {
+
+				data := udpRecvBufPool.Get().([]byte)
+				n, remoteAddr, ex := udpConn.ReadFrom(data)
+				...
+        r := bytes.NewBuffer(data[:n])
+				nSession, ex := handler.Input(remoteAddr, r)
+	
+				udpRecvBufPool.Put(data)
+				...
+
+			} else {
+				udpSvrReceiveExceedMax.Inc(1) //udp-svr 收包过载丢弃
+			}
+		}
+	}
+}
+```
 
 #### 请求处理
 
+
+
 #### 组包回包
+
+
 
 ### Module：HttpServer
 
