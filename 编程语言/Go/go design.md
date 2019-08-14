@@ -152,12 +152,6 @@ a = struct {  // literal type struct{int} converted to A, integrity is met by so
 
 
 
-# why pass as value ?
-
-What we see is what we got !
-
-
-
 # why goroutine can only directly access its frame memory ?
 
 The code we write either reads from memory or writes to memory. Goroutines only has direct access to memory for the frame it is operating on.
@@ -189,7 +183,21 @@ It means if this data transformation has to be executed by the goroutine, and it
 
 As the example metioned above, we assign value 10 to variable v, we basically are now gonna be allocating eight bytes of memory right here inside this frame `data-section`. It has to be inside this frame, because if it's not, the goroutine cannot access it.
 
-Understand that this frame is serving a really important purpose. It's creating a sandbox, a layer of isolation. It gives us  a sense of immutability that the goroutine can only mutate or cause problems here and nowhere else in our code. 
+Understand that this frame is serving a really important purpose. It's creating a sandbox, a layer of isolation. It gives us  a sense of immutability that the goroutine can only mutate or cause problems here and nowhere else in our code. This is very very powerful constructs that we're gonna wanna leverage and it starts to allow us to talk about things like semantics.
+
+# why passing as value in function arguments ?
+
+"What we see is what we got !" Yes, but there's more reasons, one of which is value mechanics.
+
+Passing as value in function arguments actually makes a copy of original value, it provides an isolation level in active frame level, it is very very important! 
+
+
+
+Let's diff the terms, **mechanics and semantics**:
+
+- mechanics, it means how things work
+
+- semantics, it means how things behave
 
 
 
