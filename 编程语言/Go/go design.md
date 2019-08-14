@@ -117,3 +117,36 @@ struct v {
 ```
 
 now, sizeof(struct v) will be 8 bytes.
+
+
+
+# named type conversion and literal type conversion ?
+
+- named type, type has a name
+- literal type, also called unnamed type, doesn't have a name
+
+in Go, named type conversion must be explicit conversion, while literal type conversion looks like implicit conversion is ok. Actually, literal type conversion is not really implicit conversion, the integrity is guaranteed in our source code.
+
+Following is an example:
+
+```go
+type A struct {
+	a int
+}
+
+type AA struct {
+	a int
+}
+
+  
+a := A{}
+aa := AA{}
+a = A(aa)			// named type AA must explicitly converted to A
+
+a = struct {  // literal type struct{int} converted to A, integrity is met by source code
+			a int
+		}{
+			100,
+		}
+```
+
