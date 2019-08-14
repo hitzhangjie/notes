@@ -191,13 +191,35 @@ Understand that this frame is serving a really important purpose. It's creating 
 
 Passing as value in function arguments actually makes a copy of original value, it provides an isolation level in active frame level, it is very very important! 
 
-
-
 Let's diff the terms, **mechanics and semantics**:
 
 - mechanics, it means how things work
 
 - semantics, it means how things behave
 
+Everything has a cost, nothing is free. So what's the cost of value semantics ? We have multiple copies of data through  t the program. There's no efficiency with the value semantics, and sometimes it can be very complicated to get a piece of data that's changed and to get that updated everywhere it needs to be.
 
+Our value semantics are very powerful semantics because it's gonna reduce things like side effects (only mutate in active frame area). It's giving us isolation, it's giving us theses levels of immutability that are so important torvards integrity. 
+
+But sometimes, the inefficiency of value semantics might cause more complexity in the code. It might even cause some performance problems, and performance does matter.
+
+One of the things we've gotta learn is how to balance our value and our pointer semantics, following is an example:
+
+```go
+func main() {
+  v := 10
+  increment(v)
+}
+
+// value semantics, only mutate in frame of `increment`, no side effects out of this frame
+func increment(v int) {
+  v++
+}
+
+// pointer semantics, argument v is new copy of data `v`, also passing by value
+// but with pointer semantics, it can has side effects out of this frame
+fucn increment(v &int) {
+  *v = (*v)++
+}
+```
 
