@@ -1,4 +1,4 @@
-# Preface
+Preface
 
 golang里面针对一个closed tcpconn执行写操作，可能会有不同的表现，先描述下场景，client通过连接池访问server：
 
