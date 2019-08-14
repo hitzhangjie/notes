@@ -150,3 +150,52 @@ a = struct {  // literal type struct{int} converted to A, integrity is met by so
 		}
 ```
 
+
+
+# why pass as value ?
+
+What we see is what we got !
+
+
+
+# why goroutine can only directly access its frame memory ?
+
+The code we write either reads from memory or writes to memory. Goroutines only has direct access to memory for the frame it is operating on.
+
+For exmaple: 
+
+```go
+func main() {
+	v := 10
+}
+```
+
+In this frame `main`, main goroutine wants to assign value `10` to variable `v`, we must allocated an memory area to store the value 10.
+
+```bash
+|---main-frame---|
+|
+|--data-section--|
+|      10        |
+|--text-section--|
+|
+|--    ...     --|
+|                |
+```
+
+If current active frame is `main-frame`, the direct memory that this goroutine can only read from or write to is this area `main-frame`. What does that mean to us?
+
+It means if this data transformation has to be executed by the goroutine, and it can only operate within the scope of memory within this frame, it means all of the data that the goroutine needs to perform this data transformation has to be in there, this frame.
+
+As the example metioned above, we assign value 10 to variable v, we basically are now gonna be allocating eight bytes of memory right here inside this frame `data-section`. It has to be inside this frame, because if it's not, the goroutine cannot access it.
+
+Understand that this frame is serving a really important purpose. It's creating a sandbox, a layer of isolation. It gives us  a sense of immutability that the goroutine can only mutate or cause problems here and nowhere else in our code. This is very very powerful constructs that we're gonna wanna leverage and it starts to allow us to talk about things like semantics.
+
+
+
+Firstly, let's diff the terms, **mechanics and semantics**:
+
+- mechanics, it means how things work
+
+- semantics, it means how things behave
+
