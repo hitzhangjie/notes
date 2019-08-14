@@ -189,13 +189,7 @@ It means if this data transformation has to be executed by the goroutine, and it
 
 As the example metioned above, we assign value 10 to variable v, we basically are now gonna be allocating eight bytes of memory right here inside this frame `data-section`. It has to be inside this frame, because if it's not, the goroutine cannot access it.
 
-Understand that this frame is serving a really important purpose. It's creating a sandbox, a layer of isolation. It gives us  a sense of immutability that the goroutine can only mutate or cause problems here and nowhere else in our code. This is very very powerful constructs that we're gonna wanna leverage and it starts to allow us to talk about things like semantics.
+Understand that this frame is serving a really important purpose. It's creating a sandbox, a layer of isolation. It gives us  a sense of immutability that the goroutine can only mutate or cause problems here and nowhere else in our code. 
 
 
-
-Firstly, let's diff the terms, **mechanics and semantics**:
-
-- mechanics, it means how things work
-
-- semantics, it means how things behave
 
