@@ -152,6 +152,8 @@ a = struct {  // literal type struct{int} converted to A, integrity is met by so
 		}
 ```
 
+Let's make it simple: Conversion is not the same as Casting. Conversion is not pretending. Casting is pretending.
+
 
 
 # why goroutine can only directly access its frame memory ?
