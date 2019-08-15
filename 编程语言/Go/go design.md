@@ -22,6 +22,8 @@ But the tradeoffs btw readability, maintenancy, memory  footprint and performanc
 
 # why using conversion over casting ?
 
+Keep in mind that `type is life`, type is of vital importance. If there's no type, we cannot do anything.
+
 The idea of conversion over casting, there would be a cost of new memory, but we always be safe than sorry. Conversion over casting, it's an integrity play to keep our software, our data and memory safe.
 
 following is an example:
