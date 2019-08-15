@@ -245,7 +245,7 @@ In Go programming, go compiler can analyze the source code to recognize if an va
 
 This analysis compiler does is called Escape Analysis.
 
-
+We can also check the escape analysis result: `go build -gcflags="-m"` or `go build -gcflags="-m -m"`.
 
 
 
