@@ -225,11 +225,25 @@ fucn increment(v &int) {
 
 
 
-# Why we need pointer semantics ?
+# why we need pointer semantics ?
 
 Firstly, passing as value in function call is always true, but value semantics make the goroutine can only directly mutate the memory in current ative frame. Sometimes, we need to mutate the memory outside the active frame, that's what pointer semantics do.
 
 Pointer semantics make goroutine has the power to indirectly mutate the memory outside its active frame.
+
+
+
+# why we need Escape Analysis ?
+
+If a function returns an memory address which points to the active frame, this frame will be destroyed after function returns.
+
+In C++ programming, it will raise an SEGMENTATION FAULT if we access the returned address later. C++ developers must pay attention to this occasion, while if compiler can recognize this occasion, why need developers always thinking about it. It's a huge burden!
+
+In Go programming, go compiler can analyze the source code to recognize if an variable can be accessed outside current active frame. If it's true, that variable will be allocated in heap memory, otherwise it'll be allocated in stack memory.
+
+This analysis compiler does is called Escape Analysis.
+
+
 
 
 
