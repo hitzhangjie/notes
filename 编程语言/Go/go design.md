@@ -223,3 +223,19 @@ fucn increment(v &int) {
 }
 ```
 
+
+
+# Why we need pointer semantics ?
+
+Firstly, passing as value in function call is always true, but value semantics make the goroutine can only directly mutate the memory in current ative frame. Sometimes, we need to mutate the memory outside the active frame, that's what pointer semantics do.
+
+Pointer semantics make goroutine has the power to indirectly mutate the memory outside its active frame.
+
+
+
+
+
+
+
+
+
