@@ -253,9 +253,15 @@ We can also check the escape analysis result: `go build -gcflags="-m"` or `go bu
 
 
 
+# what's the goals of go garbage collector ?
+
+- reduce the heap size
+- run GC task in a good pacing
+- reduce the time of StopTheWorld under 100 microseconds
 
 
 
+Go GC uses **Tri-color Concurrent-Mark-Sweep Algorithm** to clean the garbage in heap memory. It also has a **Pacing Algorithm** to determine when to execute GC task.
 
 
 
