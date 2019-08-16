@@ -235,6 +235,8 @@ Firstly, passing as value in function call is always true, but value semantics m
 
 Pointer semantics make goroutine has the power to indirectly mutate the memory outside its active frame.
 
+**Value semantics should be used in variable construction, pointer semantics should be used in sharing occasions. Only in return statement, pointer semantics should be used in variable construction.**
+
 
 
 # why we need Escape Analysis ?
