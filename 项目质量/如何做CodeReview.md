@@ -16,7 +16,11 @@ Google目前公开的最佳实践相关文档，目前包括：
 
 - LGTM：代表Looks Good to ME，负责代码review的开发者对没有问题的CL进行的评论，表明代码看上去OK；
 
-# [Code Review Developer Guide](https://google.github.io/eng-practices/review/)
+
+
+# [The Code Reviewer's Guide](https://google.github.io/eng-practices/review/)
+
+从代码reviewer的角度出发，介绍下Google内部积累的一些good  practices。
 
 ## Introduction
 
@@ -54,7 +58,7 @@ Code review应该关注如下方面：
 
 也可以进行现场评审（In-Person Reviews），一般是开发者介绍本次CL的主要内容、逻辑，其他reviewer对代码中年可能的问题、疑惑进行提问，本次CL的开发者进行解答，这种方式来发现CL中的问题也是常见的一种方式。较大型、急速上线的项目，这种方式团队内部用的还是比较多的。
 
-# How to Do a Code Review
+## How to Do a Code Review
 
 这里总计了一些Code review的建议，主要包括如下一些方面：
 
@@ -399,11 +403,6 @@ reviewer可能会给通过，有些开发者确实会在本次CL通过后，继�
 
 
 
+# [The Change Author's Guide](https://google.github.io/eng-practices/review/developer/)
 
-
-
-
-
-
-
-
+从代码CL开发者的角度出发，介绍下Google内部积累的一些good  practices，待补充。
