@@ -189,7 +189,7 @@ review过程中查看CL相关代码上文是有帮助的。代码review的时候
 
 ### Good Things
 
-如果CL中有比较好的做法，请告诉开发者，特别是对于你的评论（疑问）他做了很好的说明、解释的时候。代码review通常是聚焦于可能的错误，但是这个过程也给了我们鼓励、学习good practices的机会。Mentoring机制，我们Tencent也有，去鼓励新人如何做的更好，比告诉他们哪里错了，更有价值。
+如果CL中有比较好的做法，请告诉开发者，特别是对于你的修改建议开发者很好地完成的时候。代码review通常是聚焦于可能的错误，但是这个过程也给了我们鼓励、学习good practices的机会。Mentoring机制，我们Tencent也有，去鼓励新人如何做的更好，比告诉他们哪里错了，更有价值。
 
 ### Summary
 
@@ -246,6 +246,77 @@ review过程中查看CL相关代码上文是有帮助的。代码review的时候
 通常review完CL的主体部分之后，review剩下的部分就相对简单多了。有时阅读测试用例对于review代码也是有帮助的，比如，通过测试用例你能清楚地知道各个函数参数的含义，如何使用该函数，当然你可以联想到一些边界条件，带着这些问题去review CL主体代码效果也不错。
 
 ## [Speed of Code Reviews](https://google.github.io/eng-practices/review/reviewer/speed.html)
+
+### Why Should Code Reviews Be Fast?
+
+Google对于Speed的追求，更期望的是团队能够更快更好地生产一个好的产品的速度，而不是个人开发者编码的速度，当然这并不是说开发者的开发效率就不重要。团队整体推进的速度是非常重要的，它关系到产品迭代的进度，关系到团队的氛围，关系到每个开发者的感受，设置是他们的日常生活。
+
+在追求速度的过程中，Code review的速度扮演者一个比较重要的角色。如果review速度很慢，可能会发生：
+
+- **团队整体推进的速度被严重拖慢。**
+
+  如果reviewer没有对CL进行快速的响应，可能就会耽误CL作者的其他后续工作，因为它可能要在此CL上开展其他工作。如果这里的修改是解决一个线上bug、重要的features等，如果搁置换一个几天、周、月，这种项目速度是不可接受的。
+
+- **开发者开始抗议或者不重视Code review。**
+
+  如果一个reviewer每隔几天才回复一次CL review意见，但是每次review意见都要求CL作者进行修改，对于CL作者这种体验是非常沮丧的，开发者可能会抱怨这样的reviewer，为什么这么review个代码这么苛刻。但是如果reviewer能够快速、及时地回复review意见，这种抱怨往往会消失了。大家在意的不是CL有没有问题，而是reviewer的怠慢、反应迟缓。所以reviewer要尽快回复review意见。
+
+- **代码整体健康度会受到影响。**
+
+  如果review速度过慢，就会给开发人员、reviewer人员持续带来更多的压力，这意味着开发人员会提交更多不符合标准的CLs，reviewer人员需要回复、拒绝、解释、二次review的工作做会更多。进一步，也会降低开发者代码清理、重构、优化的积极性，导致整体代码质量下降。
+
+### How Fast Should Code Reviews Be?
+
+如果当前没有对专注度要求很高的任务的话，reviewer应该立即或者稍后进行review。
+
+一个工作日，这个是Google内部指定的上限，在Code review发起的一个工作日内，reviewer必须进行review。
+
+如果一个CL进行review之后，提出了修改意见，并且CL作者进行了修改，那一天之内可能要进行多轮review，尽量不要拖到第二天，跨天就不太好了。
+
+### Speed vs. Interruption
+
+对于review速度和个人工作专注度之间需要做个权衡，如果正在进行某些对专注度要求比较高的任务，如正在写代码，这个时候还是不要让自己的工作中断。研究表明开发者被中断之后，再回到之前的工作，是需要比较长的时间的，为了追求review进度反而拖慢了个体开发进度，反过来也可能会拖慢项目整体进度。
+
+所以建议在当前没有对专注度要求很高的时间进行review，比如你写完一段关键代码之后，或者吃完午饭、午休之后，等等，这个就要根据自己情况选择了。
+
+### Fast Responses
+
+我们谈论Code review的速度，其实强调的是CL的review意见的回复速度，而不是CL最终通过的速度。当然，如果review意见回复速度够快，CL作者修改也会更快，CL整体通过速度也会快些。
+
+尽管CL整体通过耗时可能比较久，维持比较快的CL review意见还是很重要，CL作者不会因为review过慢而沮丧。
+
+如果你现在太忙了，实在没有时间对CL进行完整的review，你也可以发送一个回复信息让开发者知道你大约会在什么时间段进行review，好让他心理有底，他也可以继续安排自己接下来的工作。或者你也可以邀请其他合适的review代你进行review。这里并不是说你就要立即放下手里的编码工作立即去回复，你可以选个稍微可以放松难点的时间去回复，比如你刚刚写完一段关键代码，大脑可以稍微休息几分钟的时候。
+
+reviewers花费足够的时间进行review是很重要的，时间充足，reviewer回复“LGTM”才更有底气。CL中每个意见的回复还是要能快就快。
+
+### Cross-Time-Zone Reviews
+
+如果review涉及到多地的、不同时区的开发人员，reviewer最好能在CL作者还在公司工作的时候给到回复review意见，如果开发人员已经下班回家了，尽量在隔日开发人员上班前完成review，尽量不要中断、delay他人的工作。
+
+### LGTM With Comments
+
+为了加速Code review整体通过进度，有些场景下，即便开发者没有完全完成reviewer的修改意见，reviewer可能也会给通过“LGTM” or “Approval”，这几种情况下是允许的：
+
+- reviewer有信心，开发者会在之后不久完成提及的修改意见
+- 剩余的还未修改之处，是些微小的修改，可以后面改，或者不一定要当前开发者来修改
+
+reviewer针对上述两个情况，在LGTM的时候应该注明是哪种情况。LGTM With Comments对于多地、跨时区的开发者而言，是比较有价值的，因为reviewer最终给LGTM或者Approval可能要隔一天的时间呢，这个时候会比较久，如果是LGTM的同时附带上reviewer对开发者的一点小期望，开发者后续再修改、优化，也是可以的，毕竟这两种情况都是无伤大雅的事情。
+
+### Large CLs
+
+如果开发者提交的一个CL非常大，以至于你不知道要从哪开始看起，这个时候可以要求开发者将这个大的CL拆分成几个小的CL，CL2 build on CL1， CL3 build on CL2... 然后再进行review。这对reviewer而言是比较有帮助的，对开发者而言可能需要额外的一点工作。
+
+如果换一个CL无法拆分成多个小的CLs，并且你眼下也没有时间去快速地完成整体的review，可以考虑看下整体设计，回复下对整体设计的意见，开发者可以先进行适当的优化。reviewer的目标，就是激励开发者持续地对代码质量进行提升。
+
+### Code Review Improvements Over Time
+
+持续地遵循上述的Code review流程，坚持下去，就会发现自己在review代码的时候，处理地越来越好、越来越快。开发者也能够学习到符合代码质量要求的代码应该是什么样子的，后续提交的CLs也会变得越来越合理，花费的reviewer的时间也会越来越少。reviewer也会更快地进行review意见回复，对于整体review进度delay的时间也会越来越少。
+
+但是，但是，但是……不要为了“快”而降低Code review标准或者破坏整体代码的质量。
+
+### Emergencies
+
+也存在一些非常紧急的情况，这些情况下CLs可能必须非常快地通过review过程，这种情况下review时的要求可以适当放低。在应用这里的Emergencies指引之前，先了解下[What is An Emergency?](https://google.github.io/eng-practices/review/emergencies.html#what)，区分什么是紧急场景，什么不是，避免滥用。
 
 ## [How to Write Code Review Comments](https://google.github.io/eng-practices/review/reviewer/comments.html)
 
