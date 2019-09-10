@@ -320,9 +320,58 @@ reviewer针对上述两个情况，在LGTM的时候应该注明是哪种情况�
 
 ## [How to Write Code Review Comments](https://google.github.io/eng-practices/review/reviewer/comments.html)
 
+### Summary
+
+- 保持友好
+- 解释原因
+- 权衡“给出可能的方案并指出问题”、“给出可能的方案让开发者自主决策”两种方式
+- 鼓励开发者简化代码，鼓励开发者添加注释，而不是解释问题有多复杂
+
+### Courtesy
+
+review别人代码的时候，保持礼貌、尊重是非常重要的，至少不要让开发者、贡献者感觉到明显的不适，如何做到这点呢？一个比较好的办法就是在写review意见的时候，只对code本身进行评论，不要对开发者本人进行评论，对于某些人称代词是否有必要出现，也需要斟酌下。
+
+举个例子：
+
+Bad：“%#@!$ 这个场景下多线程并不会有太大的性能提升，为什么**你**要用多线程？”
+
+Good：“多线程并发增加了复杂性，但%#@!$ 场景下收到的性能提升并不明显，最好用单线程模型代替多线程。”
+
+### Explain Why
+
+上面展示的这个good example向开发者解释了review不通过的原因，同时也解释了为什么多线程模型在这个场景 %#@!$ 下并不好，开发者就会从中学习，意识到自己的方案存在的问题，并进行优化。
+
+当然不需要每次review的时候都进行大篇幅的解释，但是适当的解释是有必要的。
+
+### Giving Guidance
+
+修复一个CL中存在的问题，是CL开发者的责任，而不是reviewer的责任。没有要求reviewer要代替开发者给出一个完整的详细设计，或者亲自帮助其写代码。
+
+但是这并不意味着reviewer可以无视，不去主动帮助他人，特别是在CL开发者确实get不到reviewer的点或者束手无策的时候，reviewer可以选择性的指出问题，并给出一个直接的指引，或者给出几个备选方案让开发者去对比、选择，或者给一个简单的设计让开发者去进一步细化、完善，或者可以写一个简单的demo以供开发者参考。这也是Mentoring精神的一种发扬吧，这可以帮助开发者学习，使得Code review变得更加简单、正向、积极。最终达成的结果也往往更好。
+
+Code review追求的第一目标就是尽可能高质量的CL，第二目标就是提升开发者的技能，这样后续的开发、Code review工作都会变得越来越简单、积极，技术传承也更加温和、有效。
+
+### Accepting Explanations
+
+如果reviewer有段代码不太懂，并请开发者进行解释的话，最终的结果往往是开发者需要重写这段不清晰的代码。偶尔，代码中添加注释也是一种类似于“解释”的回应，但是如果代码实现太过复杂，该重写还是要重写，不能用注释解释，套逃脱应该简化、重构的工作。
+
+代码review工具中填写的解释（对reviewer疑问的解释）对将来阅读代码的人的帮助微乎其微，这个很好理解，阅读工程代码时，别人很少会去翻之前的review意见，而要等到翻review意见的时候，意味着这里的代码可能已经需要重写了。
+
+通过注释的方式来解释代码的行为，往往只在很少的几种场景下有效，比如在review一个自己不太熟悉的领域的代码时，如果有注释reviewer更容易理解，但是对于熟知这个领域的人而言，这些注释可能都是些常识，是多余的。
+
 ## [Handling Pushback in Code Reviews](https://google.github.io/eng-practices/review/reviewer/pushback.html)
 
+### Handling Pushback in Code Reviews
 
+### Who is Right
+
+### Upsetting Developers
+
+### Cleaning it Up Later
+
+### General Complaints About Strictness
+
+### Resolving Conflicts
 
 
 
