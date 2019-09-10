@@ -90,13 +90,13 @@ Code review应该关注如下方面：
 - 代码reviewers应该要求开发者对CL中每一行代码进行精雕细琢，然后再予以通过，这个要求并不过分。
 - 或者，代码reviewers需要权衡下他们建议的“精雕细琢”的必要性和重要性。代码reviewers应该追求代码的持续优化，不能一味地追求完美。对于提升系统可维护性、可读性、可理解性的代码CL，reviewers应该尽快给出答复，不能因为一味追求完美主义将其搁置几天或者几周。
 
-## Mentoring
+### Mentoring
 
 Code review对于教授开发者一些新的东西，如编程语言、框架、软件设计原则等是非常重要的手段。进行代码review的时候添加一些comments有助于帮助开发者之间分享、学习一些新东西。分享知识也是持续改进代码质量的重要一环。
 
 需要注意的是，如果comments内容是纯教育性的、分享性的，不是我们前面提到的强制性的必须应该做出优化的，那么最好在comments内容里面添加前缀“**Nit (Not Important)**”，这样的评论表示当前CL中不一定非要做出对应的优化、修改，只是一个建议、分享。
 
-## Principles
+### Principles
 
 - 技术本身、数据至上，以及一些个人偏好
 - 代码风格的重要性，力求代码风格的一致，如果没有明确的代码风格，就用之前作者的风格
@@ -105,7 +105,7 @@ Code review对于教授开发者一些新的东西，如编程语言、框架、
 
 上述各条，均以不降低系统整体代码质量为度量标准。
 
-## Resolving Conflicts
+### Resolving Conflicts
 
 如果在代码review中出现了冲突的意见、观点，首先，开发者、reviewer应尽可能基于之前的代码、现在CL的代码达成一个共识，如果仍然达不成共识，或者很困难，最好能进行面对面沟通，或者将当前CL升级一下，供更多的人员进行讨论。可以考虑将技术Leader、项目经理拉进来一起讨论下。
 
@@ -114,6 +114,46 @@ Code review对于教授开发者一些新的东西，如编程语言、框架、
 目标就是，不要因为代码reviewer和CL作者之间达不成一致，就长时间将CL搁置。
 
 ## [What to Look For In a Code Review](https://google.github.io/eng-practices/review/reviewer/looking-for.html)
+
+结合前面提到的一些Code review标准，将Code review中应该关注的点进一步细化，主要以下内容。
+
+### Design
+
+Code review过程中最重要的事情就是看CL的整体设计是否合理，如CL中涉及到的各个部分的代码之间的接口、交互、衔接是否合理，是业务代码修改还是库的修改，和系统整体的集成是否合理，现在这个时间点添加这个新特性是否合理等等。
+
+### Functionality
+
+CL的功能是否符合开发者预期，开发者期望的这部分修改是否对用户友好，这里的用户包括产品用户（实际使用产品的人员）和开发者（将来可能使用这部分代码的人员，如CL修改的库代码）。
+
+一般，我们希望开发者发起Code review之前，能够对CL进行充分的测试确保功能是符合预期的。但作为reviewer，还是要检查下边界条件的处理是否到位，比如并发中的data race问题，确保代码中不存在“可能”的bug。
+
+reviewer有条件的话，也可以亲自验证下CL，比如CL是面向用户的产品（如UI改变），单纯看代码不能直觉地感受到做的调整，reviewer可以亲自patch这部分代码、编译构建、安装之后来体验下具体的改变。如果不是特别方便的话，也可以找相应的开发者提供一个demo演示下CL中涉及的变化。
+
+另一个非常重要的点是，要检查CL中是否存在某种类型的并发问题，如deadlocks、race conditions等。这些问题也不是运行一下代码就能发现的，往往需要reviewer来细致地考虑下相关的操作，才能判定是否有引入该类问题。
+
+### Complexity
+
+CL是否过于复杂，这个需要对CL中的不同层次的内容进行逐一检查，如每行代码是否过于复杂，函数实现是否过于复杂，类实现是否过于复杂等。“过于复杂”意味着，不能被其他开发者快速吸收、理解。也有个笑话，开发者在调用、修改自己编写的代码的时候容易引入引入bug。这些都说明了复杂性的问题所在。
+
+
+
+### Tests
+
+### Naming
+
+### Comments
+
+### Style
+
+### Documentation
+
+### Every Line
+
+### Context
+
+### Good Things
+
+### Summary
 
 ## [Navigating a CL in Review](https://google.github.io/eng-practices/review/reviewer/navigate.html)
 
