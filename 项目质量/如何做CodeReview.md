@@ -212,6 +212,39 @@ review过程中查看CL相关代码上文是有帮助的。代码review的时候
 
 ## [Navigating a CL in Review](https://google.github.io/eng-practices/review/reviewer/navigate.html)
 
+现在我们知道了What to look for，如果review涉及到多个文件，如何最高效地进行review呢？
+
+- review之前，查看CL的整体表述，确认是否有意义
+- 首先，看CL中最有价值的部分，整体设计是否良好
+- 然后，再根据合理顺序看CL中剩余的部分
+
+### Step One: Take a broad view of the change
+
+查看CL描述，先理解CL是做了什么工作，这个CL是否有意义。如果reviewer觉得这个修改没有意义，并决定拒绝该CL的时候，请选择合适的措辞向开发者解释清楚。
+
+例如，reviewer：“哇看上去你做了很多工作，非常感谢，但是我们未来方向是要移除你这里修改的FooWidget组件，如果你有时间，可以帮忙重构下BarWidget组件吗？”
+
+通能过这种方式，reviewer既向developer or contributor表明了立场、态度，也不失礼貌，保持礼貌是重要的，特别是对于开源项目，即便是你不认同贡献者的CL，也至少应看到他尝试进行付出。保持礼貌的review、讨论、沟通有助于维护开源协同的氛围。
+
+如果你收到了不少CLs，但是这些都不是你想要的，可能就需要从更高角度出发来解决这个问题，比如完善下Contributing文档，告知开发者项目需要什么，哪些方面鼓励优先解决等等。
+
+### Step Two: Examine the main parts of the CL
+
+找到CL涉及的最主要修改部分，优先进行review。CL中逻辑的变动可能主要集中在少数几个文件中，找到这些changes优先进行review，这有助于聚焦修改的主要部分，加速整体的review进度。如果CL涉及代码太多，很难识别哪部分是主要部分，那可以先问下开发者哪部分是主要修改，或者让开发者把当前这次CL拆分成多个CLs，然后再发起review。
+
+如果在review CL主要部分的时候，发现设计上明显存在不合理的地方，reviewer应该立即发送review comments给开发者，其他的代码可以不用review了，继续review纯粹是浪费时间。因为既然存在明显的设计问题，等开发者修改之后，剩余的要review的代码可能根本不存在了。
+
+发现有明显设计问题，立即发送design review comments，还有两个好处：
+
+- 开发者可能会发起一个CL之后，会立即在这个CL的基础上继续进行其他的修改工作。如果前面的CL存在明显的设计问题，那么很可能会将这里的问题继续带入到后续的CL中，并继续发起新的Code review。所以尽快发送设计上的review意见一定程度上会避免、减少这类问题的发生，避免后续review重复解决同一类问题。
+- 主要的设计变更，比其他小修小补，花费的时间更多，每个开发者排需求都是有deadline的，及时发送review意见有助于在deadline之前，让开发者仍然由机会对设计做出调整，以保证项目进度，又能兼顾整体代码质量。
+
+### Step Three: Look through the rest of the CL in an appropriate sequence
+
+一旦确定CL中主体代码没有明显的设计问题，就可以按照合理的顺序review剩下的部分，比如按照逻辑处理的顺序来review，reviewer可以根据逻辑处理中的过程、分支判断来review相关的代码，从而确保不遗漏每一行变更。
+
+通常review完CL的主体部分之后，review剩下的部分就相对简单多了。有时阅读测试用例对于review代码也是有帮助的，比如，通过测试用例你能清楚地知道各个函数参数的含义，如何使用该函数，当然你可以联想到一些边界条件，带着这些问题去review CL主体代码效果也不错。
+
 ## [Speed of Code Reviews](https://google.github.io/eng-practices/review/reviewer/speed.html)
 
 ## [How to Write Code Review Comments](https://google.github.io/eng-practices/review/reviewer/comments.html)
