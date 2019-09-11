@@ -405,4 +405,80 @@ reviewer可能会给通过，有些开发者确实会在本次CL通过后，继�
 
 # [The Change Author's Guide](https://google.github.io/eng-practices/review/developer/)
 
-从代码CL开发者的角度出发，介绍下Google内部积累的一些good  practices，待补充。
+从代码CL开发者的角度出发，介绍下Google内部积累的一些good  practices。
+
+## Writing Good CL Descriptions
+
+CL描述用来记录做了什么改变、为什么做这个改变，它会作为VCS中的提交历史记录下来，之后可能会有更多的开发者阅读到这里的CL描述。
+
+将来，开发者也可能根据一些关键词来搜索这里的CL描述，如果CL相关的关键信息只记录在代码中，在CL描述中不能予以体现的话，那么别人定位你的CL就会异常困难。
+
+### First Line
+
+- 需要对修改进行一个精炼的总结
+- 描述应该是一个完整的句子
+- 描述后跟一个空行
+
+CL描述的首行应该对做的修改进行一个精炼的总结、概括，然后后面跟一个空行。大部分情况下，开发者查看、检索CL描述信息（log信息）是看的这些内容，所以CL描述的首行信息是至关重要的。
+
+通常，首行信息应该是一个完整的句子，例如，一个好的首行表述："**Delete** the FizzBuzz RPC and **replace** it with the new system.", 下面这个则是一个不好的示例："**Deleting** the FizzBuzz RPC and **replacing** it with the new system." 
+
+### Body is Informative
+
+CL描述的剩余部分应该详细一点，可以包含对要解决问题的描述，以及为什么CL中的实现是比较好的或者是最优的方案。如果该方法有什么不足，也应该提一下。如果有一些bug编号、性能结果、设计文档之类的背景信息，也应该包含进来，方便后来者查看。
+
+即使CLs涉及到的改动不多，有必要的话，也需要在body部分描述下。
+
+### Bad CL Descriptions
+
+“Fix bug”不是一个足够充分的CL描述，修的什么bug？为了修bug做了哪些修改？其他类似的不良CL表述包括：
+
+- Fix build
+- Add patch
+- Moving code from A to B
+- Add convennience functions
+- kill weired URLs
+
+上面这些是Google代码仓库中捞出来的真实CL描述，作者可能认为他们的描述比较清晰了，但是实际上这样的CL描述没有任何意义，完全没有起到CL描述应有的作用。
+
+### Good CL Descriptions
+
+下面是一些比较好的CL描述示例。
+
+#### Functionality change
+
+>rpc: remove size limit on RPC server message freelist.
+>
+>Servers like FizzBuzz have very large messages and would benefit from reuse. Make the freelist larger, and add a goroutine that frees the freelist entries slowly over time, so that idle servers eventually release all freelist entries.
+
+这个CL描述的首行信息概述了做的修改，后面body部分又解释了为什么做这个修改，以及自己是怎么做的，有什么好处，还提供了实现相关的一些信息。
+
+#### Refactoring
+
+> Construct a Task with a TimeKeeper to use its TimeStr and Now methods.
+>
+> Add a Now method to Task, so the borglet() getter method can be removed (which was only used by OOMCandidate to call borglet’s Now method). This replaces the methods on Borglet that delegate to a TimeKeeper.
+>
+> Allowing Tasks to supply Now is a step toward eliminating the dependency on Borglet. Eventually, collaborators that depend on getting Now from the Task should be changed to use a TimeKeeper directly, but this has been an accommodation to refactoring in small steps.
+>
+> Continuing the long-range goal of refactoring the Borglet Hierarchy.
+
+这个CL描述的首行信息指出了CL做了什么，相对于以前的实现做了哪些修改。body部分介绍了实现细节、CL的context，也指出了虽然这个方案没有那么理想，但是也指出了未来的改进方向。同时也解释了为什么需要做这里的重构。
+
+#### Small CL that needs some context
+
+>Create a Python3 build rule for status.py.
+>
+>This allows consumers who are already using this as in Python3 to depend on a rule that is next to the original status build rule instead of somewhere in their own tree. It encourages new consumers to use Python3 if they can, instead of Python2, and significantly simplifies some automated build file refactoring tools being worked on currently.
+
+这个CL的首行信息描述了做了什么，body部分解释了为什么要做这里的修改，并且给reviewer提供了充分的context（领域相关知识）信息。
+
+### Review the description before submitting the CL
+
+CLs在review过程中可能会再次修改，再次review的时候，CL描述信息可能会与最新的修改不符，在提交CL之前review一下描述信息是否与代码修改仍然一致，这个是有必要的。
+
+## Small CLs
+
+
+
+## How to Handle Reviewer Comments
