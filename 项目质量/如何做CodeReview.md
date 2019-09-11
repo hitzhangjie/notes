@@ -479,6 +479,33 @@ CLs在review过程中可能会再次修改，再次review的时候，CL描述信
 
 ## Small CLs
 
+### Why Write Small CLs?
 
+Small, simple CLs有这样的好处：
+
+- **Review更快。**如果提交一个大的CL，reviewer可能要专门抽30分钟才能完成review过程，这个可能比较困难，但是如果CL拆的都比较小，reviewer每次抽个5分钟完成一次review，多次review，回比前者更快完成。
+- **Review更充分。**如果提交一个大的CL，改动东西很多情况下，reviewer需要游走在更多代码中，心理上会倾向于关注更加重要的代码，难免某些代码会被降权，review可能不那么充分。如果CL比较小，很容易就能看懂，也不需要来回翻代码，review的会更充分。
+- **不容易引入bug。**因为每次改动都比较小，CL作者不容易引入bug，reviewer也更容易发现bug。
+- **如果被拒绝，可减少无谓的工作。**CL可能会被拒绝，如果一次做大量修改，被拒绝的话，CL中的所有修改动作可能都要重新来过，不管是合理的、不合理的，相当于做了更多无谓的工作。
+- **更容易merge。**如果提交一个大的CL，涉及修改比较多，冲突可能也会比较多，那么解决冲突花费的时间会更多，不容易merge。小的CL在merge的时候就简单多了。
+- **设计不至于出大问题。**如果CL涉及修改比较少，那么很容易把修改优化到最佳，对于reviewer的建议也更容易完成，如果CL比较大，reviewer意见、建议比较多，就很难一次完成了。
+- **后续工作不容易阻塞在review上。**CL作者可能希望基于这个CL做更多工作，如果CL比较小那么review可以很快通过，但是如果CL比较大，那么CL作者将不得不等待更多的时间
+- **merge后有问题，容易回退。**merge之后有时候也会意识到merge的代码有问题，如果要回退的话，小的CL更容易回退，如果CL很大，哇，涉及到的代码多，回退就比较痛苦、复杂。
+
+reviewer不会因为某个CL很大，我不review了，然后给你拒绝掉，通常他们会表现的比较礼貌，告知你将这个大的CL拆分成几个小的CLs。当你已经完成了一个CL时，再将其拆分成几个小的CLs，其实这里的工作量可能不少的，当然和reviewer争辩为什么要求拆分成多个CLs花的时间可能也会很长。最省力的做法就是，一开始就坚持写小的CL，多次CLs。 
+
+### What is Small?
+
+### When are Large CLs OK?
+
+#### Splitting by Files
+
+### Separate Out Refactorings
+
+### Keep related test code in the same CL
+
+### Don't Break the Build
+
+### Can't Make it Small Enough
 
 ## How to Handle Reviewer Comments
