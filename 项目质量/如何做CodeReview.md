@@ -514,11 +514,21 @@ reviewer不会因为某个CL很大，我不review了，然后给你拒绝掉，�
 - 删除整个文件的内容，或者删除大段内容，可以看做是一行修改，因为它不会花费reviewer太多时间review。
 - 有时一个大的CL是有自动化refactor工具生成的，而我们信任这些工具，reviewer的工作就是检查并确认这里的修改没问题。这样的CL很大，但是对reviewer而言仍然不会花太多时间。
 
-#### Splitting by Files
+### Splitting by Files
+
+另一种拆分大的CL的方式是，将修改的文件进行适当分组，并将不同分组的文件做成CL并提交不同的reviewer进行review。
+
+例如：你发送了一个CL修改，同时包含了对protocol buffer文件的修改，另一个CL是业务代码修改但是使用了这里修改后的protocol buffer文件。首先我们要先提交proto文件对应的CL，然后再提交引用它的业务代码CL。虽然提交的时候有先后，但是review过程可以是同时进行的。这么做的同时，最好也知会下reviewer另一个CL中的存在以及与当前CL的关系。
 
 ### Separate Out Refactorings
 
+一般将CL中的重构之类的工作和其中包含的feature开发、bug修改区分开是比较好的做法。例如，将CL中包含的移动、重命名类名之类的操作单独放在一个CL中，这样reviewer能够更容易理解每个CL中的修改。
+
+不过，一个小的变量名修改的也可以包含在另一个feature change或者bugfix相关的CL中。如果一个CL中包含了一些重构之类的修改，让开发者、reviewer判断这部分重构相关的修改是否对当前CL来说太大了，太大了会让review变得更加困难，开发者应该据此作出一些调整。
+
 ### Keep related test code in the same CL
+
+
 
 ### Don't Break the Build
 
