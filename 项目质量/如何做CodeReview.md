@@ -509,6 +509,11 @@ reviewer不会因为某个CL很大，我不review了，然后给你拒绝掉，�
 
 ### When are Large CLs OK?
 
+下面这些场景，如果CL比较大也还OK，不算坏：
+
+- 删除整个文件的内容，或者删除大段内容，可以看做是一行修改，因为它不会花费reviewer太多时间review。
+- 有时一个大的CL是有自动化refactor工具生成的，而我们信任这些工具，reviewer的工作就是检查并确认这里的修改没问题。这样的CL很大，但是对reviewer而言仍然不会花太多时间。
+
 #### Splitting by Files
 
 ### Separate Out Refactorings
