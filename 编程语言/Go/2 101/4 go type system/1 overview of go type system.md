@@ -74,7 +74,7 @@
 
 - Currently (Go 1.10), following types don't support comparisons (with the == and != operators): slice types map types function types any struct type with a field whose type is uncomparable and any array type which element type is uncomparable.   [go101.org]
 
-  > "golang里面slice、map、function是属于不可比较的类型，编译器会报错，这也是为什么不能将其用作map的key的原因（map的key类型要求可比较）。另外某些符合类型如果包括了这样的不可比较类型，那么这个符合类型也是不可比较的。"
+  > "golang里面slice、map、function是属于不可比较的类型，编译器会报错，这也是为什么不能将其用作map的key的原因（map的key类型要求可比较）。另外某些复合类型如果包括了这样的不可比较类型，那么这个复合类型也是不可比较的。"
 
 - Go is not a full featured object-oriented programming language, but Go really supports some object-oriented programming styles. Please read the following listed articles for details: methods in Go. implementations in Go. type embedding in Go.   [go101.org]
 
