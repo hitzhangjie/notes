@@ -1,6 +1,10 @@
-# way of thinking suppress new technology
+# new way of thinking
 
 Look, technology is changing quickly, we feel it and see it every day, but our minds change slowly, we resist to change. And it's always easy to adopt a new technology, but it's hard to adopt a new way of thinking.
+
+# debugger
+
+"Debuggers don't remove bugs. They only show them in slow motion".  - Unknown
 
 # how to understand abstraction ?
 
