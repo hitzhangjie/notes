@@ -34,38 +34,46 @@ But the tradeoffs btw readability, maintenancy, memory  footprint and performanc
 
 # why using conversion over casting ?
 
-Keep in mind that `type is life`, type is of vital importance. If there's no type, we cannot do anything.
+`type is life`，类型就是生命，如果没有数据类型支撑，就无法解读内存里面的数据，比如一个字节的数据，是该解释成字符，还是解释成整数，还是解释成浮点数，诸如此类。
 
-The idea of conversion over casting, there would be a cost of new memory, but we always be safe than sorry. Conversion over casting, it's an integrity play to keep our software, our data and memory safe.
+术语conversion和casting，字面上都有类型转换的意思，但是稍微有点区别：
 
-following is an example:
+- conversion，a转成b，指的是将a变量的内存数据按需拷贝到b，对a没有任何影响，b是新变量；
+- casting，除了上面这种操作，还可能涉及到将a的地址之后的连续内存区强制解释成b类型的数据；
 
-```bash
-|byte1|...|...|...|
-0     1
-```
+这两种术语在编程语言中，往往同时存在，但是中文“类型转换”一词过于宽泛，没有将二者区分开来。
 
-if we declare a int8 variable, it's stored in memory area [0, 1), but if we write code as following:
+golang里面将上述术语涉及到的操作进行了更加细致的划分：
 
-```c
-struct B {
-	int8 n8;
-} b;
+- conversion，a转成b，指的是将a变量的内存数据按需拷贝到b，对a没有任何影响，b是新变量；
+- casting，只包含将a的地址之后的连续内存区强制解释成b类型的数据这一种最骚的操作；
 
-int32 n32; 
-auto sum = n32 + b.n8;
-```
+golang中，conversion相比casting会创建新变量，会多消耗内存，但是仍然建议用conversion，而不是casting，因为conversion更能保证"**数据类型的完整性**"，所以类似于casting的操作，golang将其移到了unsafe包下面。
 
-Maybe compiler will add 3 more bytes before `int8 n8`, after that, if we have some other code to read data byte by byte from `struct B b`, it will read more than one byte, maybe it will cause errors.
+> The idea of conversion over casting, there would be a cost of new memory, but we always be safe than sorry. Conversion over casting, it's an integrity play to keep our software, our data and memory safe.
 
-While in go, conversion will create new variable, it works similar to:
+这里是conversion和casting的示例：
+
+conversion示例：
 
 ```go
-var tmp = int32(b.n8)	
-var sum = n32 + tmp
+var b int32 = 6
+
+a := int8(b)
+c := int16(b)
+d := int(b)
 ```
 
-`struct B b` field `int 8 n8` only takes 1 byte, it's type-safe.
+casting示例：
+
+```go
+var b int32 = 0
+var a int16 = -1
+
+p := unsafe.Pointer(&a)
+b = *(*int32)(p)          // 注意这里的操作时有可能导致内存访问段错误(SEGMENTATION FAULT)的
+fmt.Println(`value:`, b)
+```
 
 
 
