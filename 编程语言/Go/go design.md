@@ -1,3 +1,7 @@
+# backend software developers
+
+If you are a backend developer, like I am, the idea is your software should be working 24x7 hours without issues. The reality is nobody should know your name If you're doing your job well. If somebody knows your name, probably means your software's falling or causing problems. You want people to know your name? Become a front-end dev.
+
 # new way of thinking
 
 Look, technology is changing quickly, we feel it and see it every day, but our minds change slowly, we resist to change. And it's always easy to adopt a new technology, but it's hard to adopt a new way of thinking.
