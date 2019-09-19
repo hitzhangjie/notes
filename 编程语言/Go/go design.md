@@ -1,3 +1,7 @@
+# way of thinking suppress new technology
+
+Look, technology is changing quickly, we feel it and see it every day, but our minds change slowly, we resist to change. And it's always easy to adopt a new technology, but it's hard to adopt a new way of thinking.
+
 # how to understand abstraction ?
 
 **Edsger Dijkstra**: The purpose of abstraction is not to be vague, but to create a new semantic level in which one can be absolutely precise.
