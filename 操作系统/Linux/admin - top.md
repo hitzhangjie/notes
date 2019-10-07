@@ -1,0 +1,1 @@
+linux-top命令f显示字段列表，d或space设置为显示，right选中然后up/down移动显示顺序，shift+w保存配置
