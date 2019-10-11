@@ -1,3 +1,3 @@
 # notes
 
-my working, learning notes ... good good study, day day up
+my working, learning notes ... good good study, day day up!
