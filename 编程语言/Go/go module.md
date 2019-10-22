@@ -15,10 +15,10 @@ GoModule目前在GO1.11和Go1.12还是一个处于体验的过渡阶段，Go1.13
 ## 创建一个Module
 
 ```bash
-go mod init git.code.oa.com/hello
+go mod init github.cmo/hitzhangjie/hello
 ```
 
-一般执行 `go test` 的时候，会显示一个临时生成的module名，这个名字是以 "路径名+时间戳+commit版本号” 命名的，但是当像上面这样初始化之后，module名就是 ”git.code.oa.com/hello” 了，如果hello路径下又创建子目录world，那么world对应的module名就是 "git.code.oa.com/hello/world"。
+一般执行 `go test` 的时候，会显示一个临时生成的module名，这个名字是以 "路径名+时间戳+commit版本号” 命名的，但是当像上面这样初始化之后，module名就是 ”github.com/hitzhangjie/hello” 了，如果hello路径下又创建子目录world，那么world对应的module名就是 “github.com/hitzhangjie/hello/world"。
 
 此时会生成两个文件：
 

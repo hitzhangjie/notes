@@ -422,14 +422,14 @@ http {
 
 但是遇到个问题：
 
-- 已经分配了一个域名goneat.oa.com；
-- 希望用户可以通过goneat.oa.com/wiki进行访问，而不再是goneat.oa.com:4000或者goneat.oa.com；
+- 已经分配了一个域名goneat.tx.com；
+- 希望用户可以通过goneat.tx.com/wiki进行访问，而不再是goneat.tx.com:4000或者goneat.tx.com；
 - 不大可能直接将gitbook serve监听端口80，因为同机器上希望通过nginx代理多个web服务；
-- 希望借助nginx反向代理能力，将goneat.oa.com/wiki指向gitbook地址，goneat.oa.com/xxx指向其他web服务；
+- 希望借助nginx反向代理能力，将goneat.tx.com/wiki指向gitbook地址，goneat.tx.com/xxx指向其他web服务；
 
 ngin中可用的方式：
 
-- rewrite url，将goneat.oa.com/wiki，指向goneat.oa.com:4000，这种方式需要暴露4000端口给外部，而且这种访问方式比较诡异，本来是80端口突然变为8080了，不专业，也不安全；
+- rewrite url，将goneat.tx.com/wiki，指向goneat.tx.com:4000，这种方式需要暴露4000端口给外部，而且这种访问方式比较诡异，本来是80端口突然变为8080了，不专业，也不安全；
 - 多种方式结合：
   - rewrite，将/wiki来的url重写，删除/wiki，然后proxy_pass转给gitbook serve；
   - gitbook生成的html、依赖的gitbook插件js、css在html中是相对路径引用的，需要sub_filter（ngx_http_sub_module）来修改返回给浏览器的html页面，进行字符串替换，这里就是修改相对路径为绝对路径。
@@ -455,17 +455,17 @@ ngin中可用的方式：
 
            ################### rewrite url的方式 ##################
            #location ~ /wiki {
-           #    rewrite ^(.*) http://goneat.oa.com:4000 break;
+           #    rewrite ^(.*) http://goneat.tx.com:4000 break;
            #}
 
            ################### 
            location /wiki {
                rewrite ^/wiki(.*)$ /$1 break;
-               proxy_pass http://goneat.oa.com:4000;
+               proxy_pass http://goneat.tx.com:4000;
                root /root/wiki/_book;
 
-               sub_filter 'href="'         'href="http://goneat.oa.com/wiki/';
-               sub_filter 'src="gitbook/'  'src="http://goneat.oa.com/wiki/gitbook/';
+               sub_filter 'href="'         'href="http://goneat.tx.com/wiki/';
+               sub_filter 'src="gitbook/'  'src="http://goneat.tx.com/wiki/gitbook/';
                sub_filter_once off;
            }
 
