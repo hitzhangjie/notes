@@ -175,6 +175,65 @@ Docker设计理念：
 
 # 4 操作Docker容器
 
+- 创建容器：`docker create [OPTIONS] IMAGE [COMMAND] [ARG...]`
+
+  - 使用docker create创建后容器是处于停止状态的，需要使用docker start来启动；
+  - create命令与**容器运行模式**相关的选项；
+  - create命令与**容器环境和配置相关**的选项；
+  - create命令与**容器资源限制和安全保护相关**的选项；
+- 启动容器：`docker start [OPTIONS] CONTAINER [CONTAINER...]`
+
+  - 启动之前需要知道容器名或者容器id，可以通过`docker ps -a`来查看所有状态容器列表；
+  - 然后执行docker start启动对应的容器即可；
+- 新建并启动容器：`docker run [OPTIONS] IMAGE [COMMAND] [ARG...]`
+
+  - 命令选项与docker create完全相同；
+  - docker run等价于将docker create和docker star两步操作合并为一步完成；
+- 守护态运行：`docker run -d`
+- 查看容器输出：`docker logs [OPTIONS] CONTAINER`
+
+  - 应用程序需要将某些日志输出重定向到标准输出stdout、标准错误输出stderr；
+  - docker logs只管容器stdout、stderr上的输出信息，打到其他日志文件是看不见的；
+- 暂停/恢复容器：`docker pause/unpause CONTAINER [CONTAINER…]`
+- 终止容器：`docker stop [OPTIONS] CONTAINER [CONTAINER...]`
+
+  - 该命令会首先向容器发送SIGTERM信号，等待一段时间后（默认为10s），再发送SIGKILL信号终止容器；
+  - 选项-t可以用来修改从SIGTERM到SIGKILL之间的等待时间；
+  - 如果容器中的应用终止了，那么容器也会自动终止；
+- 强行终止容器：`docker kill [OPTIONS] CONTAINER [CONTAINER...]`，kill就不像stop那么文明了，不会发送SIGTERM等待容器一段时间，直接SIGKILL干掉。
+- 重启容器：`docker kill [OPTIONS] CONTAINER [CONTAINER…]`，先停止容器，然后再启动容器
+- 清除掉停止状态的容器：`docker container prune`
+- 进入容器：`docker attach [OPTIONS] CONTAINER` or `docker exec [OPTIONS] CONTAINER COMMAND [ARG...]`
+
+  - 如果容器指定了-d参数进入后台运行了，用户无法看到容器中的信息，也无法进行操作；
+  - 如果希望进入容器内执行操作，需要通过attach或者exec命令；
+  - attach命令使用
+    - 当多个窗口同时attach到同一个容器时，所有窗口都会同步显示；
+    - 当某个窗口因为命令阻塞时，其他窗口也无法执行操作；
+  - exec命令使用
+    - `docker exec -it [CONTAINER] /bin/bash`，这个打开一个连接容器的伪终端，在不影响容器内其他应用的前提下，用户可以与容器进行交互。
+    - 通过exec命令执行操作是最为推荐的方式！
+- 删除容器：`docker rm`
+  - docker rm只能删除停止状态的容器，docker ps -a查看所有容器列表；
+  - docker rm -f，可以删除运行中的容器，它先给容器发送SIGKILL干掉容器，然后再删除容器；
+- 导出和导入容器：`docker export` && `docker import`
+  - docker export导出一个已经创建的容器到一个文件，类似于镜像操作的docker save；
+  - docker import导入一个导出的容器文件到本地镜像库，类似于镜像操作的docker load；
+  - 容器的导出、导入不完全等同于镜像的导出、导入，后者是保留了镜像的完整元数据信息的，但是容器导出的快照文件则丢弃了这些信息。
+- 查看容器：`docker inspect` && `docker top` && `docker stats`
+  	- dockr inspect，查看容器创建信息等等，如由哪个镜像创建的之类的；
+  	- docker top，查看容器内的进程；
+  	- docker stats，查看容器当前的CPU、内存、存储、网络等使用情况统计；
+ - 其他容器命令：
+   	- 复制文件，`docker cp`，可以方便地在容器和host之间拷贝文件；
+   	- 查看变更，`docker container diff`，用于查看容器当前的文件系统变更情况；
+   	- 查看端口映射：`docker container port`，查看容器当前的端口映射情况；
+   	- 更新配置：`docker container update`，更新容器运行时配置信息，如内存大小等；
+
+> 可见Docker针对容器操作提供了一系列的工具：使得我们**可以像操作一个进程一样来操作一个容器，像操作一个代码仓库一样来操作一个镜像**。正是因为有了Docker的这一系列工具，才将容器技术给简单化、平民化了，我
+>
+> 们也才能开心地取拥抱容器技术。
+
 # 5 访问Docker仓库
 
 # 6 Docker数据管理
