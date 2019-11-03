@@ -313,6 +313,74 @@ docker run -it --volumes-from db2 --name db3 ubuntu
 
 # 7 端口映射与容器互联
 
+实践中经常会碰到需要多个服务组件对应的容器进行协作的情况，这往往需要多个容器之间能够互相访问到对方的服务。Docker除了通过网络访问外，还提供了两个很方便的功能来满足服务访问的基本需求。
+
+- 第一种方式，允许映射容器内应用的服务端口到本地宿主主机的端口；
+- 第二种方式，允许通过容器名来实现多个容器间的互联机制；
+
+**第一种方式，端口映射实现容器访问**:
+
+- 通过-P随机映射一个49000~49900范围内的端口，到容器内服务监听端口；
+- 挺过-p指定一个端口映射到容器内服务监听的端口；
+- 端口映射的时候可以考虑指定哪些NIC的端口进行映射，是否所有端口都映射，映射tcp还是udp；
+
+**第二种方式，容器名互联机制实现快捷互访:**
+
+- 容器的互联（linking）是一种让多个容器中的应用进行快速互访的方式，它会在源和接收容器之间建立一个连接关系，接收容器可以通过源容器的容器名快速访问到源容器，比指定源容器的IP地址方便多了；
+
+- 连接系统是工作在容器名上的，docker会随机分配容器名，但是最好还是--name自定义容器名，好记、直观！
+
+  ```bash
+  #创建一个数据库容器，并自定义容器名为db
+  docker run -d --name db training/postgres
+  ```
+
+- 容器互联使用参数—link，可以让容器之间实现快捷、方便、安全地进行交互。
+
+  ```bash
+  #创建一个web容器并实现与数据库容器db的快速互访
+  docker run -d -P --name web --link db:db training/webapp python app.py
+  ```
+
+  这里—link参数的格式为—link name:alias，name是要链接的容器名称（—name指定的），alias是别名。
+
+- 查看互联情况，这个时候如果docker ps -a会发现数据库容器db的names列为`db, web/db`，这说明容器web已经link到了db，web容器被允许访问db容器中的信息。**Docker相当于在两个互联的容器之间创建了一个虚拟通道，而且不用映射他们的端口到宿主主机上**。在启动db容器的时候并没有使用-p和-P标记，从而避免了暴露数据库服务端口暴露到外部网络上。
+
+- Docker通过两种方式为容器公开链接信息
+
+  - 更新环境变量；
+
+    ```bash
+    #env结束后容器也结束了，并非是想启动个web容器，只是查看下env
+    docker run -name web --link db:db training/webapp env
+    
+    ...
+    DB_NAME=/web/db
+    DB_PORT=tcp://172.17.17.0.5:5432
+    DB_PORT_5000_TCP=tcp://172.17.0.5:5432
+    DB_PORT_5000_TCP_PROTO=tcp
+    DB_PORT_5000_TCP_PORT=5432
+    DB_PORT_5000_TCP_ADDR=172.17.0.5
+    ```
+
+    其中以DB_前缀开头的环境变量是供web容器连接db容器使用的，**前缀采用大些的链接别名**。
+
+  - 更新/etc/hosts文件；
+
+    除了上面传递的环境变量信息，Docker也会添加host信息到父容器的/etc/hosts文件中（对于link web/db，web是父容器，db是子容器）。下面查看web容器的/etc/hosts文件：
+
+    ```bash
+    docker run --name web --link db:db training/webapp /bin/bash
+    root@aed84ee21bde:/opt/webapp# cat /etc/hosts
+    172.17.0.7 aed84ee21bde
+    ...
+    172.17.0.5 db
+    ```
+
+    这里子容器名db的ip地址是172.17.0.5，/etc/hosts只提供了容器名到ip的映射，但是没有提供要访问的端口、协议信息，还是要依赖上面提供的env信息。
+
+  > Docker —link机制为父容器、子容器之间构建了一个通道实现了二者的快速、边界互联，同时又避免了将子容器的端口与host建立映射避免了对外部网路暴露，这样也更加安全。
+
 # 8 使用Dockerfile创建镜像
 
 # 9 操作系统
