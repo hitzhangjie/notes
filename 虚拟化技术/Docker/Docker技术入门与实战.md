@@ -95,6 +95,22 @@ Docker作为一种轻量级的虚拟化方式，Docker在运行应用上与传�
 
 # 2 核心概念与安装配置
 
+Docker技术中涉及到的核心概念，包括：
+
+- Docker镜像：docker镜像类似于虚拟机镜像，可以将它理解为一个只读的模板，镜像是创建容器的基础；
+- Docker容器：docker容器类似于一个轻量级沙箱，docker利用容器来运行和隔离应用；
+- Docker仓库：docker仓库类似于代码仓库，是docker集中存放镜像文件的场所；
+
+Docker安装配置：
+
+- Docker引擎：docker引擎是使用docker容器前必须要安装的核心组件，主流操作系统基本都有对应版本；
+- Kitematic：kitematic这个工具是管理本地镜像的一个非常好用的工具；
+
+Docker设计理念：
+
+- 基于三大核心概念镜像、容器、仓库构建了一套非常高效的工作流程，也是其脱颖而出的重要原因；
+- Docker和DockerHub的工作流程，很大程度上参考了高效的Git和Github的设计理念，用的越久感受越深；
+
 # 3 使用Docker镜像
 
 # 4 操作Docker容器
