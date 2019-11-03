@@ -113,6 +113,64 @@ Docker设计理念：
 
 # 3 使用Docker镜像
 
+镜像相关的常用操作包括：
+
+- 获取镜像：docker pull
+  - 如果拉取镜像时未指定tag，则默认选择latest，这回下载仓库中最新版本的镜像；
+  - 镜像由多层组成（AUFS分层文件系统），如多个镜像共享某些层，不会重复下载存储，节省空间；
+  - 拉取非默认hub中的镜像，需要指定hub名，如docker pull hub.c.163.com/public/ubuntu
+
+- 查看镜像信息：docker images
+  - docker images或docker images ls列出本地镜像
+  - docker images有几个命令选项比较好用，可以通过—format=“template”来控制输出格式，如.Description代表描述信息，希望只列出描述信息可以通过—format={{.Description}}，完全是go模板的写法；
+  - docker images默认会trunc描述比较长的，如果希望看完整信息，加个选项—no-trunc；
+- 给镜像打标签（tag）：docker tag
+  - 非常类似于git操作中打tag，做了修改之后git commit，然后git tag用来标识一个发行版；
+  - docker中也是，比较常见的是容器启动了做了修改，然后docker commit保存最新的镜像，这个时候可以再docker tag打个标签，比如给当前的某个镜像（imageId标识）打个最新tag latest:
+	  ```bash
+  docker tag -a author -m “修改信息” imageId hitzhangjie/linux:latest
+    ```
+
+- 查看镜像详细信息：docker inspect
+
+  这里列出的内容非常详细，甚至包含了多少镜像层等等，可以用-f来过滤希望看到的信息。
+
+- 查看镜像历史信息：docker history
+
+  类似于git log，可以看到各个镜像层创建的时候对应的描述信息（-m指定的信息），对于回溯历史变更很有用。
+
+- 搜索镜像：docker search <keyword>
+
+- 删除和清理镜像：docker rm、docker prune
+
+  - 使用docker rmi或者docker image rm可以删除镜像，参数可以是imageId或者imageTag，行为稍微有点差异。删除imageId的时候，会尝试删除所有的imageTag，再删除imageId；如果删除imageTag的时候，如果对应的imageId有多个imageTag，那么删除这一个tag并不会导致其他tag被删除，更不会导致对应的imageId对应的镜像被删除；
+  - 如果imageId有对应的container在运行，是不允许删除的，当然可以指定-f参数强制删除，但是一般不建议这样做。应该先docker ps查看有哪些容器正在使用该镜像，先停掉、删除容器，再删除镜像本身；
+  - 系统中可能会遗留一些临时的镜像文件，这种镜像可以docker image prune来清理，对应容器的话，一些停掉的容器也可以通过docker container prune来执行，很类似的操作；
+
+- 创建镜像：方法有三种，基于已有镜像的容器创建、基于本地模板导入、基于Dockerfile创建。
+
+  - 基于已有容器创建：docker commit（类似于git commit），commit的时候可以打tag也可以不打，不打的就称为dangling image，可以某些命令的选项—filter-dangling=true给筛选出来。
+
+  - 基于本地模板导入：用户也可以直接从一个操作系统模板文件导入一个镜像，如使用OpenVZ提供的模板，或者使用其他已导出的镜像模板来创建。如下载了一个ubuntu镜像的模板后导入：
+
+    ```bash
+    cat ubuntu-18.04-x86_64.minimal.tar.gz | docker import - ubuntu:18.04
+    ```
+
+  - 基于Dockerfile创建：基于Dockerfile创建时最常见的方式，dockerfile是一个文本文件，利用指定的指令描述基于某个父镜像创建镜像的过程。假如已经编写好了dockerfile文件，可以执行`docker build`构建镜像。
+
+- 存出和载入镜像
+
+  - 存出镜像：`docker save -o 文件名.tgz image:tag`，之后就可以将tgz包分享给其他人；
+  - 载入镜像：`docker load -i 文件名.tgz`，导入文件中的镜像到本地，镜像的相关元数据信息统统都有的；
+
+- 上传镜像：`docker push NAME[:TAG] | [REGISTRY_HOST[:REGISTRY_PORT]/NAME[:TAG]`。第一次上传之前会进行身份认证，请先确保已经登录docker hub了，执行docker login完成登录认证，然后再docker push。
+
+> 关于镜像信息的一点理解：
+>
+> - Every image contains an complete Operating System。
+> - 除非这个镜像是从From Scratch构建的。Docker Hub上有scratch这个镜像，但是不允许pull，也不能将自己的镜像tag为scratch，只能在Dockerfile文件中指定父镜像为scratch然后构建其他镜像。
+
 # 4 操作Docker容器
 
 # 5 访问Docker仓库
