@@ -242,6 +242,75 @@ Docker设计理念：
 
 # 6 Docker数据管理
 
+在生产环境中使用Docker，往往需要对数据进行持久化，或者需要在多个容器之间进行数据共享，这必然涉及到容器的数据管理操作。
+
+**容器中的数据管理主要有两种方式：**
+
+- 数据卷（Data Volumes）：容器内数据直接映射到本地主机环境；
+- 数据卷容器（Data Volume Containers）：使用特定的容器来维护数据卷。
+
+**首先介绍数据卷，然后再介绍数据卷容器。**
+
+- 数据卷：是一个可供容器使用的特殊目录，它将主机操作系统目录直接映射进容器，类似于Linux中的mount行为。
+
+  数据卷可以提供很多有用的特性：
+
+  - 数据卷可以在容器之间共享和重用，容器之间传递数据将变得高效与方便；
+  - 对数据卷内数据的修改会立即生效，无论是在容器内操作还是本地操作；
+  - 对数据卷的更新不会影响到镜像本身，解耦开应用和数据存储；
+  - 卷会一直存在，直到没有容器使用，可以安全地卸载卷；
+
+- 创建数据卷：`docker volume create [OPTIONS] [VOLUME]`，创建之后可以通过`docker volume ls`查看，也可以通过`docker inspect`查看，可以通过`docker volume prune`干掉没有使用的数据卷。
+
+  下面这个例子，我们先创建一个普通数据卷，然后通过—mount将其挂载到容器中使用。
+
+  ```bash
+  $ docker volume create -d local hello
+  $ docker volume ls
+  DRIVER              VOLUME NAME
+  local               hello
+  
+  $docker run -it --mount type=volume,source=hello,destination=/opt/hello hitzhangjie/linux-golang-dev /bin/bash
+  [root@7fa1efddc9ed ~]# ls /opt/
+  go1.12  go1.13  hello
+  ```
+
+- 绑定数据卷：除了使用volume create等命令来管理数据卷外，也可以创建容器时直接将主机上的目录挂载到容器内作为数据卷使用，这种形式创建的数据卷成为“**绑定数据卷**”。
+
+  在docker run命令的时候，可以使用-mount选项来指定要使用的数据卷，支持3种类型的数据卷：
+
+  - volume，普通数据卷，映射到主机/var/lib/docker/volumes路径下；
+  - bind，绑定数据卷，映射到主机指定路径下；
+  - tmpfs，临时数据卷，只存在于内存中；
+
+  假定我们创建一个容器名为helloworld的容器，它启动后执行python app.py，我们给他绑定主机上的/webapp目录到容器内的/opt/webapp：
+
+  ```bash
+  docker run -d -P —name web —mount type=bind,source=/webapp,destination=/opt/webapp helloworld python app.py
+  ```
+
+  这里的操作类似于旧版的操作`docker run …. -v /webapp:/opt/webapp ….`，-v在容器内创建一个数据卷。
+
+**然后介绍下数据卷容器。**
+
+数据卷容器，也是一个容器，但是它的目的是**专门提供数据卷给其他容器挂载**。如创建的数据卷容器名为dbdata，其他容器启动的时候可以通过选项**—volumes-from dbdata**来共享dbdata中的数据卷。
+
+下面是个数据卷容器操作相关的例子：
+
+```bash
+#创建一个数据卷容器
+docker run -it -v /dbdata:/opt/dbdata --name dbdata ubuntu
+
+#在其他容器中使用--volumes-from=dbdata来引用数据卷容器中的数据卷
+docker run -it --volumes-from dbdata --name db1 ubuntu
+docker run -it --volumes-from dbdata --name db2 ubuntu
+
+#其实，也可以从其他已经挂载了数据卷容器的容器中挂载数据卷
+docker run -it --volumes-from db2 --name db3 ubuntu
+```
+
+删除容器，并不会删除数据卷，数据卷必须显示**docker volume rm**来删除。
+
 # 7 端口映射与容器互联
 
 # 8 使用Dockerfile创建镜像
