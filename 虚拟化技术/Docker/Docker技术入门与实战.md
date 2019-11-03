@@ -141,6 +141,8 @@ Docker设计理念：
 
 - 搜索镜像：docker search <keyword>
 
+  docker search的时候也可以指定一些过滤选项，比如指定stars数超过700的linux相关的镜像：`docker search linux -f stars=700`。
+
 - 删除和清理镜像：docker rm、docker prune
 
   - 使用docker rmi或者docker image rm可以删除镜像，参数可以是imageId或者imageTag，行为稍微有点差异。删除imageId的时候，会尝试删除所有的imageTag，再删除imageId；如果删除imageTag的时候，如果对应的imageId有多个imageTag，那么删除这一个tag并不会导致其他tag被删除，更不会导致对应的imageId对应的镜像被删除；
