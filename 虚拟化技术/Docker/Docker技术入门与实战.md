@@ -53,7 +53,7 @@ Docker也是站在巨人的肩膀上诞生的，其中最重要的就是**Linux�
 
 Docker作为一种轻量级的虚拟化方式，Docker在运行应用上与传统的虚拟机方式相比具有显著的优势。
 
-> 虚拟化（virtualization）技术时一个通用的概念，在不同的领域有不同的理解。在计算领域，一般指的是计算虚拟化（computing virtualization），或通常说的服务器虚拟化。
+> 虚拟化（virtualization）技术是一个通用的概念，在不同的领域有不同的理解。在计算领域，一般指的是计算虚拟化（computing virtualization），或通常说的服务器虚拟化。
 >
 > wikipedia这样定义：**在计算机技术中，虚拟化是一种资源管理技术，是将计算机的各种实体资源，如服务器、网络、内存及存储等，予以抽象、转换后呈现出来，打破实体结构间的不可切割的障碍，使用户可以用比原本的组态更好的方式来应用这些资源。**
 
@@ -73,7 +73,11 @@ Docker作为一种轻量级的虚拟化方式，Docker在运行应用上与传�
   
   - **完全虚拟化**：虚拟机管理软件（Type-2 Hypervisor）模拟完整的底层硬件环境和特权指令的执行过程。**客户操作系统无需进行修改**，例如VMware Workstation、VirtualBox、QEMU等。
   
-    >全虚拟化是指虚拟机模拟了完整的底层硬件，包括处理器、物理内存、时钟、外设等，使得为原始硬件设计的操作系统或其它系统软件完全不做任何修改就可以在虚拟机中运行。操作系统与真实硬件之间的交互可以看成是通过一个预先规定的硬件接口进行的。全虚拟化 VMM 以完整模拟硬件的方式提供全部接口（同时还必须模拟特权指令的执行过程）。举例而言，x86 体系结构中，对于操作系统切换进程页表的操作，真实硬件通过提供一个特权 CR3 寄存器来实现该接口，操作系统只需执行 "mov pgtable,%%cr3" 汇编指令即可。全虚拟化 VMM 必须完整地模拟该接口执行的全过程。如果硬件不提供虚拟化的特殊支持，那么这个模拟过程将会十分复杂：一般而言，VMM 必须运行在最高优先级来完全控制主机系统，而 Guest OS 需要降级运行，从而不能执行特权操作。当 Guest OS 执行前面的特权汇编指令时，主机系统产生异常（General Protection Exception），执行控制权重新从 Guest OS 转到 VMM 手中。VMM 事先分配一个变量作为影子 CR3 寄存器给 Guest OS，将 pgtable 代表的客户机物理地址（Guest Physical Address）填入影子 CR3 寄存器，然后 VMM 还需要 pgtable 翻译成主机物理地址（Host Physical Address）并填入物理 CR3 寄存器，最后返回到 Guest OS中。随后 VMM 还将处理复杂的 Guest OS 缺页异常（Page Fault）。比较著名的全虚拟化 VMM 有 Microsoft Virtual PC、VMware Workstation、Sun Virtual Box、Parallels Desktop for Mac 和 QEMU。
+    >全虚拟化是指虚拟机模拟了完整的底层硬件，包括处理器、物理内存、时钟、外设等，使得为原始硬件设计的操作系统或其它系统软件完全不做任何修改就可以在虚拟机中运行。操作系统与真实硬件之间的交互可以看成是通过一个预先规定的硬件接口进行的。
+    >
+    >全虚拟化 VMM 以完整模拟硬件的方式提供全部接口（同时还必须模拟特权指令的执行过程）。举例而言，x86 体系结构中，对于操作系统切换进程页表的操作，真实硬件通过提供一个特权 CR3 寄存器来实现该接口，操作系统只需执行 "mov pgtable,%%cr3" 汇编指令即可。全虚拟化 VMM 必须完整地模拟该接口执行的全过程。如果硬件不提供虚拟化的特殊支持，那么这个模拟过程将会十分复杂：一般而言，VMM 必须运行在最高优先级来完全控制主机系统，而 Guest OS 需要降级运行，从而不能执行特权操作。当 Guest OS 执行前面的特权汇编指令时，主机系统产生异常（General Protection Exception），执行控制权重新从 Guest OS 转到 VMM 手中。VMM 事先分配一个变量作为影子 CR3 寄存器给 Guest OS，将 pgtable 代表的客户机物理地址（Guest Physical Address）填入影子 CR3 寄存器，然后 VMM 还需要 pgtable 翻译成主机物理地址（Host Physical Address）并填入物理 CR3 寄存器，最后返回到 Guest OS中。随后 VMM 还将处理复杂的 Guest OS 缺页异常（Page Fault）。
+    >
+    >比较著名的全虚拟化 VMM 有 Microsoft Virtual PC、VMware Workstation、Sun Virtual Box、Parallels Desktop for Mac 和 QEMU。
   
   - **硬件辅助虚拟化**：利用硬件辅助支持（CPU x86体系结构上可用的硬件辅助虚拟化包括Intel-VT和AMD-V）来处理敏感指令实现**“完全虚拟化”**的功能。**客户操作系统无需进行修改**，例如VMware Workstation、Xen、KVM；
   
@@ -87,7 +91,7 @@ Docker作为一种轻量级的虚拟化方式，Docker在运行应用上与传�
   
     > 这是一种修改 Guest OS 部分访问特权状态的代码以便直接与 VMM 交互的技术。在超虚拟化虚拟机中，部分硬件接口以软件的形式提供给客户机操作系统，这可以通过 Hypercall（VMM 提供给 Guest OS 的直接调用，与系统调用类似）的方式来提供。例如，Guest OS 把切换页表的代码修改为调用 Hypercall 来直接完成修改影子 CR3 寄存器和翻译地址的工作。由于不需要产生额外的异常和模拟部分硬件执行流程，超虚拟化可以大幅度提高性能，比较著名的 VMM 有 Denali、Xen。
   
-  - 操作系统级虚拟化：内核通过创建多个虚拟的操作系统实例（内核和库）来隔离不同的进程。容器相关技术即在这个范畴内。
+  - **操作系统级虚拟化**：内核通过创建多个虚拟的操作系统实例（内核和库）来隔离不同的进程。容器相关技术即在这个范畴内。
   
     > 在传统操作系统中，所有用户的进程本质上是在同一个操作系统的实例中运行，因此内核或应用程序的缺陷可能影响到其它进程。操作系统级虚拟化是一种在服务器操作系统中使用的轻量级的虚拟化技术，内核通过创建多个虚拟的操作系统实例（内核和库）来隔离不同的进程，不同实例中的进程完全不了解对方的存在。比较著名的有 Solaris Container [2]，FreeBSD Jail 和 OpenVZ 等。
   
@@ -122,8 +126,8 @@ Docker设计理念：
 
 - 查看镜像信息：docker images
   - docker images或docker images ls列出本地镜像
-  - docker images有几个命令选项比较好用，可以通过—format=“template”来控制输出格式，如.Description代表描述信息，希望只列出描述信息可以通过—format={{.Description}}，完全是go模板的写法；
-  - docker images默认会trunc描述比较长的，如果希望看完整信息，加个选项—no-trunc；
+  - docker images有几个命令选项比较好用，可以通过—format=“template”来控制输出格式，如{{.Description}}代表描述信息，希望只列出描述信息可以通过—format={{.Description}}，完全是go模板的写法；
+  - docker images默认会trunc比较长的描述，如果希望看完整信息，加个选项—no-trunc；
 - 给镜像打标签（tag）：docker tag
   - 非常类似于git操作中打tag，做了修改之后git commit，然后git tag用来标识一个发行版；
   - docker中也是，比较常见的是容器启动了做了修改，然后docker commit保存最新的镜像，这个时候可以再docker tag打个标签，比如给当前的某个镜像（imageId标识）打个最新tag latest:
@@ -221,12 +225,12 @@ Docker设计理念：
   - docker import导入一个导出的容器文件到本地镜像库，类似于镜像操作的docker load；
   - 容器的导出、导入不完全等同于镜像的导出、导入，后者是保留了镜像的完整元数据信息的，但是容器导出的快照文件则丢弃了这些信息。
 - 查看容器：`docker inspect` && `docker top` && `docker stats`
-  	- dockr inspect，查看容器创建信息等等，如由哪个镜像创建的之类的；
-  	- docker top，查看容器内的进程；
-  	- docker stats，查看容器当前的CPU、内存、存储、网络等使用情况统计；
+  	- docker inspect，查看容器创建信息等等，如由哪个镜像创建的之类的；
+  	  	- docker top，查看容器内的进程；
+  	  	- docker stats，查看容器当前的CPU、内存、存储、网络等使用情况统计；
  - 其他容器命令：
    	- 复制文件，`docker cp`，可以方便地在容器和host之间拷贝文件；
-   	- 查看变更，`docker container diff`，用于查看容器当前的文件系统变更情况；
+   - 查看变更，`docker container diff`，用于查看容器当前的文件系统变更情况；
    	- 查看端口映射：`docker container port`，查看容器当前的端口映射情况；
    	- 更新配置：`docker container update`，更新容器运行时配置信息，如内存大小等；
 
@@ -363,7 +367,7 @@ docker run -it --volumes-from db2 --name db3 ubuntu
     DB_PORT_5000_TCP_ADDR=172.17.0.5
     ```
 
-    其中以DB_前缀开头的环境变量是供web容器连接db容器使用的，**前缀采用大些的链接别名**。
+    其中以DB_前缀开头的环境变量是供web容器连接db容器使用的，**前缀采用大写的链接别名**。
 
   - 更新/etc/hosts文件；
 
@@ -379,7 +383,7 @@ docker run -it --volumes-from db2 --name db3 ubuntu
 
     这里子容器名db的ip地址是172.17.0.5，/etc/hosts只提供了容器名到ip的映射，但是没有提供要访问的端口、协议信息，还是要依赖上面提供的env信息。
 
-  > Docker —link机制为父容器、子容器之间构建了一个通道实现了二者的快速、边界互联，同时又避免了将子容器的端口与host建立映射避免了对外部网路暴露，这样也更加安全。
+  > Docker —link机制为父容器、子容器之间构建了一个通道实现了二者的快速、便捷互联，同时又避免了将子容器的端口与host建立映射避免了对外部网络暴露，这样也更加安全。
 
 # 8 使用Dockerfile创建镜像
 
