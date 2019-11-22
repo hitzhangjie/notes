@@ -10,10 +10,10 @@ Golang中的垃圾回收主要应用三色标记法，GC过程和其他用户gor
 
 ![img](assets/v2-ed600e255367b30af1c489131357eadc_hd.jpg)
 
-1. 1. Sweep Termination: 收集根对象，清扫上一轮未清扫完的span，启用写屏障和辅助GC，辅助GC是将一定量的标记和清扫工作交给用户goroutine来执行，写屏障在后面会详细说明。
-   2. Mark: 扫描所有根对象和根对象可以到达的对象，并标记它们
-   3. Mark Termination: 完成标记工作，重新扫描部分根对象(要求STW)，关闭写屏障和辅助GC
-   4. Sweep: 按标记结果清扫对象
+1.  Sweep Termination: 收集根对象，清扫上一轮未清扫完的span，启用写屏障和辅助GC，辅助GC是将一定量的标记和清扫工作交给用户goroutine来执行，写屏障在后面会详细说明。
+2.  Mark: 扫描所有根对象和根对象可以到达的对象，并标记它们
+3.  Mark Termination: 完成标记工作，重新扫描部分根对象(要求STW)，关闭写屏障和辅助GC
+4.  Sweep: 按标记结果清扫对象
 
 - 1.8版本引入了混合写屏障机制（hybrid write barrier），避免了对栈re-scan的过程，极大的减少了STW的时间。
 
