@@ -14,7 +14,20 @@
 
 可能遇到这样的问题，release分支滞后于master，master中合入了很多待验证的新特性，或者已基本验证通过但是还没有足够稳定，这个时候是不能直接`git merge master`将代码合入release的，那还有什么办法将bugfix对应的commit合入release分支吗？有的！
 
+## cherry-pick一个commit
+
 我们可以选择bugfix对应的这一次commit，将这一次修改对文件所做的修改合并入release，在release分支执行`git cherry-pic <commit>`即可。
+
+## cherry-pick多个连续的commit
+
+`git cherry-pick A..B`，从A到B，不包含A；
+
+如果要包含A，git cherry-pick A^..B。
+
+## cherry-pick多个不连续的commit
+
+`git cherry-pick A1 A2 A3 B1 B2 B3`，这样就可以了，指定多个commit。
+
 
 当然git cherry-pick可能会遇到更加复杂的场景，这里就不介绍了，具体问题具体分析吧。
 
