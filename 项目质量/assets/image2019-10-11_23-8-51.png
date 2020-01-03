@@ -1,0 +1,322 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <meta charset="utf-8" />
+    <meta http-equiv="Expires" content="0" />
+    <meta http-equiv="Cache-Control" content="no-cache" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <title>企业管理首页</title>
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="stylesheet" type="text/css" href="../../Styles/login.2016.css?ver=20190927" />
+    <script type="text/javascript" src="../../Scripts/jquery-1.9.0.min.js"></script>
+    <script  type="text/javascript"  src="../../Scripts/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../Scripts/qrcode.js?ver=20190927"></script>
+   
+
+</head>
+
+<body id="thebody" >
+    <div class="wrap">
+        <div class="banner_wrap">
+            <div class="rtx_top">
+                <div class="rtx_top_banner">
+                    <a><img src="../../Images/top_banner.jpg" alt="" /></a>
+                </div>
+            </div>
+        </div>
+
+  
+
+        <div class="login_wrap">
+            <div class="login_title">
+                <h1 class="title">Tencent腾讯 企业门户</h1>
+            </div>
+            <br/>
+             <div id="div_logintypeselect" class="login_quick" style="display:none">
+                <a id="link_ioalogin" style="display: inline-block" class="quickLogin">iOA 快速登录<br/>Sign in with iOA</a>
+                <div style="display: inline-block; padding: 0 20px; font-size:large;vertical-align:middle;height:52px"> / </div>
+                <a style="display: inline-block" class="accountLogin">帐号密码登录<br/>Sign in with account</a>
+            </div>
+            <div class="login_con_show">
+                <form name="form1" method="post" action="SignInNewQR.aspx?url=http%3a%2f%2fiwiki.oa.com%2f_sp_login_%2f%3furl%3d%252Fdownload%252Fthumbnails%252F17700398%252Fimage2019-10-11_23-8-51.png%253Fversion%253D1%2526modificationDate%253D1570806527000%2526api%253Dv2%26app%3d&amp;title=" id="form1">
+<div>
+<input type="hidden" name="__SCROLLPOS" id="__SCROLLPOS" value="0" />
+<input type="hidden" name="__COMPRESSED_VIEWSTATE" id="__COMPRESSED_VIEWSTATE" value="QlpoOTFBWSZTWc22GGAAAJN/kPaOgQHA52r6GAVBAL/v3ioAAIAAsADaMEqBNKGYofqeqND1B6nqfqjCMwobKflQaRBqaPETR6RkMjJpkAGQDBqnqaj0yg9T0hoyGjBGmmhiaDI9TIDMJh+iiwNhpVKQus7ZZQEZuy1jGUWIzhAgkApUB7WLxiKWQrm8Ez10PF6EqY1SlHXlbZbZCEJhcUaRxJ50ojcJfOlxmwYa2u+bi87i/yMkY35FS+oqq9gU0wwwHTadWaXkujMpnSsi2X2wdWbXiyhehG5I3jSNl3hJGGAqbm1j+GjlCjG2Y7DCUZwmE9wcR5jCtsEhZlseChsOSfWB9QyhDEuO1RUreIwQN5kxXi7kinChIZtsMMA=" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="" />
+</div>
+
+                    <div id="div_accountlogin" class="login_con login_con_normal clearfix account_login" style="display:block">
+                        <div class="login_normal">
+                            <div class="ipt_item ipt_name ipt_item_focus">
+                                <label class="watermark" for="txtLoginName">英文ID</label>
+                                <input name="txtLoginName" type="text" id="txtLoginName" tabindex="1" class="ipt my_loginname" value="" placeholder="英文ID / Account ID" />
+                                &nbsp;
+                            </div>
+                            <div class="ipt_item ipt_password ipt_item_focus">
+                                <input name="txtPasswordType" type="text" value="1" id="txtPasswordType" style="display: none" />
+                                <label class="watermark password" for="txtPassword">PIN + TOKEN</label>
+                                <input name="txtPassword" type="password" id="txtPassword" tabindex="2" class="ipt my_password" value="" placeholder="PIN+TOKEN" />
+                                &nbsp;
+                            </div>
+                             <div class="btn_wrap">
+                                <input type="submit" name="ibnLogin" value="登 录 / Sign in" onclick="if (typeof(Page_ClientValidate) == &#39;function&#39;) { if (Page_ClientValidate() == false) { return false; }};this.disabled  = true;__doPostBack(&#39;ibnLogin&#39;,&#39;&#39;);setCookieLoginName();WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(&quot;ibnLogin&quot;, &quot;&quot;, true, &quot;&quot;, &quot;&quot;, false, false))" id="ibnLogin" class="btn_login" />
+                            </div>
+                            <p class="login_outlook">
+                                <a href="#" class="link link_1"><i class="icon icon_switch"></i>切换至Outlook/QCS密码验证<br /><span style="padding-left:16px">Sign in with Outlook/QCS</span></a>
+
+                                <a href="#" class="link link_2"><i class="icon icon_switch_2"></i>切换至 Pin+Token 验证<br /><span style="padding-left:16px">Sign in with Pin+Token</span></a>
+                                <input name="isOutlookSelect" type="hidden" id="isOutlookSelect" value="false" />
+                            </p>
+                            <p id="login_error_tip" class="login_error_tips login_error_tips_show">
+                                &nbsp
+                            </p>
+
+                            
+                        </div>
+
+                        <div class="scan_alert_area" onclick="restartQRcode()">
+                                <i class="icon_alert"></i>
+                                <span class="txt">二维码失效<br/>点击刷新<br />QR code expired<br />Refresh and try again</span>
+                            </div>
+
+                        <div class="login_qr_code">
+                            <input name="qrcode_uid" type="hidden" id="qrcode_uid" value="5700e7df-5805-4e1d-98fc-39e7b7ebd68e" />
+                            <input name="qrcode_content" type="hidden" id="qrcode_content" value="https://qr.oa.tencent.com/login?uid=5700e7df-5805-4e1d-98fc-39e7b7ebd68e%26host=iwiki.oa.com" />
+
+                            <img id="qrcode_image" class="qr_img" alt="" />
+
+                            <div class="scan_success_area">
+                    	        <i class="icon_success"></i>
+                                <span class="txt">扫描成功<br />QR code scanned</span>
+                            </div>
+                                 <div class="scan_alert_area" onclick="restartQRcode()">
+                                <i class="icon_alert"></i>
+                                <span class="txt">二维码失效, 点击刷新<br /><span style="font-size:12px;">QR code expired</span><br /><span style="font-size:12px">Refresh and try again</span></span>
+                            </div>
+                            <p class="qr_tips">
+                                使用 <a href="https://work.weixin.qq.com/" target="_blank" class="tips">企业微信 2.4</a> 或 <a href="http://moa.oa.com" target="_blank" class="tips">MOA 3.2以上版本</a>
+                                <br/>扫描二维码登录<br />
+                                Scan the QR code with <a href="https://work.weixin.qq.com/" target="_blank" class="tips">WeChat Work <br /> 2.4+</a> or 
+                                <a href="http://moa.oa.com" target="_blank" class="tips">MOA 3.2+</a>to sign in
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="login_con login_con_authorize" >
+                        <div class="login_authorize">
+                            <div class="user_area">
+                                <div class="cover_area">
+                                    <img id="user_image" class="user_img" alt="头像"
+                                        onerror="javascript:this.src='../../Images/defaultUserImage.png'" />
+                                    <i class="cover"></i>
+                                </div>
+                                <p id="user_name" class="name"></p>
+                            </div>
+                            <i class="s_line"></i>
+                            <i id="icon_scansrc" class="icon_phone"></i>
+                            <i class="s_line s_line_2"></i>
+                            <div class="ent_area">
+                                <div class="cover_area">
+                                    <img src="../../Images/icons/general_icon.jpg" id="sys_icon_img" class="enterprise_img" />
+                                    <i class="cover"></i>
+                                </div>
+                                <p id="sys_name" class="name">公司内部系统<br /><span style="font-size:12px">Internal Website</span></p>
+                            </div>
+                            <div class="pop_tips">
+                                <h3 class="title" id="user_confirmsource">请在MOA确认登录<br />Confirm in MOA</h3>
+                                <p class="txt">使用其它方式登录，请<a href="#" class="link_back" onclick="handleReturn();return false;">返回</a><br />
+                                    Or<a href="#" style="text-decoration:underline" class="link_back" onclick="handleReturn();return false;">Change</a> sign in mode
+                                </p>
+                	        </div>
+                        </div>
+                    </div>
+
+                    <div id="div_ioalogin" class="login_con_show quick_login" style="display:none">
+                        <div class="login_con login_con_normal clearfix">
+                            <div class="login_normal">
+                                <div class="login_authorize">
+                                    <div class="user_area">
+                                        <div class="cover_area">
+                                            <img id="ioa_userimage" class="user_img" alt="头像" onerror="javascript:this.src=&#39;../../Images/defaultUserImage.png&#39;" />
+                                            <i class="cover"></i>
+                                        </div>
+                                        <p class="name name_title">检测到当前已登录帐号</p>
+                                        <p class="name"><label id="lbl_ioausername" name="ioausername"></label></p>
+                                    </div>
+                                </div>
+                                 <div class="btn_wrap">
+                                    <input type="submit" name="btn_smartlogin" value="iOA快速登录 / Sign in with iOA" onclick="return clientquickclick();WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(&quot;btn_smartlogin&quot;, &quot;&quot;, true, &quot;&quot;, &quot;&quot;, false, false))" id="btn_smartlogin" class="btn_login" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+<script language='javascript'>function saveScrollPosition() {document.forms[0].__SCROLLPOS.value = thebody.scrollTop;}thebody.onscroll=saveScrollPosition;</script></form>
+            </div>
+        </div>
+
+        <div class="footer_wrap">
+            <div class="links">
+                <a onclick="showhide_hint();return false;">重要提示 Notice</a>
+                <span class="sperate_line">|</span>
+                <a href="http://passport.oa.com/doc/faq.html" target="_blank">问题与解答 FAQ</a>
+            </div>
+            <!--
+            <div class="addtion_tips">
+                <a href="http://aq.oa.com/110" target="_blank">亲友QQ被盗！需要紧急封号？快上自助封号系统</a>
+            </div>
+            <div class="addtion_tips">
+                 <a href="http://tof2.oa.com/" target="_blank">自助发布广告</a>
+            </div>
+            -->
+        </div>
+    </div>
+
+    <!--<img id = "moa_hint_img" class = "moa_hint_img" src ="../../Images/moa_hint.png" alt="MOA扫一扫" />-->
+
+    <script type="text/javascript">
+        var handlerAddr = "http://qrcode.tof.oa.com";
+        // var handlerAddr = "http://localhost:29584"
+        var queryString = "?url=http%3A%2F%2Fiwiki.oa.com%2F_sp_login_%2F%3Furl%3D%252Fdownload%252Fthumbnails%252F17700398%252Fimage2019-10-11_23-8-51.png%253Fversion%253D1%2526modificationDate%253D1570806527000%2526api%253Dv2%26app%3D";
+
+        // Login logic variables
+        var webPollInterval = 1000;
+        var isShowingSignInBoard;
+        var username;
+        var loginSource;
+        var pollTimeOut;
+        var showUserInfoTimeOut;
+
+        // For Displaying ADs in turn
+        var bannerIdPrefix = "top_banner_";
+        var ad_num = 0;
+        var ad_index = 0;
+
+        $(document).ready(initialize);
+
+        function GetAdsenseImagesByHandler() {
+            $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: "/Modules/Passport/AdsenseHandler.ashx",
+                data: "{}",
+                dataType: 'json',
+                success: function (result) {
+                    if (result != null) {
+                        onAjaxImage(result);
+                    }
+
+                }
+            });
+        }
+
+      
+           
+        function onAjaxImage(data) {
+            var list = data;
+            if (list != null) {
+                for (var i = 0; i < list.length; i++) {
+                    switch (list[i].TypeId) {
+                        case 0:
+                        default:
+                            SetAdsenseImg(list[i]);
+                            break;
+                    }
+                }
+            }
+        }
+
+        function SetAdsenseImg(data) {
+            var result = data;
+            if (result != null) {
+                var htmldoc = getBannerHtml(result);
+                if(ad_num == 0) {
+                    $(".banner_wrap").replaceWith(htmldoc);
+                } else {
+                    $(".banner_wrap").append(htmldoc);
+                }
+                ad_num ++;
+            }
+        }
+        
+        function getBannerHtml(result) {
+            var imglink = "#";
+            if (result.ImgLink != "") {
+                imglink = result.ImgLink;
+            }
+            var imgSrc = "http://tof2.oa.com" + result.ImgName;
+
+            // Need setting background
+            var htmldoc = "<div class='rtx_top' id = '" + bannerIdPrefix + ad_num + "' style = 'background-color:#" + result.BgColor + "'>";
+            htmldoc += "<div class='rtx_top_banner'>";
+            htmldoc += "<a href='" + imglink + "' target='_blank'>";
+            htmldoc += "<img alt='" + result.Title + "' src='" + imgSrc + "' />";
+            htmldoc += "</a></div></div>";
+            return htmldoc;
+        }
+
+        // Top banner
+        function showTopBanner() {
+            if (ad_num < 2) {
+                $('.rtx_top_banner').css("display", "block");
+            } else {
+                showAd();
+                setInterval(showAd, 0);
+            }
+        }
+
+        // display ADs in turn
+        // If there is more than 1 advertisement, the second one will be displayed first
+        function showAd() {
+            $(bannerIdPrefix + ad_index).fadeOut();
+            ad_index = (ad_index + 1) % add_num;
+            $(bannerIdPrefix + ad_index).fadeIn();
+        }
+
+
+        // show the info of current login user
+        function showUserInfo() {
+            if (isShowingSignInBoard) {
+                $(".login_wrap").addClass("login_authorize_show");
+                $("#user_name").text(username);
+                var user_image_src ="/Modules/Passport/UserImage.ashx?user=" + username;
+                $("#user_image").attr("src", user_image_src);
+                var srcText = "请在MOA确认登录<br/>Confirm in MOA"
+                $("#icon_scansrc").attr("class", "icon_phone");
+                if(!loginSource){
+                    loginSource = "MOA";
+                    $("#icon_scansrc").attr("class", "icon_phone");
+                    srcText = "请在" + loginSource + "确认登录<br/>Confirm in MOA"
+                }else if(loginSource == "企业微信"){
+                    $("#icon_scansrc").attr("class", "icon_qywx");
+                    srcText = "请在" + loginSource + "确认登录<br/>Confirm in WeChat Work"
+                }
+                $("#user_confirmsource").html(srcText);
+                isShowingSignInBoard = false;
+            }
+        }
+
+        // return the login page
+        function showSignInBoard() {
+            if (!isShowingSignInBoard) {
+                $(".login_qr_code").removeClass("scan_success_show");
+                $(".login_wrap").removeClass("login_authorize_show");
+                isShowingSignInBoard = true;
+            }
+        }
+
+        function clientquickclick(){
+            var ioausername = $("label[name='ioausername']").text();
+            $("input[name='txtLoginName']").text(ioausername);
+            $("input[name='txtPassword']").text(ioausername);
+            return true;
+        }
+    </script>
+    <script src="../../Scripts/jquery.infieldlabel.min.js"></script>
+  
+</body>
+</html>
