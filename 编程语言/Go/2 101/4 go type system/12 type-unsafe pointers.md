@@ -44,8 +44,8 @@
   ```
   func main() {
   	x := 123 // of type int
-  	p := unsafe.Pointer(&amp;x)
-  	pp := &amp;p // of type *unsafe.Pointer
+  	p := unsafe.Pointer(&x)
+  	pp := &p // of type *unsafe.Pointer
   	p = unsafe.Pointer(pp)
   	pp = (*unsafe.Pointer)(p)
   }
