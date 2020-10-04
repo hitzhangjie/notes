@@ -18,5 +18,29 @@ Etcd在业界有着广泛的应用，这里列举几个大家比较熟悉的：
 
 ## Etcd架构设计
 
+
+
 ## Etcd详细实现
+
+了解Etcd详细实现的过程中，少不了要结合Etcd实例进行测试、分析，我们可以在本地搭建一个Etcd集群（也并不复杂），当然也可以从DockerHub下载镜像本地运行etcd容器，都很方便。
+
+```bash
+docker pull elcolio/etcd
+
+docker run \
+  -d \
+  -p 2379:2379 \
+  -p 2380:2380 \
+  -p 4001:4001 \
+  -p 7001:7001 \
+  -v /data/backup/dir:/data \
+  --name some-etcd \
+  elcolio/etcd:latest \
+  -name some-etcd \
+  -discovery=https://discovery.etcd.io/blahblahblahblah \
+  -advertise-client-urls http://192.168.1.99:4001 \
+  -initial-advertise-peer-urls http://192.168.1.99:7001
+```
+
+
 
