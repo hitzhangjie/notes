@@ -4,7 +4,7 @@ CPS：Continuation Passing Style Programming
 
 基于栈帧的函数调用还是比较高效，计算机处理器也多基于此设计、优化。
 
-这里设想一种情况，一个函数a调用了吧，并且b是a的 [tail call](https://en.wikipedia.org/wiki/Tail_call)，由于a中不依赖b的返回值做其他处理，因此a在调用b的时候完全没必要为b构建一个新的栈帧。即便是a要根据b的返回值做其他处理，例如返回0时做什么处理，返回非0时做什么处理，也完全可以通过函数传递b(proc_normal, proc_abnormal)的方式来解决，那么假如proc_normal、proc_abnormal中依赖a中的某些变量值怎么办？那就借助参数的方式传递过去呗。这里其实可以将传递的过程procedure以及状态进行传递，称之为 [continuation](https://en.wikipedia.org/wiki/Continuation)！
+这里设想一种情况，一个函数a调用了b，并且b是a的 [tail call](https://en.wikipedia.org/wiki/Tail_call)，由于a中不依赖b的返回值做其他处理，因此a在调用b的时候完全没必要为b构建一个新的栈帧。即便是a要根据b的返回值做其他处理，例如返回0时做什么处理，返回非0时做什么处理，也完全可以通过函数传递b(proc_normal, proc_abnormal)的方式来解决，那么假如proc_normal、proc_abnormal中依赖a中的某些变量值怎么办？那就借助参数的方式传递过去呗。这里其实可以将传递的过程procedure以及状态进行传递，称之为 [continuation](https://en.wikipedia.org/wiki/Continuation)！
 
 现在明白了continuation为何物了，也可以理解基于 [Continuation Passing Styple](https://en.wikipedia.org/wiki/Continuation-passing_style)（简称CPS）风格的编程了。
 
