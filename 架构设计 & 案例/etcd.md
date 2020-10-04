@@ -8,7 +8,13 @@ Etcd节点之间的通信采用Raft一致性算法，到etcd leader节点之间�
 
 ## Etcd使用案例
 
+Etcd在业界有着广泛的应用，这里列举几个大家比较熟悉的：
 
+- Kubernetes，使用etcd作为服务发现和集群配置、集群状态管理的存储组件；
+- CoreDNS，使用etcd作为一个可选的存储实现；
+- M3，是一个用于Prometheus的大规模监控（metrics）平台，使用etcd存储规则和函数；
+- OpenStack，将etcd作为一个可选的配置中心、分布式锁实现，等等；
+- 其他；
 
 ## Etcd架构设计
 
