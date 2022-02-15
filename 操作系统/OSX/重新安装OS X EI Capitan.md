@@ -10,7 +10,10 @@ sudo scutil --set HostName $(hostname)
 ```
 4. 修改按键频率
 ```bash
-defaults write NSGlobalDomain KeyRepeat -int 3
+# key重复速率，比如vim hjkl按住不放时移动速度，过大容易引起误输入
+defaults write NSGlobalDomain KeyRepeat -int 2
+
+# 按键时的等待时延，过大容易导致误输入，比如不小心碰到一个按键就激活了
 defaults write NSGlobalDomain InitialKeyRepeat -int 10
 ```
 5.安装homebrew；
