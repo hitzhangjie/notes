@@ -4,7 +4,7 @@
 
 - TCP/UDP连接（UDP无连接但可以connect），由五元组表示：<协议类型，源ip，源端口，目的ip，目的端口>；
 - REUSEADDR解决的是监听本地任意地址0.0.0.0:port与另一个监听本地特定地址相同端口a.b.c.d:port的问题；
-  - REUSEPORT解决多个sockets（可能归属于相同或者不同的进程）是否允许bind到相同端口的问题，Linux下为了避免port hijack，只允许euid相同的进程bind到相同的port（bind设置socket源port，connect设置socket目的端口），同时对于tcp listen socket、udp socket还会进行“均匀的”流量分发，也是一个轻量的负载均衡方案。fuser
+- REUSEPORT解决多个sockets（可能归属于相同或者不同的进程）是否允许bind到相同端口的问题，Linux下为了避免port hijack，只允许euid相同的进程bind到相同的port（bind设置socket源port，connect设置socket目的端口），同时对于tcp listen socket、udp socket还会进行“均匀的”流量分发，也是一个轻量的负载均衡方案。fuser
 
 原文出自：[reuseport & reuseaddr, how they differ?](https://stackoverflow.com/a/14388707/3817040)
 
