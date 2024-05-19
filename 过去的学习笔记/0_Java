@@ -1,0 +1,215 @@
+=============================================================================
+2014-07-27 21:48
+=============================================================================
+
+1. eclipse快捷键
+alt+/: 注释
+ctrl+shift+/:函数快速注释
+ctrl+shift+\:去除注释
+ctrl+shift+f:快速格式化
+
+2
+内部类，局部内部类，匿名内部类；
+在一个类的里面定义的类，内部类；
+在一个类的方法里面定义的类，局部内部类，只能用在方法的内部，是使用的最少的；
+匿名内部类，例如:
+Interface Inf_A {
+	      public void func();
+};
+在某一个类的方法里面:
+Inf_A = new Inf_A {
+	 @override
+		  public void func() {
+			   ...
+				    }
+}
+这里就是创建了一个匿名内部类，简单的可以理解为：new 接口，就是创建了一个你们那
+个内部类；
+
+3
+import 导入
+import static静态导入
+
+使用import导入的类，其中的类方法在使用的时候，需要加上类名；
+使用import static导入的类，其中的静态类方法在使用的时候，不用加上类的名字；
+
+4
+JUnit单元测试，Junit3，Junit4。
+测试程序，是由程序开发人员编写的，而不是由测试人员编写的；
+
+创建工程的时候，选择add library，添加上junit库，编写完业务类后，在业务类的源文
+件上，右键单击，选择new，选择junit test case，在里面选择好某些需要填写的东西，
+一般会自动生成，勾选上需要测试的业务类的成员函数，然后在生成的测试类中，自定义
+测试方法，运行测试方法，查看是否有错误。
+
+junit3: setUp相当于初始化函数，tearDown相当于析构函数；
+junit4里面的setUp和tearDown必须加上注释@Before和@After，其他的测试方法都要加上
+@Test。
+
+junit3中使用的完全是java的反射机制，获取方法名称，来执行；
+junit4中使用的是@annotation，即注释，与junit3不太一样，不过大同小异。
+
+junit4里面的常用注释：
+@Test，其注释的方法是一个测试方法
+@Test(expected=xxxxException)，其注解的方法，将被检测是否抛出了期望的异常类型
+@Test(timeout=xxx)，其注解的方法，将被检测其执行时间是否超过了xxx
+@Before，其注释的方法，会在任何一个测试方法执行前被执行
+@After，其注释的方法，会在任何一个测试方法执行后被执行
+@BefoeClass，其注释的方法，会在所有测试方法执行前被执行
+@AfterClass，其注释的方法，会在所有测试方法执行完成后执行
+@Ignore，表示被忽略的测试方法
+
+Failure
+指的是预期的结果与实际运行单元的结果不同所导致，实际上就是java中的错误，可能是
+编码错误；
+
+Error
+指的是您程式没有考虑到的情况，在断言之前程式就因为某种错误引发例外而终止，实际
+上类似于java中的异常；
+
+
+5
+名门出品，必属精品
+Ant，Another Nesto Tools
+
+ant，支持编译、测试、部署，除了代码编写之外的工作，它几乎都可以做。
+
+
+
+6
+MVC:servlet充当控制器，jsp页面充当视图，javaBean充当模式；
+servlet：C
+jsp：V
+javaBean：M
+
+例如用户登录界面的MVC设计：
+V：
+登录界面，采用jsp，里面有个登录表单，动作为loginServelet；
+登录成功界面，登录失败界面；
+M：访问数据库操作，验证用户登录是否成功
+C：Servlet，实例化M中的javaBean，调用其操作，返回结果，根据结果，决定显示页面
+登录还成还是失败；
+
+在WebRoot下面保存着WEB-INF，META-INF文件夹，WEB-INF下面有个lib文件夹，我们需要
+加载的外部jar文件都要放在lib下面，WEB-INF下面还有个web.xml，它非常重要，例如可
+以书写servlet的配置，将浏览器请求的url映射到servlet名，再将servlet名映射到对应
+的servlet类，在servlet里面完成对javabean的调用，javabean中完成业务逻辑，然后根
+据结果，servlet类再决定显示什么信息给用户。
+java类，servlet都是在源代码文件夹src中保存，就跟建立java源文件一个样。
+
+这个MVC的过程中，servlet作为控制器。
+
+7
+轻量级框架，如何理解轻量级？
+structs1是一个重量级框架，structs2是一个轻量级框架。
+轻量级框架的意思是，很容易将这个框架植入到系统中，同时也可以很容易的将该框架从
+系统中移除。
+
+struts2：
+首先将structs相关的jar文件添加到工程的WEB-INF/lib文件夹下面，然后在源文件文件
+夹src目录下建立一个structs.xml文件，在这个文件中将对structs2进行配置，例如将浏
+览器请求的一个动作actionname.action映射到对应的action类，这里的action类就相当
+于控制器，相当于之前的servlet，action类里面可以调用javabean完成业务处理，然后
+返回结果，在structs2中根据返回结果，将页面重定向到指定的页面，显示个用户。
+在structs2可以被使用之前，必须在WEB-INF/web.xml中进行配置，即必须在web.xml文件
+中添加过滤器的信息，指定使用structs2这个过滤器。这样当浏览器请求的时候，才会将
+请求和处理交给structs2。
+
+8
+用myeclipse，创建web工程，在工程上单击右键，选择myeclipse->project
+facets->install structs2 facets。
+
+这样myeclipse会帮助我们自动创建structs.xml，导入对应的jar文件，并且在web.xml中
+添加上使用structs2的过滤器。
+
+9
+实现action类的三种方式：
+普通action类，具有一个public String execute() 方法；
+实现Action接口；
+继承ActionSupport类；
+推荐使用第三种方法，因为它提供了很多方法，当然可以覆盖，相对来说还是比较方便的
+。
+
+10
+接收表单数据：
+Action类简单属性接收，<s:property>
+使用领域对象来接收，推荐这种方式；
+使用模型驱动模式接收；
+
+当使用领域对象获取表单的值时：
+比如index.jsp页面有个登录的表单，输入用户名密码，
+name="user.username",name="user.password"，这里的user就是Action类中的private对
+象名User user，在Action类里面要定义user的getter和setter方法，然后在User类里面
+定义private String username，private String password，并定义对应的getter和
+setter方法。
+
+这其实是一个变量绑定的过程，struts2首先从index.jsp里面获取到表单的值，然后调用
+Action类中的getUser方法检查领域对象user是否为null，如果为null，那么就new User
+，然后调用setUser方法为user赋值，之后再调用user.setUsername和user.setPassword
+完成表单中元素与user中成员变量的绑定。
+
+11
+execute方法如果不重写的话，默认返回success；
+
+
+=============================================================================
+2014-04-17 17:22
+=============================================================================
+
+1. mvn help:describe -Dplugin=help
+2. mvn help:describe -Dplugin=help -Dfull
+3. mvn help:describe -Dplugin=compiler -Dmojo=compile -Dfull
+4. 创建一个工程
+mvn archetype:create -DgroupId=.. -DartifactId=... -DpacakgeName=...
+groupId，项目组织的名称
+artifactId，项目的名称
+packageName，包名，所有的java文件都建立在这个包下
+注意大小写，遵循camel风格
+
+注意大小写，遵循camel风格。
+
+=============================================================================
+2014-03-01 21:20
+=============================================================================
+1. Date与Calendar
+Calendar cal = Calendar.getInstance();
+cal.clear();
+cal.set(year, month, day);    // month是从0开始计数，0表示1月，依次类推
+cal.getTimeInMillis();        // 返回毫秒数，long类型
+
+cal.setTimeInMillis(long mills);
+cal.YEAR, cal.MONTH,cal.DAY_OF_MONTH
+
+2. 多线程同步
+
+synchronize： 实际上时互斥
+wait(),notify(),notifyAll()是同步
+
+用什么关键字修饰同步方法 ? 用synchronized关键字修饰同步方法
+同步有几种实现方法,都是什么?分别是synchronized,wait与notify
+wait():使一个线程处于等待状态，并且释放所持有的对象的lock。
+sleep():使一个正在运行的线程处于睡眠状态，是一个静态方法，调用此方法要捕捉
+InterruptedException异常。
+notify():唤醒一个处于等待状态的线程，注意的是在调用此方法的时候，并不能确切的
+		 唤醒某一个等待状态的线程，而是由JVM确定唤醒哪个线程，而且不是按优先级
+			 。
+notifyAll():唤醒所有处入等待状态的线程，注意并不是给所有唤醒线程一个对象的锁，
+			而是让它们竞争。
+wait被唤醒之后，是从wait之后的代码处恢复执行。
+wait被唤醒可能是由于其他线程调用了notify或者notifyAll，也有可能是伪唤醒，所以
+应该尽可能的将wait放在一个while循环体内，while循环不停地检测条件是否满足，满
+足在挑出wait。
+注意obj.wait()是wait释放obj这个对象上的锁，并且等到其他线程调用obj.notify()或
+者obj.notifyAll()之后才能被唤醒，并继续获得obj上的锁，这里的obj是对象的引用，
+如果在某个线程等待obj上的锁期间，程序改变了obj这个引用指向的对象，那么该线程永
+远不会获得原来obj对象的锁，这时，程序就会抛出一个illegal monitor异常。
+
+3. new Integer(int) 与 Integer.valueOf(int)的不同之处
+new Integer(int)永远返回的是一个新的具有int值的Integer实例，而
+Integer.valueOf(int)则不是；
+假如有一个Integer实例，Integer intV = new Integer(0);
+如果再次执行intV = Integer.valueOf(1);的时候，Integer.valueOf(1)返回的对象就是
+intV本身，只不过intV的值被修改成了1而已。因此，假如我们并不需要一个新的Integer
+实例的情况下，用Integer.valueOf(int)比new Integer(int)效果要好，更加节省空间和
+时间。
+

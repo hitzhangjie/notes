@@ -1,0 +1,63 @@
+#									ActiveMQ								  #
+############################################################################
+add 'activemq-all-5.9.0.jar' into CLASSPATH
+cd /usr/local/apache-activemq-5.9.0/bin
+
+create a default configuration file for activemq:
+activemq setup ~/.activemqrc
+
+run:
+activemq restart
+
+check:
+netstat -a | grep 61616
+
+invalid broker URI, no specified scheme
+for windows:
+drop console argument after activemq.bat, just run: activemq
+
+using web console to monitor activemq:
+
+for version 5.9, new monitor tool hawtio can be used:
+	point your browser at ---> http://localhost:8161/hawtio
+
+
+
+username:admin
+password:admin
+
+for previous version, there's also a monitor tool (not hawtio) can be used:
+	point your browser at ---> http://localhost:8161/admin
+
+
+
+username:admin
+password:admin
+	
+pairs of username/password are defined in file:
+		/usr/local/apache-activemq-5.9.0/conf/jetty-realm.properties
+
+
+
+/home/zhangjie/activemq/java/Publisher.java
+/home/zhangjie/activemq/java/Consumer.java
+
+javac *java
+java Consumer
+java Publisher
+
+then check localhost:8161/admin, you can see the change.
+
+browse the webapps demo
+
+start activemq as following:
+	./bin/activemq console xbeans:examples/conf/activemq-demo.xml
+	or
+	./bin/activemq xbeans:examples/conf/activemq-demo.xml
+
+point browser at:
+	http://localhost:8161/demo
+
+openwire:
+	uri="tcp://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrame
+	-Size=104857600"

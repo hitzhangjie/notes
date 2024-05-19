@@ -1,0 +1,59 @@
+2013/10/12 21:27:26
+网络安全方向偏工程培养要求
+
+一、	基础理论要求
+1.	密码学与网络安全		*
+2.	计算机网络				*
+3.	容灾技术、存储技术
+4.	软件工程
+
+二、	软件开发能力要求
+1.	Linux的使用，SSH Shell、Samba等
+2.	Web开发平台搭建，Apache/Tomcat＋MySQL＋PHP/JSP安装配置	*
+3.	HTML、javascript、css、Div、Jquery、Dojo				*
+4.	Java程序设计			*
+5.	PHP程序设计				*
+6.	SSH框架（Spring+Struts+Hibernate）	*
+7.	MySQL编程							*
+8.	Oracle编程							*
+9.	Linux编程（gcc、Makefile，Shell）	*
+10.	Linux网络编程（socket、epoll）
+11.	Linux内核编程
+12.	Windows编程（VC++/MFC）				*
+13.	Windows网络编程
+14.	Windows内核编程
+15.	虚拟机软件的使用（VMWare）			*
+16.	iptables
+17.	Snort
+18.	VPN
+
+三、	推荐的参考资料
+
+安全理论：
+Atul Kahate，《密码学与网络安全》，清华大学出版社
+William Stallings，《密码学与网络安全：原理与实践》，清华大学出版社
+Bert Hubert，《Linux Advanced Routing & Traffic Control HOWTO》，http://www.lartc.org/lartc.pdf
+
+编程语言：
+Herbert Schildt著，张玉清等译，《Java2参考大全》，清华大学出版社
+Stanley BLippman等，《C++Primer》，人民邮电出版社				*
+W. Richard Stevens等，尤晋元等译，《UNIX环境高级编程》，人民邮电出版社	*
+
+Web开发：
+刘京华，《Java web整合开发王者归来》，清华大学出版社
+王黎，《Flex+JSP Web应用开发实战详解》，清华大学出版社
+袁润非，《DIV+CSS网站布局案例精粹》，清华大学出版社
+Rawld Gill等著，DOJO中国译，《精通Dojo》，人民邮电出版社
+
+系统开发：
+Daniel P. Bovet等著，陈莉君等译，《深入理解Linux内核》，中国电力出版社
+毛德超，胡希明，《Linux内核源代码情景分析》，浙江大学出版社
+Gerard Beekmans等，《Linux From Scratch》，http://www.linuxfromscratch.org
+
+Mark ERussinovich，《深入解析windows操作系统》，人民邮电出版社
+谭文等，《寒江独钓windows内核安全编程》，电子工业出版社
+
+软件工程：
+张海藩，软件工程导论(第5版)，清华大学出版社
+Frederick P. Brooks，《人月神话》，清华大学出版社
+林锐，《面向企业的软件研发管理解决方案方法与工具》，电子工业出版社
