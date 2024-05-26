@@ -29,7 +29,7 @@ i/o	:
 			-d' ' only specify space as the delimiter,not including tab,so it's inconvenient when files contain both of space and tab.
 			cut -d' ' -f2 filename
 		note:
-			awk regard tab and space as the delimiter,maybe it's more convenient.
+			awk uses tab and space as the delimiter,maybe it's more convenient.
 			cat filename | awk '{print $2}'
 
 		sed : edit the input
@@ -70,6 +70,8 @@ note:	set the new owner of files
 	note:   set the new group of files
 	chgrp -R newgrp dirname
 	chgrp newgrp filename
+
+	ps: chown -R $username:$groupname files...
 
 adduser linux
 	adduser user group
@@ -128,8 +130,7 @@ network configuration
 	wlan0	：无线网卡
 	lo		：回环测试网卡
 
-at
-	
+at:
 	sudo service atd start
 	
 	at 12:10
@@ -143,8 +144,7 @@ at
 
 	note : press ctrl-d to generate a EOT signal
 
-process management
-
+process management:
 	ps -aux	: display all processes(-a),display users(-u),display background processess(-x)
 	ps -ef	: display all running processes including background processes(-e),display parental process id(-f)
 	ps		: display processes running on current terminal
@@ -154,8 +154,7 @@ process management
 
 	top			: dynamically display processes in system
 
-kill process
-	
+kill process:
 	sudo kill pid
 	sudo kill -9 pid	: -9,kill process forcefully
 
@@ -163,10 +162,10 @@ kill process
 
 	note : every running process,providing its name is ABC,stores their pid in a file,named /var/run/ABC.pid
 
-date
-	
+date:
 	date : display date and time
 	date -s "20121224 16:40" : set date and time according to the given string
+	date -d@$timestamp : convert timestamp to formatted datetime
 
 df	: display the disk space usage of every file system
 	
