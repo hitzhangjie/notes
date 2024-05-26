@@ -64,7 +64,7 @@ gzip与bzip2这两个压缩程序，可以与tar实现无缝衔接，tar命令�
 	  -v表示输出压缩解压缩的文件列表。
 	  -f表示对文件进行压缩解压。
 
-apt-cache 强大的apt查询工具
+8) apt-cache 强大的apt查询工具
 
 9）dpkg apt的底层软件工具
 dpkg一个比较实用的方法使用来备份系统已经安装的软件列表，以便重装系统之后，快速恢复系统中需要的软件，相当于对系统的一次克隆。
@@ -192,7 +192,7 @@ at/cron/anacron
 
 24） update-alternatives，常用重要选项：--list/--config/--auto/--install/--remove
 
-软件安装一般过程
+25) 软件安装一般过程
 .configure	:如果运行成功，将会生成makefile文件；如果失败，需要根据提示信息，调整下系统中的软件依赖，然后再次尝试。
 make		:如果运行成功，会生成可执行文件，便于之后的安装过程。如果失败，当然要继续调整。
 make install 	:安装。
