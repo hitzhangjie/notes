@@ -10,178 +10,173 @@ reward: true
 draft: false
 ---
 
-迁移自 hitzhangjie/Study 项目下的内容，本文主要总结的是一些日常高频使用的linux命令。
+迁移自 hitzhangjie/Study 项目下的内容，本文主要总结的是一些日常高频使用的Linux命令。
 
-```
-lp	: submit files and print
-pwd	: print current work directory
-match pattern in bash : ? * []
-extension of '{}' : b{ed,olt,ar}s
-					   ls *.{c,h,o}
-i/o	:
-		cat	: copy input to output
-		grep: match lines from input
-		sort: sort lines from input
-		cut : extract columns from input
-			
-		how to set the delimiter to space?
-		note: 
-			-d' ' only specify space as the delimiter,not including tab,so it's inconvenient when files contain both of space and tab.
-			cut -d' ' -f2 filename
-		note:
-			awk uses tab and space as the delimiter,maybe it's more convenient.
-			cat filename | awk '{print $2}'
+## lp
+- submit files and print
 
-		sed : edit the input
-		tr  : convert input characters to others
-background jobs
-	& : background jobs have no access to the terminal input,i.e.background jobs cann't listen the terminal input
-	jobs : list background jobs
-diff	: compare files line by line
-		diff -s -y file1 file2
-		diff -q -y file1 file2
-modify the priority of jobs
-	nice -n num cmd
+## pwd
+- print current working directory
 
-control key
-	ctrl-c	: interrupt current cmd
-	ctrl-d	: end input
-	ctrl-\	: quit
-	ctrl-s	: stop outputing to current screen
-	ctrl-q	: restart outputing to current screen
-	ctrl-u	: delete the whole cmd line
-	ctrl-z	: suspend current cmd
+## Match pattern in bash
+- `?`, `*`, `[]` can be used to match patterns in bash
+- Examples:
+	- `b{ed,olt,ar}s`
+	- `ls *.{c,h,o}`
 
-source .bashrc
-	note:after you modified file .bashrc to customize the bash environment,use cmd 'source .bashrc' to execute the cmds in file .bashrc,
-	the customized bash environment will be updated!
+## I/O
+- `cat`: copy input to output
+- `grep`: match lines from input
+- `sort`: sort lines from input
+- `cut`: extract columns from input
+- How to set the delimiter to space?
+	- Note: `-d' '` only specifies space as the delimiter, not including tab. It's inconvenient when files contain both space and tab.
+	- Example: `cut -d' ' -f2 filename`
+	- Note: `awk` uses tab and space as the delimiter, which may be more convenient.
+	- Example: `cat filename | awk '{print $2}'`
+- `sed`: edit the input
+- `tr`: convert input characters to others
 
-Bash Shell Programming and Debug
-	....
-	....
-	....
-	....
-	Learn it in details !
+## Background jobs
+- `&`: background jobs have no access to the terminal input, i.e., background jobs can't listen to the terminal input
+- `jobs`: list background jobs
 
-note:	set the new owner of files
-	chown -R newuser dirname
-	chown newuser filename
+## Diff
+- Compare files line by line
+- Examples:
+	- `diff -s -y file1 file2`
+	- `diff -q -y file1 file2`
 
-	note:   set the new group of files
-	chgrp -R newgrp dirname
-	chgrp newgrp filename
+## Modify the priority of jobs
+- `nice -n num cmd`
 
-	ps: chown -R $username:$groupname files...
+## Control key
+- `ctrl-c`: interrupt current command
+- `ctrl-d`: end input
+- `ctrl-\`: quit
+- `ctrl-s`: stop outputting to the current screen
+- `ctrl-q`: restart outputting to the current screen
+- `ctrl-u`: delete the whole command line
+- `ctrl-z`: suspend current command
 
-adduser linux
-	adduser user group
+## Source .bashrc
+- Note: After you modify the file `.bashrc` to customize the bash environment, use the command `source .bashrc` to execute the commands in the file. The customized bash environment will be updated!
 
-	deluser linux ; sudo rm -r linux
-	deluser user group
+## Bash Shell Programming and Debug
+- Learn it in detail!
 
-	////
+## Set the new owner of files
+- `chown -R newuser dirname`
+- `chown newuser filename`
 
-	addgroup
-	delgroup
+## Set the new group of files
+- `chgrp -R newgrp dirname`
+- `chgrp newgrp filename`
 
-	////
+## Add and delete users
+- Add user to group:
+	- `adduser user group`
+- Delete user:
+	- `deluser user group`
+	- `sudo rm -r linux`
 
-	passwd user		: change passwd for account user
-	passwd -l user	: lock and disable login of user
-					  when user try to login,he will get a message 'login incorrect'
-	passwd -u user	: unlock user account
-	passwd -d user	: remove password of user account
+## Add and delete groups
+- Add group:
+	- `addgroup groupname`
+- Delete group:
+	- `delgroup groupname`
 
-tar : packet and compress files
-	
-	packet:
-		tar -cvf xxx.tar files	: packet files into xxx.tar
-			tar cvf
-	packet and compress:
-		tar -zcvf xxx.tar.gz files	: packet and compress files into xxx.tar.gz by gzip
-			tar cvfz
-		tar -jcvf xxx.tar.bz2 files : packet and compress files into xxx.tar.bz2 by bzip2
-			tar cvfj
-	uncompress:
-		tar -xvf xxx.tar
-			tar xvf
-		tar -zxvf xxx.tar.gz 
-			tar xvfz
-		tar -jxvf xxx.tar.bzip2
-			tar xvfj
+## Password management
+- Change password for an account:
+	- `passwd user`
+- Lock and disable login of a user:
+	- `passwd -l user`
+	- When the user tries to login, they will get a message 'login incorrect'
+- Unlock user account:
+	- `passwd -u user`
+- Remove password of a user account:
+	- `passwd -d user`
 
-mount/umount:
-	
-	for cdrom:
-		mount -t iso9660 /dev/cdrom	/mnt/dirname
-	for u-disk:
-		mount -t vfat /dev/disk/by-label/diskname /mnt/dirname
+## Tar
+- Packet and compress files
+- Packet:
+	- `tar -cvf xxx.tar files`: packet files into `xxx.tar`
+- Packet and compress:
+	- `tar -zcvf xxx.tar.gz files`: packet and compress files into `xxx.tar.gz` using gzip
+- Uncompress:
+	- `tar -xvf xxx.tar`
+	- `tar -zxvf xxx.tar.gz`
+- Note: Similar commands can be used with `.tar.bz2` files using `bzip2`
 
-	umount /mnt/dirname
+## Mount/Unmount
+- For CD-ROM:
+	- `mount -t iso9660 /dev/cdrom /mnt/dirname`
+- For USB disk:
+	- `mount -t vfat /dev/disk/by-label/diskname /mnt/dirname`
+- Unmount:
+	- `umount /mnt/dirname`
 
-network configuration
-	
-	ifconfig	: show configuration
-	ifconfig eth0 xxx.xxx.xxx.xxx netmask xxx.xxx.xxx.xxx	: set ipaddr and netmask for eth0,broadcast will be automatically calculated
-	ifconfig eth0 down	: disable eth0
-	ifconfig eth0 up	: enable eth0
+## Network configuration
+- `ifconfig`: show configuration
+- Set IP address and netmask for `eth0`:
+	- `ifconfig eth0 xxx.xxx.xxx.xxx netmask xxx.xxx.xxx.xxx`
+- Disable `eth0`:
+	- `ifconfig eth0 down`
+- Enable `eth0`:
+	- `ifconfig eth0 up`
+- Network interfaces:
+	- `eth0`: wired Ethernet card
+	- `wlan0`: wireless network card
+	- `lo`: loopback test network card
 
-	eth0	：有线以太网卡
-	wlan0	：无线网卡
-	lo		：回环测试网卡
+## At
+- Start `atd` service:
+	- `sudo service atd start`
+- Examples:
+	- Run a command at a specific time:
+		```
+		at 12:10
+		at> mpg123 -C -Z dir/*.mp3
+		at> <EOT>
+		```
+	- Run a command after a specific time:
+		```
+		at now +3 week
+		at> ...
+		at> ...
+		at> <EOT>
+		```
+	- Note: Press `ctrl-d` to generate an EOT signal
 
-at:
-	sudo service atd start
-	
-	at 12:10
-	at>mpg123 -C -Z dir/*.mp3
-	at><EOT>	
+## Process management
+- `ps -aux`: display all processes (-a), display users (-u), display background processes (-x)
+- `ps -ef`: display all running processes including background processes (-e), display parental process ID (-f)
+- `ps`: display processes running on the current terminal
+- `pstree`: display process tree in the system
+- `pstree -p`: display process tree with their PIDs
+- `top`: dynamically display processes in the system
 
-	at now +3 week
-	at>..
-	at>..
-	at><EOT>
+## Kill process
+- `sudo kill pid`
+- `sudo kill -9 pid`: kill process forcefully
+- `sudo kill `cat /var/run/processname.pid``: kill process using the PID stored in `/var/run/processname.pid`
 
-	note : press ctrl-d to generate a EOT signal
+## Date
+- `date`: display date and time
+- `date -s "20121224 16:40"`: set date and time according to the given string
+- `date -d@$timestamp`: convert timestamp to formatted datetime
 
-process management:
-	ps -aux	: display all processes(-a),display users(-u),display background processess(-x)
-	ps -ef	: display all running processes including background processes(-e),display parental process id(-f)
-	ps		: display processes running on current terminal
+## Disk space usage
+- `df`: display the disk space usage of every file system
+- `df -h`: display disk space usage in a human-readable format
+- `du`: display the disk space usage of files or directories
+- `du -h filename`: display file size in a human-readable format
+- `du -h dirname`: display the size of every file or directory within the specified directory
+- `du -sh dirname`: display the total size of the specified directory
 
-	pstree		: display processes tree in system
-	pstree -p	: ................................,displaying their pid
-
-	top			: dynamically display processes in system
-
-kill process:
-	sudo kill pid
-	sudo kill -9 pid	: -9,kill process forcefully
-
-	sudo kill `cat /var/run/processname.pid`	
-
-	note : every running process,providing its name is ABC,stores their pid in a file,named /var/run/ABC.pid
-
-date:
-	date : display date and time
-	date -s "20121224 16:40" : set date and time according to the given string
-	date -d@$timestamp : convert timestamp to formatted datetime
-
-df	: display the disk space usage of every file system
-	
-	df -h : -h,readable for human
-	
-	du  : display the disk space usage of files or directories
-
-	du -h filename	: readable for human,display file size
-	du -h dirname	: ..................,display every file or dir size within specified dir
-	du -sh dirname	: ..................,display total size of specified dir
-
-wc	: count quantities of new lines,bytes,....
-	
-	wc -m	: count quantites of characters
-	wc -c	: .................. bytes
-	wc -w	: .................. words
-	wc -l	: .................. lines
-
-```
+## Word count
+- `wc`: count quantities of new lines, bytes, words, etc.
+- `wc -m`: count quantities of characters
+- `wc -c`: count quantities of bytes
+- `wc -w`: count quantities of words
+- `wc -l`: count quantities of lines
