@@ -21,6 +21,8 @@ Java是基于vm的语言，Java方法的暂停、恢复执行不能通过保存�
   - int类型成员pc指示当前Pausing的第${pc}th个Pausable方法
   - Object类型成员寄存了当前Pausing方法中后续执行所需要的部分变量
 
+ps: 本质上是stackless coroutine的做法，就是协程没有自己独有的stack，而是共享calling thread的stack。对于不同的coroutine，stack里的内容由coroutine的context中的信息来决定如何理解，比如stack pointer当前指向哪里？stack中的函数调用栈是什么，对于coroutine 1可能是fn1()->fn2()，对coroutine 2可能是fn3()->fn4()。同一个线程创建的stackless coroutines的stack base是一样的，这样coroutine yield时只要记录下当时其调用栈中的函数调用关系以及每个函数中的局部变量，即保存了栈内存信息。硬件上下文记录下stack base、stack pointer、IP。有了这些信息就可以完整描述一个coroutine的现场，方便后面还原让coroutine重新跑起来。
+
 Kilim中的后处理器Weaver会针对每个Pausable方法进行特殊处理，在其参数列表中追加一个Fiber参数，这个Fiber参数在整个调用链中是共享的，可以通过它追查到所有的Pausable方法信息，Fiber通过down()进入下一个Pausable方法的栈帧，Pausable方法返回后通过up()返回到上一个Pausable方法对应的栈帧。
 
 ### 2.3 Scheduler
